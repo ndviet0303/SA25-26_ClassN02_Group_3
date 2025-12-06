@@ -1,0 +1,748 @@
+locale: vi
+
+# Main App Configuration
+app:
+  title: NoZie
+  
+# Common Actions
+common:
+  skip: Bỏ qua
+  continueText: Tiếp tục
+  confirm: Xác nhận
+  data: Dữ liệu
+  save: Lưu
+  cancel: Hủy
+  next: Tiếp theo
+  back: Quay lại
+  done: Hoàn thành
+  empty: Trống
+  yes: Có
+  no: Không
+  addNew: Thêm mới
+  clear: Xoá
+  search: Tìm kiếm
+  loading: "Đang tải…"
+  signOut: Đăng xuất
+  retry: Thử lại
+  errorPrefix: "Lỗi:"
+
+notification:
+  title: Thông báo
+  empty: Chưa có thông báo nào
+  markAllAsRead: Đánh dấu tất cả là đã đọc
+  newItem: Thông báo mới
+  seeAll: Xem tất cả
+  today: Hôm nay
+  dayAgo: Ngày trước
+  loadFailed: Lỗi khi tải thông báo
+  markAllAsReadFailed(String error): "Không thể đánh dấu tất cả là đã đọc: $error"
+
+# Authentication Module
+auth:
+  # General Auth Terms
+  login: Đăng nhập
+  signIn: Đăng Nhập
+  signUp: Đăng ký
+  email: Email
+  password: Mật khẩu
+  username: Tên đăng nhập
+  confirmPassword: Xác nhận mật khẩu
+  rememberMe: Ghi nhớ tôi
+  errors:
+    invalidCredentials: Sai tên đăng nhập hoặc mật khẩu
+  
+  # Login Screen
+  loginScreen:
+    title: "Xin chào bạn 👋"
+    description: Điền email/tên đăng nhập và mật khẩu để tiếp tục nha ✨
+    placeholder:
+      email: admin@ziet.dev
+      password: "●●●●●●●●●●●●"
+  
+  # OAuth Features
+  oauth:
+    featureInDevelopment: Tính năng đang phát triển
+  
+  # Forgot Password Flow
+  forgotPassword:
+    title: "Quên Mật Khẩu 🔑"
+    description: Nhập email của bạn, chúng tôi sẽ gửi mã OTP để xác minh ở bước tiếp theo.
+    orContinueWith: hoặc tiếp tục với
+    
+    # OTP Screen
+    otp:
+      title: "OTP tới rồi nè 📩"
+      description: Chúng tôi đã gửi mã xác thực OTP đến email của bạn. Vui lòng kiểm tra email và nhập mã bên dưới nhé.
+      didntReceiveCode: Chưa có mã?
+      resendCode: Gửi lại mã ngay
+      resendAfter(int seconds): "Đợi ${seconds}s rồi gửi lại"
+    
+    # New Password
+    newPassword:
+      title: "Tạo mật khẩu mới 🔐"
+      description: Nhập mật khẩu mới của bạn. Nếu quên, bạn sẽ cần thực hiện lại bước quên mật khẩu.
+  
+  # Registration Flow
+  register:
+    createAccount: Tạo tài khoản
+    description: Nhập tên đăng nhập, email và mật khẩu. Nếu bạn quên, bạn sẽ phải làm quên mật khẩu.
+    placeholder:
+      username: Nhập tên đăng nhập của bạn
+      password: Nhập mật khẩu của bạn
+      email: Nhập địa chỉ email của bạn
+      confirmPassword: Xác nhận mật khẩu của bạn
+    registrationSuccessful: Đăng ký thành công!
+    
+    # Profile Steps
+    steps:
+      stepOf: "Bước {current} của {total}"
+      contentForStep: "Nội dung cho bước {step}"
+      
+      # Gender Selection
+      gender:
+        select: Chọn giới tính của bạn
+        question: Giới tính của bạn là gì?
+        description: Chọn giới tính để có nội dung phù hợp hơn
+        options:
+          male: Nam
+          female: Nữ
+          other: Khác
+          preferNotToSay: Không muốn nói
+        choices:
+          iAmMale: Tôi là nam
+          iAmFemale: Tôi là nữ
+          ratherNotToSay: Không muốn nói
+      
+      # Age Selection
+      age:
+        select: Chọn độ tuổi của bạn
+        title: Chọn độ tuổi của bạn
+        description: Chọn khoảng tuổi để có nội dung phù hợp hơn
+        ranges:
+          age14to17: "14-17"
+          age18to24: "18-24"
+          age25to29: "25-29"
+          age30to34: "30-34"
+          age35to39: "35-39"
+          age40to44: "40-44"
+          age45to49: "45-49"
+          age50plus: "50+"
+      
+      # Genre Selection
+      genres:
+        select: Chọn thể loại yêu thích
+        title: Chọn thể loại phim bạn thích
+        description: Chọn thể loại phim yêu thích để có gợi ý tốt hơn hoặc bạn có thể bỏ qua
+        list:
+          amNhac: Âm Nhạc
+          biAn: Bí ẩn
+          chienTranh: Chiến Tranh
+          chinhKich: Chính kịch
+          coTrang: Cổ Trang
+          giaDinh: Gia Đình
+          haiHuoc: Hài Hước
+          hanhDong: Hành Động
+          hinhSu: Hình Sự
+          hocDuong: Học Đường
+          khoaHoc: Khoa Học
+          kinhDi: Kinh Dị
+          kinhDien: Kinh Điển
+          phieuLuu: Phiêu Lưu
+          phim18: Phim 18+
+          shortDrama: Short Drama
+          taiLieu: Tài Liệu
+          tamLy: Tâm Lý
+          thanThoai: Thần Thoại
+          theThao: Thể Thao
+          tinhCam: Tình Cảm
+          vienTuong: Viễn Tưởng
+          voThuat: Võ Thuật
+      
+      # Profile Information
+      profile:
+        title: Hoàn thành hồ sơ của bạn
+        infoTitle: Thông tin cá nhân
+        accountTitle: Thông tin tài khoản
+        privacyNote: Đừng lo lắng, chỉ bạn mới có thể xem dữ liệu cá nhân của mình. Không ai khác có thể xem được.
+        photo:
+          add: Thêm ảnh
+          tapToAdd: Nhấn để thêm ảnh đại diện
+        fields:
+          fullName:
+            label: Họ và tên
+            placeholder: Nhập họ và tên của bạn
+          phoneNumber:
+            label: Số điện thoại
+            placeholder: Nhập số điện thoại của bạn
+          dateOfBirth:
+            label: Ngày sinh
+            format: DD/MM/YYYY
+          country:
+            label: Quốc gia
+            placeholder: Nhập quốc gia của bạn
+
+# Welcome/Onboarding Module
+welcome:
+  title: "Chào mừng đến với NoZie 👋"
+  titlePrefix: "Chào mừng đến với "
+  description: Người bạn đồng hành phim của bạn. Nhận gợi ý cá nhân hóa, khám phá phim mới và theo dõi danh sách xem của bạn.
+  getStarted: Bắt đầu
+  continueWithGoogle: Tiếp tục với Google
+  iAlreadyHaveAnAccount: Tôi đã có tài khoản
+  
+  slides:
+    discover:
+      title: Khám phá phim mới
+      description: Khám phá hàng nghìn bộ phim từ các thể loại khác nhau. Tìm những viên ngọc ẩn và phim xu hướng phù hợp với sở thích của bạn.
+    
+    track:
+      title: Theo dõi danh sách xem
+      description: Lưu phim bạn muốn xem, đánh dấu những gì bạn đã xem và nhận gợi ý dựa trên sở thích của bạn.
+    
+    community:
+      title: Tham gia cộng đồng
+      description: Kết nối với những người yêu phim khác, chia sẻ đánh giá và khám phá những gì đang xu hướng trong thế giới điện ảnh.
+
+# Settings & Preferences
+settings:
+  language:
+    vietnamese: Tiếng Việt
+    english: English
+  
+  theme:
+    system: Hệ thống
+    light: Sáng
+    dark: Tối
+
+# Profile Module
+profile:
+  header:
+    defaultName: Người dùng NoZie
+    loadError: Không thể tải hồ sơ
+
+  menu:
+    paymentMethods: Phương thức thanh toán
+    personalInfo: Thông tin cá nhân
+    notification: Thông báo
+    preferences: Tùy chỉnh
+    security: Bảo mật
+    language: Ngôn ngữ
+    helpCenter: Trung tâm trợ giúp
+    about: Giới thiệu về NoZie
+    darkMode: Chế độ tối
+    logout: Đăng xuất
+
+  language:
+    title: Ngôn ngữ
+    sectionSuggested: Đề xuất
+    sectionOthers: Ngôn ngữ khác
+    loadError(String error): "Không thể tải danh sách ngôn ngữ: $error"
+    fallback: Tiếng Anh (Mỹ)
+
+  logoutSheet:
+    title: Đăng xuất
+    description: Bạn có chắc muốn đăng xuất khỏi NoZie? Bạn có thể đăng nhập lại bất cứ lúc nào.
+
+  helpCenter:
+    title: Trung tâm trợ giúp
+    tabs:
+      faq: FAQ
+      contact: Liên hệ
+    categories:
+      all: Tất cả
+      general: Chung
+      account: Tài khoản
+      service: Dịch vụ
+      movies: Phim
+      ebook: Sách điện tử
+    search:
+      hint: Tìm kiếm
+      noResults: Không tìm thấy câu hỏi phù hợp
+    filter:
+      clear: Xoá
+    faq:
+      general:
+        whatIsNozie:
+          question: Nozie là gì?
+          answer: Nozie là trung tâm cá nhân giúp bạn khám phá, đọc và nghe sách. Dễ dàng duyệt gợi ý tuyển chọn, sắp xếp thư viện và đồng bộ trên mọi thiết bị.
+        syncProgress:
+          question: Làm sao đồng bộ tiến độ đọc trên nhiều thiết bị?
+          answer: Đảm bảo bạn đã đăng nhập trên tất cả thiết bị. Tiến độ sẽ tự đồng bộ khi có kết nối; hãy kéo để làm mới trong tab Thư viện nếu muốn đồng bộ ngay.
+        formatsSupport:
+          question: Nozie hỗ trợ định dạng nào?
+          answer: Nozie hỗ trợ tệp EPUB, PDF và audiobook MP3. Các tệp cá nhân tải lên sẽ được chuyển đổi tự động để phát tốt nhất.
+      service:
+        purchaseEbook:
+          question: Làm thế nào để mua ebook?
+          answer: Mở trang chi tiết sách, nhấn "Mua", chọn phương thức thanh toán rồi xác nhận. Sách đã mua sẽ xuất hiện ngay trong tab Thư viện.
+        audiobookNotPlaying:
+          question: Vì sao audiobook không phát?
+          answer: Kiểm tra âm lượng thiết bị và kết nối ổn định. Nếu vẫn lỗi, hãy xóa bộ nhớ đệm tại Hồ sơ > Trung tâm trợ giúp rồi khởi động lại ứng dụng.
+        manageNotifications:
+          question: Quản lý thông báo như thế nào?
+          answer: Vào Hồ sơ > Cài đặt thông báo để bật hoặc tắt cảnh báo cho gợi ý, mua sắm, khuyến mãi và nhiều loại khác.
+        requestRefund:
+          question: Làm sao yêu cầu hoàn tiền?
+          answer: Liên hệ hỗ trợ qua Trung tâm trợ giúp > Liên hệ, cung cấp mã đơn hàng và đội ngũ của chúng tôi sẽ phản hồi trong 24 giờ.
+        purchaseEbookIssue:
+          question: "Tại sao tôi không thể mua ebook?"
+          answer: Kiểm tra bạn đã thêm phương thức thanh toán hợp lệ và có kết nối ổn định. Nếu vẫn không được, hãy đăng xuất rồi đăng nhập lại trước khi thử mua.
+        downloadEbookIssue:
+          question: "Tại sao tôi không tải được ebook?"
+          answer: Đảm bảo bạn đã mua tựa sách và còn đủ dung lượng lưu trữ. Việc tải xuống cần Wi-Fi trừ khi bạn bật tải bằng dữ liệu di động trong phần Tùy chỉnh.
+      account:
+        addPaymentMethod:
+          question: Làm sao thêm phương thức thanh toán?
+          answer: Vào Hồ sơ > Phương thức thanh toán, chọn "Thêm mới", nhập thông tin thẻ hoặc ví rồi lưu. Bạn có thể quản lý hoặc xóa bất cứ lúc nào tại đây.
+        resetPassword:
+          question: Làm sao đặt lại mật khẩu?
+          answer: Vào Đăng nhập > Quên mật khẩu, nhập email và làm theo bước xác minh. Bạn có thể đặt mật khẩu mới sau khi xác nhận OTP gửi đến hộp thư.
+        changeLanguage:
+          question: Làm sao đổi ngôn ngữ ứng dụng?
+          answer: Chuyển đến Hồ sơ > Ngôn ngữ để chọn ngôn ngữ mong muốn. Cài đặt sẽ áp dụng tức thì trên toàn ứng dụng.
+        deleteAccount:
+          question: Làm sao xóa tài khoản?
+          answer: Mở Cài đặt > Bảo mật > Xóa tài khoản. Thực hiện các bước xác minh danh tính để hoàn tất.
+        addPaymentMethodIssue:
+          question: "Tại sao tôi không thêm được phương thức thanh toán?"
+          answer: Hãy kiểm tra thông tin thẻ chính xác và được hỗ trợ ở khu vực của bạn. Một số thẻ trả trước hoặc ví điện tử có thể bị hạn chế bởi ngân hàng hoặc quốc gia.
+      ebook:
+        downloadOffline:
+          question: Làm sao tải ebook để đọc offline?
+          answer: Mở bất kỳ sách đã mua nào, nhấn biểu tượng tải xuống và chọn nơi lưu. Bản tải sẽ sẵn sàng offline trong tab Thư viện.
+      movies:
+        closeErabookAccount:
+          question: "Tại sao tôi không thể đóng tài khoản trên Erabook?"
+          answer: Nếu bạn đã liên kết Nozie với Erabook, hãy hủy liên kết tại Hồ sơ > Dịch vụ liên kết trước. Sau đó gửi yêu cầu đóng tài khoản từ bảng điều khiển Erabook.
+    contacts:
+      customerService:
+        title: Chăm sóc khách hàng
+        subtitle: "support@nozie.app"
+      whatsapp:
+        title: WhatsApp
+        subtitle: "+1 800 123 4567"
+      website:
+        title: Website
+        subtitle: "www.nozie.app/support"
+      facebook:
+        title: Facebook
+        subtitle: "@NozieOfficial"
+      twitter:
+        title: Twitter
+        subtitle: "@NozieApp"
+      instagram:
+        title: Instagram
+        subtitle: "@nozie.app"
+
+  payment:
+    title: Phương thức thanh toán
+    loadError(String error): "Không thể tải phương thức thanh toán: $error"
+    addNewMessage: "Đã chạm vào thêm phương thức thanh toán"
+    comingSoon: Nozie đang phát triển thêm phương thức thanh toán khác
+
+  notification:
+    title: Thông báo
+    loadError(String error): "Không thể tải cài đặt: $error"
+    sectionTitle: Thông báo cho tôi khi...
+    toggles:
+      newRecommendation: Có gợi ý mới
+      newBookSeries: Có phim mới
+      authorUpdates: Có cập nhật từ tác giả
+      priceDrops: Có khuyến mãi giảm giá
+      purchase: Khi tôi thực hiện giao dịch
+      appSystem: Bật thông báo hệ thống ứng dụng
+      tipsServices: Có mẹo và dịch vụ mới
+      survey: Tham gia khảo sát
+
+  personalInfo:
+    title: Thông tin cá nhân
+    loadError: Không thể tải hồ sơ. Vui lòng thử lại sau.
+    success: Cập nhật hồ sơ thành công
+    fields:
+      fullName:
+        label: Họ và tên
+        hint: Nhập họ và tên
+      username:
+        label: Tên đăng nhập
+        hint: Nhập tên đăng nhập
+      email:
+        label: Email
+        hint: Nhập địa chỉ email
+      phone:
+        label: Số điện thoại
+        hint: Nhập số điện thoại
+      dob:
+        label: Ngày sinh
+        hint: DD/MM/YYYY
+      country:
+        label: Quốc gia
+        hint: Chọn quốc gia
+    saveChanges: Lưu thay đổi
+
+  preferences:
+    title: Tùy chỉnh
+    sections:
+      general: Chung
+      playback: Phát lại
+      video: Video
+      audio: Âm thanh
+    toggles:
+      wifiOnlyDownloads: Chỉ xem qua Wi-Fi
+      autoPlayNextEpisode: Tự phát tập tiếp theo
+      continueWatching: Tiếp tục xem từ vị trí dở
+      subtitlesEnabled: Phụ đề
+      autoRotateScreen: Tự xoay màn hình
+      autoDownloadAudio: Tự động tải âm thanh
+    actions:
+      clearCache:
+        title: Xóa bộ nhớ đệm
+        description(String size): "Đang lưu trữ: $size. Xóa bộ nhớ đệm sẽ loại bỏ tệp tạm nhưng giữ lại nội dung đã tải và cài đặt của bạn."
+        button: Xóa bộ nhớ đệm
+        success: Đã xóa bộ nhớ đệm
+      videoQuality:
+        title: Chất lượng video
+        options:
+          auto: Tự động
+          hd: HD
+          fullHd: Full HD
+      audioPreference:
+        title: Ngôn ngữ / Chất lượng âm thanh
+        options:
+          systemDefault: Theo hệ thống
+          englishHigh: Tiếng Anh • Chất lượng cao
+          originalStandard: Bản gốc • Tiêu chuẩn
+    storageLabel:
+      empty: 0 MB đã lưu
+      value(String amount): $amount MB đã lưu
+
+  security:
+    title: Bảo mật
+    loadError(String error): "Không thể tải cài đặt bảo mật: $error"
+    toggles:
+      rememberMe: Ghi nhớ tôi
+      biometricId: Sinh trắc học
+      faceId: Face ID
+      smsAuthenticator: Xác thực SMS
+      googleAuthenticator: Google Authenticator
+    actions:
+      deviceManagement: Quản lý thiết bị
+      changePassword: Đổi mật khẩu
+      changePasswordMessage: Đã chạm vào đổi mật khẩu
+      signOutDevice(String name): Đã đăng xuất $name
+      signOutAll: Đã đăng xuất khỏi tất cả thiết bị
+    deviceManagement:
+      title: Quản lý thiết bị
+      description: Quản lý các thiết bị được phép truy cập tài khoản của bạn.
+      signOutAll: Đăng xuất tất cả thiết bị
+      current: Thiết bị hiện tại
+      lastActive(String time): "Hoạt động lần cuối: $time"
+
+# Validation Messages
+validation:
+  general:
+    fillAllFields: Vui lòng điền đầy đủ tất cả các trường.
+    required: Trường này là bắt buộc.
+    length(int length): Độ dài phải là $length.
+    min(int length): Độ dài tối thiểu là $length.
+    max(int length): Độ dài tối đa là $length.
+    regex: Trường không hợp lệ.
+    custom:
+      password: Mật khẩu phải có ký tự, số.
+      username: Tên người dùng chỉ được chứa chữ cái thường (a-z), số (0-9), dấu gạch ngang (-) và dấu gạch dưới (_).
+
+  name:
+    required: Họ và tên là bắt buộc
+    minLength: Họ và tên phải có ít nhất 2 ký tự
+  
+  phone:
+    required: Số điện thoại là bắt buộc
+    minLength: Số điện thoại phải có ít nhất 10 chữ số
+  
+  dateOfBirth:
+    required: Ngày sinh là bắt buộc
+  
+  country:
+    required: Quốc gia là bắt buộc
+  
+  username:
+    required: Tên đăng nhập là bắt buộc
+    minLength: Tên đăng nhập phải có ít nhất 3 ký tự
+    invalidChars: Tên đăng nhập chỉ có thể chứa chữ cái, số và dấu gạch dưới
+  
+  email:
+    required: Email là bắt buộc
+    invalid: Vui lòng nhập địa chỉ email hợp lệ
+  
+  password:
+    required: Mật khẩu là bắt buộc
+    minLength: Mật khẩu phải có ít nhất 8 ký tự
+    complexity: Mật khẩu phải chứa ít nhất một chữ hoa, một chữ thường và một số
+    confirmRequired: Vui lòng xác nhận mật khẩu của bạn
+    mismatch: Mật khẩu không khớp
+
+# Navigation
+navigation:
+  home: Trang chủ
+  discover: Khám phá
+  wishlist: Yêu thích
+  purchase: Mua
+  profile: Hồ sơ
+
+# Search
+search:
+  searchMovies: Tìm kiếm phim, chương trình TV, diễn viên...
+  popularSearches: Tìm kiếm phổ biến
+  noResultsFound: Không tìm thấy kết quả
+  tryDifferentKeywords: Thử từ khóa khác hoặc kiểm tra chính tả
+  all: Tất cả
+  movies: Phim
+  tvShows: Chương trình TV
+  actors: Diễn viên
+
+  previousSearches: Tìm kiếm trước
+  noResults: Không tìm thấy kết quả
+  showIn: Kết quả
+
+  filter:
+    header: Bộ lọc
+    reset: Đặt lại
+    apply: Áp dụng
+    sections:
+      sort: Sắp xếp
+      price: Giá
+      rating: Đánh giá
+      genre: Thể loại
+      language: Ngôn ngữ
+      age: Độ tuổi
+    sortOptions:
+      trending: Xu hướng
+      newReleases: Phát hành mới
+      highestRating: Đánh giá cao nhất
+      lowestRating: Đánh giá thấp nhất
+      highestPrice: Giá cao nhất
+      lowestPrice: Giá thấp nhất
+
+    genres:
+      action: Hành động
+      adventure: Phiêu lưu
+      romance: Lãng mạn
+      comics: Truyện tranh
+      comedy: Hài
+      fantasy: Giả tưởng
+      mystery: Bí ẩn
+      horror: Kinh dị
+      scienceFiction: Khoa học viễn tưởng
+      thriller: Giật gân
+      travel: Du lịch
+
+    rangePrice:
+      min: 0
+      max: 500000
+
+    languages:
+      english: Tiếng Anh
+      vietnamese: Tiếng Việt
+      others: Khác
+
+    age:
+      under12: Dưới 12 tuổi
+      above12: 12+
+      above16: 16+
+      above18: 18+
+
+
+# Utility Functions
+utils:
+  itemsCount: "{count, plural, =0{Không có mục} =1{1 mục} other{{count} mục}}"
+  helloUser: "Xin chào, {name}!"
+  counterText: ""
+
+cards:
+  showIn: Hiển thị trong
+
+# Purchase Detail Screen
+purchaseDetail:
+  title: Chi tiết giao dịch
+  infoTitle: Thông tin mua hàng
+  labels:
+    movieId: Mã phim
+    downloaded: Đã tải xuống
+    finished: Đã xem xong
+    transactions: Giao dịch
+    amount: Số tiền
+    created: Tạo lúc
+    paidAt: Thanh toán lúc
+    failedAt: Thất bại lúc
+    canceledAt: Hủy lúc
+    paymentIntent: Mã Payment Intent
+    chargeId: Mã giao dịch (Charge ID)
+  states:
+    succeeded: Thành công
+    failed: Thất bại
+    canceled: Đã hủy
+    pending: Đang xử lý
+  empty:
+    transactions: Chưa có giao dịch nào
+    purchaseNotFound: Không tìm thấy thông tin mua hàng
+  error:
+    generic(String error): "Lỗi: $error"
+
+# Discover Module
+discover:
+  sections:
+    topCharts: Bảng xếp hạng
+    topSelling: Bán chạy
+    topFree: Miễn phí hàng đầu
+    topNewReleases: Phát hành mới
+
+# Home Module
+home:
+  sections:
+    recommendedForYou: Gợi ý cho bạn
+    yourPurchases: Giao dịch của bạn
+    yourWishlist: Danh sách yêu thích
+    recentlyWatched: Xem gần đây
+    exploreByGenre: Khám phá theo thể loại
+
+# Genre Module
+genre:
+  explore:
+    title: "Thể loại:"
+    empty: Không tìm thấy phim cho
+    loadFailed: Không tải được danh sách phim
+
+# Purchase Module
+purchase:
+  common:
+    free: Miễn phí
+    purchased: Đã mua
+    movieNotFound: Không tìm thấy phim
+    comingSoon: Sắp ra mắt
+    errorPrefix: "Lỗi:"
+  checkout:
+    title: Thanh toán
+    section:
+      movieSummary: Tóm tắt phim
+      priceDetails: Chi tiết giá
+      paymentMethod: Phương thức thanh toán
+    labels:
+      price: Giá
+      total: Tổng cộng
+      visa: Visa
+    actions:
+      confirm: Xác nhận
+      payNow: Thanh toán ngay
+      processing: Đang xử lý...
+    toasts:
+      addedSuccess: "Đã thêm phim thành công! 🎬"
+      paymentSuccess: "Thanh toán thành công! 🎬"
+      paymentFailed: Thanh toán thất bại. Vui lòng thử lại.
+      paymentCanceled: Thanh toán đã bị hủy
+  item:
+    menu:
+      watchNow: Xem ngay
+      viewSeries: Xem series
+      purchaseDetails: Chi tiết giao dịch
+      aboutMovie: Về phim
+    snackbar:
+      viewSeriesComing: Tính năng xem series - sắp ra mắt
+  notifications:
+    successTitle: "Mua hàng thành công! 🎬"
+    successDescription: "Bạn đã sở hữu"
+
+# Movie Module
+movie:
+  details:
+    notFound: Không tìm thấy phim
+    alreadyPurchased: Phim này đã có trong thư viện đã mua của bạn
+    quality1080p: 1080p
+    seriesFallback: Series
+  ratings:
+    title: Đánh giá & Nhận xét
+    noReviews: Chưa có đánh giá nào
+    rateThisFilm: Đánh giá phim này
+    purchaseRequired: Cần mua để đánh giá
+    writeAReview: Viết đánh giá
+    dialog:
+      title: Viết đánh giá
+      yourRatingPrefix: "Đánh giá của bạn:"
+      star: sao
+      stars: sao
+      hint: Viết đánh giá của bạn...
+      cancel: Hủy
+      submit: Gửi
+      submitted: Đã gửi đánh giá
+  info:
+    images: Hình ảnh
+    cannotLoadImage: Không thể tải ảnh
+    episodesList: Danh sách tập
+    language: Ngôn ngữ
+    genres: Thể loại
+    countries: Quốc gia
+    directors: Đạo diễn
+    actors: Diễn viên
+    aboutThisFilm: Giới thiệu
+    trailer: Trailer
+    watchTrailer: Xem trailer
+    episodePrefix: Tập
+    episodesPrefix: Tập
+  player:
+    noAccess: Bạn chưa có quyền truy cập phim này
+    videoUrlMissing: Không có URL video
+    tryingFallback: Đang thử URL thay thế...
+    cannotLoadM3u8: Không thể load video từ URL m3u8
+    cannotLoadBoth: Không thể load video từ cả m3u8 và embed URL
+    unknownError: Lỗi không xác định
+    cannotOpenTrailer: Không mở được trailer
+    playbackSpeed: Tốc độ phát
+    quality: Chất lượng
+  hero:
+    ratings: lượt đánh giá
+    reviews: nhận xét
+    duration: thời lượng
+    quality: chất lượng
+    watched: lượt xem
+    watchNow: Xem ngay
+    aboutThisFilm: Giới thiệu
+    viewMore: Xem thêm
+  similar:
+    title: Phim tương tự
+  report:
+    headerTitle: Báo cáo vấn đề
+    headerSubtitle: Giúp chúng tôi cải thiện chất lượng dịch vụ
+    movieInfo: Thông tin phim
+    labels:
+      movieName: Tên phim
+      director: Đạo diễn
+      videoUrl: Video URL
+      error: Lỗi
+    issueTypeLabel: Loại vấn đề *
+    descriptionLabel: Mô tả chi tiết *
+    descriptionHint: Mô tả chi tiết vấn đề bạn gặp phải...
+    validations:
+      selectIssue: Vui lòng chọn loại vấn đề
+      descRequired: Vui lòng nhập mô tả chi tiết
+      descMin: Mô tả phải có ít nhất 10 ký tự
+    actions:
+      cancel: Hủy
+      submit: Gửi báo cáo
+      sending: Đang gửi...
+    success: Báo cáo đã được gửi thành công. Cảm ơn bạn đã phản hồi!
+    failurePrefix: "Lỗi khi gửi báo cáo:"
+# Wishlist Module
+wishlist:
+  common:
+    retry: Thử lại
+    errorPrefix: "Lỗi:"
+    movieNotFound: Không tìm thấy phim
+  item:
+    menu:
+      removeFromWishlist: Xóa khỏi danh sách yêu thích
+      share: Chia sẻ
+      aboutMovie: Về phim
+    snackbar:
+      removed: Đã xóa khỏi danh sách yêu thích
+      shareComing: Tính năng chia sẻ sẽ có sớm
+  empty:
+    title: Danh sách yêu thích của bạn đang trống
+    subtitle: Thêm những phim bạn muốn xem sau
