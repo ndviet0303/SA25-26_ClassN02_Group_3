@@ -1,0 +1,45 @@
+# Maven Build Artifacts
+**/target/
+target/
+Src/backend/microservices/*/target/
+Src/backend/microservices/**/target/
+
+# iOS Build
+Src/fe/ios/build/
+**/pom.xml.releaseBackup
+**/pom.xml.versionsBackup
+**/pom.xml.next
+**/release.properties
+**/dependency-reduced-pom.xml
+**/buildNumber.properties
+**/.mvn/timing.properties
+**/.mvn/wrapper/maven-wrapper.jar
+
+# Spring Boot
+**/HELP.md
+**/.springBeans
+**/stg/
+
+# IDE
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
+

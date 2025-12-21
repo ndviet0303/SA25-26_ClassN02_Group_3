@@ -1,6 +1,0 @@
-com/nozie/movieservice/service/MovieService.class
-com/nozie/movieservice/repository/MovieRepository.class
-com/nozie/movieservice/MovieServiceApplication.class
-com/nozie/movieservice/dto/MovieRequest.class
-com/nozie/movieservice/model/Movie.class
-com/nozie/movieservice/controller/MovieController.class

@@ -1,6 +1,0 @@
-com/nozie/paymentservice/controller/PaymentController.class
-com/nozie/paymentservice/dto/PaymentResponse.class
-com/nozie/paymentservice/repository/TransactionRepository.class
-com/nozie/paymentservice/dto/PaymentRequest.class
-com/nozie/paymentservice/PaymentServiceApplication.class
-com/nozie/paymentservice/model/Transaction.class
