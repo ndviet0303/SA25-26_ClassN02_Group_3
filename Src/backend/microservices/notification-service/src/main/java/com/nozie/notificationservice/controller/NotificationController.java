@@ -57,7 +57,7 @@ public class NotificationController {
     }
 
     @PatchMapping("/{id}/read")
-    public ResponseEntity<ApiResponse<Notification>> markAsRead(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Notification>> markAsRead(@PathVariable String id) {
         log.info("PATCH /api/notifications/{}/read - Marking as read", id);
         Notification notification = notificationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
@@ -67,7 +67,7 @@ public class NotificationController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteNotification(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteNotification(@PathVariable String id) {
         log.info("DELETE /api/notifications/{} - Deleting notification", id);
         notificationRepository.deleteById(id);
         return ResponseEntity.ok(ApiResponse.success("Notification deleted", null));

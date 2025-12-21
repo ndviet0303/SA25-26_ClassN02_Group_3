@@ -1,0 +1,2 @@
+CREATE DATABASE customerdb;
+CREATE DATABASE paymentdb;

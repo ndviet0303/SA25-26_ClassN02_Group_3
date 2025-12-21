@@ -47,7 +47,7 @@ public class MovieService {
     }
 
     @Transactional(readOnly = true)
-    public Movie getMovieById(Long id) {
+    public Movie getMovieById(String id) {
         return movieRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Movie", "id", id));
     }
@@ -58,22 +58,22 @@ public class MovieService {
                 .orElseThrow(() -> new ResourceNotFoundException("Movie", "slug", slug));
     }
 
-    public Movie updateMovie(Long id, MovieRequest request) {
+    public Movie updateMovie(String id, MovieRequest request) {
         Movie existingMovie = getMovieById(id);
 
-        if (!existingMovie.getSlug().equals(request.getSlug()) && 
-            movieRepository.existsBySlug(request.getSlug())) {
+        if (!existingMovie.getSlug().equals(request.getSlug()) &&
+                movieRepository.existsBySlug(request.getSlug())) {
             throw new BadRequestException("Movie with slug '" + request.getSlug() + "' already exists");
         }
 
         Movie updatedMovie = mapToEntity(request, existingMovie);
-        updatedMovie.setIsFree(updatedMovie.getPrice() == null || 
-                               updatedMovie.getPrice().compareTo(BigDecimal.ZERO) <= 0);
+        updatedMovie.setIsFree(updatedMovie.getPrice() == null ||
+                updatedMovie.getPrice().compareTo(BigDecimal.ZERO) <= 0);
 
         return movieRepository.save(updatedMovie);
     }
 
-    public void deleteMovie(Long id) {
+    public void deleteMovie(String id) {
         if (!movieRepository.existsById(id)) {
             throw new ResourceNotFoundException("Movie", "id", id);
         }
@@ -85,7 +85,8 @@ public class MovieService {
         if (keyword == null || keyword.trim().isEmpty()) {
             return getAllMovies();
         }
-        return movieRepository.searchByKeyword(keyword.trim());
+        return movieRepository.findByNameContainingIgnoreCaseOrOriginNameContainingIgnoreCase(keyword.trim(),
+                keyword.trim());
     }
 
     @Transactional(readOnly = true)
@@ -103,7 +104,7 @@ public class MovieService {
         return movieRepository.findByIsFreeTrue();
     }
 
-    public void incrementViewCount(Long id) {
+    public void incrementViewCount(String id) {
         Movie movie = getMovieById(id);
         movie.setView(movie.getView() + 1);
         movieRepository.save(movie);

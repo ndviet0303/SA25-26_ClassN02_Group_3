@@ -44,7 +44,7 @@ public class MovieController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Movie>> getMovieById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Movie>> getMovieById(@PathVariable String id) {
         log.info("GET /api/movies/{} - Fetching movie by ID", id);
         Movie movie = movieService.getMovieById(id);
         return ResponseEntity.ok(ApiResponse.success(movie));
@@ -58,14 +58,15 @@ public class MovieController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Movie>> updateMovie(@PathVariable Long id, @Valid @RequestBody MovieRequest request) {
+    public ResponseEntity<ApiResponse<Movie>> updateMovie(@PathVariable String id,
+            @Valid @RequestBody MovieRequest request) {
         log.info("PUT /api/movies/{} - Updating movie", id);
         Movie movie = movieService.updateMovie(id, request);
         return ResponseEntity.ok(ApiResponse.success("Movie updated successfully", movie));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteMovie(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteMovie(@PathVariable String id) {
         log.info("DELETE /api/movies/{} - Deleting movie", id);
         movieService.deleteMovie(id);
         return ResponseEntity.ok(ApiResponse.success("Movie deleted successfully", null));
@@ -100,7 +101,7 @@ public class MovieController {
     }
 
     @PostMapping("/{id}/view")
-    public ResponseEntity<ApiResponse<Void>> incrementViewCount(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> incrementViewCount(@PathVariable String id) {
         log.info("POST /api/movies/{}/view - Incrementing view count", id);
         movieService.incrementViewCount(id);
         return ResponseEntity.ok(ApiResponse.success("View count incremented", null));

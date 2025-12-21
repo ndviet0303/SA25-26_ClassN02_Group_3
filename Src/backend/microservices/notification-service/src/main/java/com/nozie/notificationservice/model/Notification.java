@@ -1,48 +1,45 @@
 package com.nozie.notificationservice.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 import java.time.LocalDateTime;
 
 /**
- * Notification Entity
+ * Notification Document
  */
-@Entity
-@Table(name = "notifications")
+@Document(collection = "notifications")
 public class Notification {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(name = "customer_id", nullable = false)
+    @Field("customer_id")
     private Long customerId;
 
-    @Column(nullable = false)
     private String type; // purchase, system, promo
 
-    @Column(nullable = false)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "deep_link")
+    @Field("deep_link")
     private String deepLink;
 
     private Boolean read = false;
 
-    @Column(name = "created_at")
+    @Field("created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
     public Notification() {
     }
 
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

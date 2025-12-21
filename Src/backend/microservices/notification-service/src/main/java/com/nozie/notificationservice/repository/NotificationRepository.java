@@ -1,7 +1,7 @@
 package com.nozie.notificationservice.repository;
 
 import com.nozie.notificationservice.model.Notification;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.List;
  * Layer 3: Persistence Layer - Notification Repository
  */
 @Repository
-public interface NotificationRepository extends JpaRepository<Notification, Long> {
+public interface NotificationRepository extends MongoRepository<Notification, String> {
 
     List<Notification> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
 
@@ -18,4 +18,3 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     long countByCustomerIdAndReadFalse(Long customerId);
 }
-

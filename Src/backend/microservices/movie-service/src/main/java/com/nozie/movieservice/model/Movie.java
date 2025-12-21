@@ -1,91 +1,88 @@
 package com.nozie.movieservice.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Movie Entity
+ * Movie Document
  */
-@Entity
-@Table(name = "movies")
+@Document(collection = "movies")
 public class Movie {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     @NotBlank(message = "Movie name is required")
-    @Column(nullable = false)
     private String name;
 
-    @Column(name = "origin_name")
+    @Field("origin_name")
     private String originName;
 
     @NotBlank(message = "Slug is required")
-    @Column(unique = true, nullable = false)
+    @Indexed(unique = true)
     private String slug;
 
-    @Column(columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "poster_url")
+    @Field("poster_url")
     private String posterUrl;
 
-    @Column(name = "thumb_url")
+    @Field("thumb_url")
     private String thumbUrl;
 
-    @Column(name = "trailer_url")
+    @Field("trailer_url")
     private String trailerUrl;
 
     private String type;
     private String status;
     private String quality;
     private String lang;
-    
-    @Column(name = "\"year\"")
+
+    @Field("year")
     private Integer year;
 
     private Long view = 0L;
 
     private String time;
 
-    @Column(name = "episode_current")
+    @Field("episode_current")
     private String episodeCurrent;
 
-    @Column(name = "episode_total")
+    @Field("episode_total")
     private String episodeTotal;
 
-    @Column(precision = 10, scale = 2)
     private BigDecimal price = BigDecimal.ZERO;
 
-    @Column(name = "is_free")
+    @Field("is_free")
     private Boolean isFree = true;
 
     private Double tmdbRating;
     private Double imdbRating;
 
-    @Column(name = "created_at")
+    @Field("created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(name = "updated_at")
+    @Field("updated_at")
     private LocalDateTime updatedAt;
 
     public Movie() {
     }
 
-    @PreUpdate
-    protected void onUpdate() {
+    public void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
 
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

@@ -1,9 +1,7 @@
 package com.nozie.movieservice.repository;
 
 import com.nozie.movieservice.model.Movie;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -13,7 +11,7 @@ import java.util.Optional;
  * Layer 3: Persistence Layer - Movie Repository
  */
 @Repository
-public interface MovieRepository extends JpaRepository<Movie, Long> {
+public interface MovieRepository extends MongoRepository<Movie, String> {
 
     Optional<Movie> findBySlug(String slug);
 
@@ -23,10 +21,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
 
     List<Movie> findTop10ByOrderByViewDesc();
 
-    @Query("SELECT m FROM Movie m WHERE LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(m.originName) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-    List<Movie> searchByKeyword(@Param("keyword") String keyword);
+    List<Movie> findByNameContainingIgnoreCaseOrOriginNameContainingIgnoreCase(String name, String originName);
 
     boolean existsBySlug(String slug);
 }
-
