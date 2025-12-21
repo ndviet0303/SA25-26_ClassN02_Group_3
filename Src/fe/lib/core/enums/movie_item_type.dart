@@ -1,0 +1,1 @@
+enum MovieItemType { movie, genre }

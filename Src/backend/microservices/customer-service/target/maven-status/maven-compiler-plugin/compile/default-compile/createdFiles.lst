@@ -1,0 +1,6 @@
+com/nozie/customerservice/repository/CustomerRepository.class
+com/nozie/customerservice/controller/CustomerController.class
+com/nozie/customerservice/model/Customer.class
+com/nozie/customerservice/service/CustomerService.class
+com/nozie/customerservice/CustomerServiceApplication.class
+com/nozie/customerservice/dto/CustomerRequest.class

@@ -1,0 +1,4 @@
+com/nozie/notificationservice/repository/NotificationRepository.class
+com/nozie/notificationservice/controller/NotificationController.class
+com/nozie/notificationservice/NotificationServiceApplication.class
+com/nozie/notificationservice/model/Notification.class

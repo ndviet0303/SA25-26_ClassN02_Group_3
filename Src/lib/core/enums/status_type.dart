@@ -1,1 +1,0 @@
-enum StatusType { info, feature, update, storage, credit, user }

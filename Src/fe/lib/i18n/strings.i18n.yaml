@@ -1,0 +1,747 @@
+locale: en
+
+# Main App Configuration
+app:
+  title: NoZie
+  
+# Common Actions
+common:
+  skip: Skip
+  continueText: Continue
+  confirm: Confirm
+  data: Data
+  save: Save
+  cancel: Cancel
+  next: Next
+  back: Back
+  done: Done
+  empty: Empty
+  yes: Yes
+  no: No
+  addNew: Add New
+  clear: Clear
+  search: Search
+  loading: "Loading…"
+  signOut: Sign out
+  retry: Retry
+  errorPrefix: "Error:"
+
+notification:
+  title: Notifications
+  empty: You don't have any notification at this time
+  markAllAsRead: Mark all as read
+  newItem: New notification
+  seeAll: See all notifications
+  today: Today
+  dayAgo: Days ago
+  loadFailed: Error loading notifications
+  markAllAsReadFailed(String error): "Failed to mark all as read: $error"
+
+
+# Authentication Module
+auth:
+  # General Auth Terms
+  login: Login
+  signIn: Sign In
+  signUp: Sign Up
+  email: Email
+  password: Password
+  username: Username
+  confirmPassword: Confirm Password
+  rememberMe: Remember me
+  errors:
+    invalidCredentials: Incorrect username or password
+  
+  # Login Screen
+  loginScreen:
+    title: "Hello there 👋"
+    description: Please enter your username/email and password to sign in.
+    placeholder:
+      email: admin@ziet.dev
+      password: "●●●●●●●●●●●●"
+  
+  # OAuth Features
+  oauth:
+    featureInDevelopment: This feature is under development
+  
+  # Forgot Password Flow
+  forgotPassword:
+    title: "Forgot Password 🔑"
+    description: Enter your email address. We will send an OTP code for verification in the next step.
+    orContinueWith: or continue with
+    
+    # OTP Screen
+    otp:
+      title: "You've Got Mail 📩"
+      description: We have sent the OTP verification code to your email address. Check your email and enter the code below.
+      didntReceiveCode: "Didn't receive the code?"
+      resendCode: Resend Code
+      resendAfter(int seconds): "You can resend after ${seconds}s"
+    
+    # New Password
+    newPassword:
+      title: "Create New Password 🔐"
+      description: Enter your new password. If you forget it, then you have to do forgot password.
+  
+  # Registration Flow
+  register:
+    createAccount: Create an Account
+    description: Enter your username, email & password. If you forget it, then you have to do forgot password.
+    placeholder:
+      username: Enter your username
+      password: Enter your password
+      email: Enter your email address
+      confirmPassword: Confirm your password
+    registrationSuccessful: Registration successful!
+    
+    # Profile Steps
+    steps:
+      stepOf: "Step {current} of {total}"
+      contentForStep: "Content for step {step}"
+      
+      # Gender Selection
+      gender:
+        select: Select your gender
+        question: What is your gender?
+        description: Select gender for better content
+        options:
+          male: Male
+          female: Female
+          other: Other
+          preferNotToSay: Prefer not to say
+        choices:
+          iAmMale: I am male
+          iAmFemale: I am female
+          ratherNotToSay: Rather not to say
+      
+      # Age Selection
+      age:
+        select: Select your age
+        title: Choose your Age
+        description: Select age range for better content
+        ranges:
+          age14to17: "14-17"
+          age18to24: "18-24"
+          age25to29: "25-29"
+          age30to34: "30-34"
+          age35to39: "35-39"
+          age40to44: "40-44"
+          age45to49: "45-49"
+          age50plus: "50+"
+      
+      # Genre Selection
+      genres:
+        select: Select your favorite genres
+        title: Choose the Movie Genre You Like
+        description: Select your preferred movie genre for better recommendation or you can skip it
+        list:
+          amNhac: Music
+          biAn: Mystery
+          chienTranh: War
+          chinhKich: Drama
+          coTrang: Historical
+          giaDinh: Family
+          haiHuoc: Comedy
+          hanhDong: Action
+          hinhSu: Crime
+          hocDuong: School
+          khoaHoc: Science
+          kinhDi: Horror
+          kinhDien: Classic
+          phieuLuu: Adventure
+          phim18: Adult 18+
+          shortDrama: Short Drama
+          taiLieu: Documentary
+          tamLy: Psychological
+          thanThoai: Mythology
+          theThao: Sport
+          tinhCam: Romance
+          vienTuong: Sci-Fi
+          voThuat: Martial Arts
+      
+      # Profile Information
+      profile:
+        title: Complete Your Profile
+        infoTitle: Profile Information
+        accountTitle: Account Information
+        privacyNote: "Don't worry, only you can see your personal data. No one else will be able to see it."
+        photo:
+          add: Add Photo
+          tapToAdd: Tap to add profile picture
+        fields:
+          fullName:
+            label: Full Name
+            placeholder: Enter your full name
+          phoneNumber:
+            label: Phone Number
+            placeholder: Enter your phone number
+          dateOfBirth:
+            label: Date of Birth
+            format: DD/MM/YYYY
+          country:
+            label: Country
+            placeholder: Enter your country
+
+# Welcome/Onboarding Module
+welcome:
+  title: "Welcome to NoZie 👋"
+  titlePrefix: "Welcome to "
+  description: Your personal movie companion. Get personalized recommendations, discover new films, and track your watchlist.
+  getStarted: Get Started
+  continueWithGoogle: Continue with Google
+  iAlreadyHaveAnAccount: I Already Have an Account
+  
+  slides:
+    discover:
+      title: Discover New Movies
+      description: Explore thousands of movies from different genres. Find hidden gems and trending films that match your taste.
+    
+    track:
+      title: Track Your Watchlist
+      description: Save movies you want to watch, mark what you've seen, and get recommendations based on your preferences.
+    
+    community:
+      title: Join the Community
+      description: Connect with other movie lovers, share reviews, and discover what's trending in the film world.
+
+# Settings & Preferences
+settings:
+  language:
+    vietnamese: Tiếng Việt
+    english: English
+  
+  theme:
+    system: System
+    light: Light
+    dark: Dark
+
+# Profile Module
+profile:
+  header:
+    defaultName: NoZie User
+    loadError: Unable to load profile
+
+  menu:
+    paymentMethods: Payment Methods
+    personalInfo: Personal Info
+    notification: Notification
+    preferences: Preferences
+    security: Security
+    language: Language
+    helpCenter: Help Center
+    about: About NoZie
+    darkMode: Dark Mode
+    logout: Logout
+
+  language:
+    title: Language
+    sectionSuggested: Suggested
+    sectionOthers: Other Languages
+    loadError(String error): "Failed to load languages: $error"
+    fallback: English (US)
+
+  logoutSheet:
+    title: Logout
+    description: Are you sure you want to logout from NoZie? You can log in again anytime.
+
+  helpCenter:
+    title: Help Center
+    tabs:
+      faq: FAQ
+      contact: Contact us
+    categories:
+      all: All
+      general: General
+      account: Account
+      service: Service
+      movies: Movies
+      ebook: Ebook
+    search:
+      hint: Search
+      noResults: No FAQs found
+    filter:
+      clear: Clear
+    faq:
+      general:
+        whatIsNozie:
+          question: What is Nozie?
+          answer: Nozie is your personal hub for discovering, reading, and listening to stories. Browse curated recommendations, organise your library, and stay synced across devices.
+        syncProgress:
+          question: How do I sync reading progress across devices?
+          answer: Make sure you are signed in on all devices. Progress syncs automatically when the device is online; pull to refresh in Library to force a sync.
+        formatsSupport:
+          question: What formats does Nozie support?
+          answer: Nozie supports EPUB, PDF, and MP3 audiobook files. Uploaded personal files are converted automatically for best playback.
+      service:
+        purchaseEbook:
+          question: How to purchase an Ebook?
+          answer: Open the book detail page, tap the "Buy" button, choose a payment method, then confirm. Purchased titles instantly appear in your Library tab.
+        audiobookNotPlaying:
+          question: Why is my audiobook not playing?
+          answer: Ensure your device volume is up and you have a stable connection. If the issue persists, try clearing cache from Profile > Help Center and restart the app.
+        manageNotifications:
+          question: How to manage notifications?
+          answer: Go to Profile > Notification Settings to enable or disable alerts for recommendations, purchases, promotions, and more.
+        requestRefund:
+          question: How do I request a refund?
+          answer: Contact support via Help Center > Contact Us, provide your order ID, and our team will review within 24 hours.
+        purchaseEbookIssue:
+          question: "Why can't I purchase an ebook?"
+          answer: Verify that you have a valid payment method added and a stable internet connection. If the issue persists, try signing out and back in before attempting the purchase again.
+        downloadEbookIssue:
+          question: "Why can't I download an ebook?"
+          answer: Ensure the title is purchased and you have sufficient storage space. Downloads require Wi-Fi unless you enable cellular downloads in Preferences.
+      account:
+        addPaymentMethod:
+          question: How to add a payment method?
+          answer: Head to Profile > Payment Methods, choose "Add New", enter your card or wallet details, and save. You can manage or remove methods anytime from the same screen.
+        resetPassword:
+          question: How do I reset my password?
+          answer: Go to Login > Forgot Password, enter your email, and follow the verification steps. You can set a new password once you confirm the OTP sent to your inbox.
+        changeLanguage:
+          question: How do I change the app language?
+          answer: Navigate to Profile > Language to select your preferred language. Your choice syncs instantly across all sections of the app.
+        deleteAccount:
+          question: How can I delete my account?
+          answer: Open Settings > Security > Delete Account. Follow the instructions to confirm your identity and complete the deletion process.
+        addPaymentMethodIssue:
+          question: "Why can't I add a payment method?"
+          answer: Check that your card details are correct and supported in your region. Some prepaid cards and virtual wallets may be restricted by your bank or country.
+      ebook:
+        downloadOffline:
+          question: How can I download ebooks for offline reading?
+          answer: Open any purchased title, tap the download icon, and choose the device storage location. Downloads are available offline from your Library tab.
+      movies:
+        closeErabookAccount:
+          question: "Why can't I close an account on Erabook?"
+          answer: If you linked your Nozie account with Erabook, unlink the integration under Profile > Connected Services first. Afterwards, submit the closure request from the Erabook dashboard.
+    contacts:
+      customerService:
+        title: Customer Service
+        subtitle: "support@nozie.app"
+      whatsapp:
+        title: WhatsApp
+        subtitle: "+1 800 123 4567"
+      website:
+        title: Website
+        subtitle: "www.nozie.app/support"
+      facebook:
+        title: Facebook
+        subtitle: "@NozieOfficial"
+      twitter:
+        title: Twitter
+        subtitle: "@NozieApp"
+      instagram:
+        title: Instagram
+        subtitle: "@nozie.app"
+
+  payment:
+    title: Payment Methods
+    loadError(String error): "Failed to load payment methods: $error"
+    addNewMessage: "Add payment method tapped"
+    comingSoon: More payment methods coming soon
+
+  notification:
+    title: Notification
+    loadError(String error): "Failed to load settings: $error"
+    sectionTitle: Notify me when...
+    toggles:
+      newRecommendation: There is a New Recommendation
+      newBookSeries: There's a New Book Series
+      authorUpdates: There is an update from Authors
+      priceDrops: There are Price Drops Available
+      purchase: When I Make a Purchase
+      appSystem: Enable App System Notifications
+      tipsServices: New Tips & Services Available
+      survey: Participate in Survey
+
+  personalInfo:
+    title: Personal Info
+    loadError: Failed to load profile. Please try again later.
+    success: Profile updated
+    fields:
+      fullName:
+        label: Full Name
+        hint: Enter full name
+      username:
+        label: Username
+        hint: Enter username
+      email:
+        label: Email
+        hint: Enter email address
+      phone:
+        label: Phone Number
+        hint: Enter phone number
+      dob:
+        label: Date of Birth
+        hint: DD/MM/YYYY
+      country:
+        label: Country
+        hint: Select country
+    saveChanges: Save Changes
+
+  preferences:
+    title: Preferences
+    sections:
+      general: General
+      playback: Playback
+      video: Video
+      audio: Audio
+    toggles:
+      wifiOnlyDownloads: Watch over Wi-Fi Only
+      autoPlayNextEpisode: Auto Play Next Episode
+      continueWatching: Continue Watching from Last Position
+      subtitlesEnabled: Subtitles
+      autoRotateScreen: Auto Rotate Screen
+      autoDownloadAudio: Automatically Download Audio
+    actions:
+      clearCache:
+        title: Clear Cache
+        description(String size): "Currently stored: $size. Removing cache will delete temporary files but keep your downloads and preferences."
+        button: Clear Cache
+        success: Cache cleared
+      videoQuality:
+        title: Video Quality
+        options:
+          auto: Auto
+          hd: HD
+          fullHd: Full HD
+      audioPreference:
+        title: Audio Language / Quality
+        options:
+          systemDefault: System Default
+          englishHigh: English • High Quality
+          originalStandard: Original • Standard
+    storageLabel:
+      empty: 0 MB stored
+      value(String amount): $amount MB stored
+
+  security:
+    title: Security
+    loadError(String error): "Failed to load security settings: $error"
+    toggles:
+      rememberMe: Remember me
+      biometricId: Biometric ID
+      faceId: Face ID
+      smsAuthenticator: SMS Authenticator
+      googleAuthenticator: Google Authenticator
+    actions:
+      deviceManagement: Device Management
+      changePassword: Change Password
+      changePasswordMessage: Change password tapped
+      signOutDevice(String name): Signed out $name
+      signOutAll: Signed out from all devices
+    deviceManagement:
+      title: Device Management
+      description: Manage devices that have access to your account.
+      signOutAll: Sign Out All Devices
+      current: Current
+      lastActive(String time): "Last active: $time"
+
+# Validation Messages
+validation:
+  general:
+    fillAllFields: Please fill in all fields.
+    required: This field is required.
+    length(int length): The length must be $length.
+    min(int length): The minimum length is $length.
+    max(int length): The maximum length is $length.
+    regex: The field is invalid.
+    custom:
+      password: The password must have characters, numbers.
+      username: The username must only contain lowercase letters (a-z), numbers (0-9), hyphens (-), and underscores (_).
+
+  name:
+    required: Full name is required
+    minLength: Full name must be at least 2 characters
+  phone:
+    required: Phone number is required
+    minLength: Phone number must be at least 10 digits
+  
+  dateOfBirth:
+    required: Date of birth is required
+  
+  country:
+    required: Country is required
+  
+  username:
+    required: Username is required
+    minLength: Username must be at least 3 characters
+    invalidChars: Username can only contain letters, numbers, and underscores
+  
+  email:
+    required: Email is required
+    invalid: Please enter a valid email address
+  
+  password:
+    required: Password is required
+    minLength: Password must be at least 8 characters
+    complexity: Password must contain at least one uppercase letter, one lowercase letter, and one number
+    confirmRequired: Please confirm your password
+    mismatch: Passwords do not match
+
+# Navigation
+navigation:
+  home: Home
+  discover: Discover
+  wishlist: Wishlist
+  purchase: Purchase
+  profile: Profile
+
+# Search
+search:
+  searchMovies: Search movies, TV shows, actors...
+  popularSearches: Popular Searches
+  noResultsFound: No results found
+  tryDifferentKeywords: Try different keywords or check your spelling
+  all: All
+  movies: Movies
+  tvShows: TV Shows
+  actors: Actors
+
+  previousSearches: Previous Searches
+  noResults: No results found
+  showIn: Show in
+
+  filter:
+    header: Filter
+    reset: Reset
+    apply: Apply
+    sections:
+      sort: Sort
+      price: Price
+      rating: Rating
+      genre: Genre
+      language: Language
+      age: Age
+    sortOptions:
+      trending: Trending
+      newReleases: New Releases
+      highestRating: Highest Rating
+      lowestRating: Lowest Rating
+      highestPrice: Highest Price
+      lowestPrice: Lowest Price
+
+    genres:
+      action: Action
+      adventure: Adventure
+      romance: Romance
+      comics: Comics
+      comedy: Comedy
+      fantasy: Fantasy
+      mystery: Mystery
+      horror: Horror
+      scienceFiction: Science Fiction
+      thriller: Thriller
+      travel: Travel
+
+    rangePrice:
+      min: 0
+      max: 30
+
+    languages:
+      english: English
+      vietnamese: Vietnamese
+      others: Others
+
+    age:
+      under12: Age 12 & Under
+      above12: 12+
+      above16: 16+
+      above18: 18+
+
+# Utility Functions
+utils:
+  itemsCount: "{count} items"
+  helloUser: "Hello, {name}!"
+  counterText: ""
+
+cards:
+  showIn: Show in
+ 
+# Purchase Detail Screen
+purchaseDetail:
+  title: Purchase Details
+  infoTitle: Purchase Information
+  labels:
+    movieId: Movie ID
+    downloaded: Downloaded
+    finished: Finished
+    transactions: Transactions
+    amount: Amount
+    created: Created
+    paidAt: Paid At
+    failedAt: Failed At
+    canceledAt: Canceled At
+    paymentIntent: Payment Intent
+    chargeId: Charge ID
+  states:
+    succeeded: Succeeded
+    failed: Failed
+    canceled: Canceled
+    pending: Pending
+  empty:
+    transactions: No transactions found
+    purchaseNotFound: Purchase not found
+  error:
+    generic(String error): "Error: $error"
+
+# Discover Module
+discover:
+  sections:
+    topCharts: Top Charts
+    topSelling: Top Selling
+    topFree: Top Free
+    topNewReleases: Top New Releases
+
+# Home Module
+home:
+  sections:
+    recommendedForYou: Recommended For You
+    yourPurchases: Your Purchases
+    yourWishlist: Your Wishlist
+    recentlyWatched: Recently Watched
+    exploreByGenre: Explore by Genre
+
+# Genre Module
+genre:
+  explore:
+    title: "Genre:"
+    empty: No movies found for
+    loadFailed: Failed to load movies
+
+# Purchase Module
+purchase:
+  common:
+    free: Free
+    purchased: Purchased
+    movieNotFound: Movie not found
+    comingSoon: Coming soon
+    errorPrefix: "Error:"
+  checkout:
+    title: Checkout
+    section:
+      movieSummary: Movie Summary
+      priceDetails: Price Details
+      paymentMethod: Payment Method
+    labels:
+      price: Price
+      total: Total
+      visa: Visa
+    actions:
+      confirm: Confirm
+      payNow: Pay Now
+      processing: Processing...
+    toasts:
+      addedSuccess: "Movie added successfully! 🎬"
+      paymentSuccess: "Payment successful! 🎬"
+      paymentFailed: Payment failed. Please try again.
+      paymentCanceled: Payment was canceled
+  item:
+    menu:
+      watchNow: Watch now
+      viewSeries: View Series
+      purchaseDetails: Purchase Details
+      aboutMovie: About Movie
+    snackbar:
+      viewSeriesComing: View series - coming soon
+  notifications:
+    successTitle: "Purchase Successful! 🎬"
+    successDescription: "You now own"
+
+# Movie Module
+movie:
+  details:
+    notFound: Movie not found
+    alreadyPurchased: This movie is already in your purchased library
+    quality1080p: 1080p
+    seriesFallback: Series
+  ratings:
+    title: Ratings & Reviews
+    noReviews: No reviews yet
+    rateThisFilm: Rate this Film
+    purchaseRequired: Purchase required to rate
+    writeAReview: Write a Review
+    dialog:
+      title: Write a Review
+      yourRatingPrefix: "Your rating:"
+      star: star
+      stars: stars
+      hint: Write your review...
+      cancel: Cancel
+      submit: Submit
+      submitted: Review submitted
+  info:
+    images: Images
+    cannotLoadImage: Cannot load image
+    episodesList: Episodes
+    language: Language
+    genres: Genres
+    countries: Countries
+    directors: Directors
+    actors: Actors
+    aboutThisFilm: About This Film
+    trailer: Trailer
+    watchTrailer: Watch trailer
+    episodePrefix: Episode
+    episodesPrefix: Episodes
+  player:
+    noAccess: You do not have access to this movie
+    videoUrlMissing: Video URL not available
+    tryingFallback: Trying fallback URL...
+    cannotLoadM3u8: Cannot load video from m3u8 URL
+    cannotLoadBoth: Cannot load video from both m3u8 and embed URL
+    unknownError: Unknown error
+    cannotOpenTrailer: Cannot open trailer
+    playbackSpeed: Playback Speed
+    quality: Quality
+  hero:
+    ratings: ratings
+    reviews: reviews
+    duration: duration
+    quality: quality
+    watched: watched
+    watchNow: Watch now
+    aboutThisFilm: About This Film
+    viewMore: View More
+  similar:
+    title: Similar Movies
+  report:
+    headerTitle: Report an Issue
+    headerSubtitle: Help us improve the service quality
+    movieInfo: Movie Information
+    labels:
+      movieName: Movie Name
+      director: Director
+      videoUrl: Video URL
+      error: Error
+    issueTypeLabel: Issue Type *
+    descriptionLabel: Detailed Description *
+    descriptionHint: Describe the issue you encountered...
+    validations:
+      selectIssue: Please select an issue type
+      descRequired: Please enter a detailed description
+      descMin: Description must be at least 10 characters
+    actions:
+      cancel: Cancel
+      submit: Submit Report
+      sending: Sending...
+    success: Report submitted successfully. Thank you for your feedback!
+    failurePrefix: "Failed to submit report:"
+# Wishlist Module
+wishlist:
+  common:
+    retry: Retry
+    errorPrefix: "Error:"
+    movieNotFound: Movie not found
+  item:
+    menu:
+      removeFromWishlist: Remove from Wishlist
+      share: Share
+      aboutMovie: About Movie
+    snackbar:
+      removed: Removed from wishlist
+      shareComing: Share functionality coming soon
+  empty:
+    title: Your wishlist is empty
+    subtitle: Add movies you want to watch later
