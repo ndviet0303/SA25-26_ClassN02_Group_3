@@ -15,6 +15,8 @@ eureka:
       defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
   server:
     wait-time-in-ms-when-sync-empty: 0
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 5000
 
 management:
   endpoints:
