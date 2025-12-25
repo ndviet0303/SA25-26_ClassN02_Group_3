@@ -27,6 +27,16 @@ services:
     ports:
       - "6379:6379"
 
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: nozie-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
   # Core Services
   config-server:
     build: ./config-server
@@ -100,9 +110,12 @@ services:
         condition: service_started
       discovery-server:
         condition: service_started
+      rabbitmq:
+        condition: service_started
     environment:
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paymentdb
+      SPRING_RABBITMQ_HOST: rabbitmq
 
   notification-service:
     build: ./notification-service
@@ -116,10 +129,13 @@ services:
         condition: service_started
       discovery-server:
         condition: service_started
+      rabbitmq:
+        condition: service_started
     environment:
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/notificationdb
       SPRING_REDIS_HOST: redis
+      SPRING_RABBITMQ_HOST: rabbitmq
 
 volumes:
   postgres_data:

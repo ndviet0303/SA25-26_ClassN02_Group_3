@@ -9,6 +9,7 @@ import com.nozie.paymentservice.infrastructure.client.CustomerClient;
 import com.nozie.paymentservice.infrastructure.client.MovieClient;
 import com.nozie.paymentservice.infrastructure.client.dto.CustomerDTO;
 import com.nozie.paymentservice.infrastructure.client.dto.MovieDTO;
+import com.nozie.paymentservice.infrastructure.messaging.PaymentEventProducer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +34,9 @@ class PaymentApplicationServiceTest {
 
     @Mock
     private CustomerClient customerClient;
+
+    @Mock
+    private PaymentEventProducer eventProducer;
 
     @InjectMocks
     private PaymentApplicationService paymentApplicationService;
