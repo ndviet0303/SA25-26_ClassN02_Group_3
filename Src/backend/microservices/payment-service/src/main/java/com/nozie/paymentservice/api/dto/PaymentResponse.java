@@ -1,4 +1,4 @@
-package com.nozie.paymentservice.dto;
+package com.nozie.paymentservice.api.dto;
 
 /**
  * Payment Response DTO
@@ -10,17 +10,6 @@ public class PaymentResponse {
     private String ephemeralKey;
     private String customerId;
 
-    public PaymentResponse() {
-    }
-
-    public PaymentResponse(Long transactionId, String clientSecret, String ephemeralKey, String customerId) {
-        this.transactionId = transactionId;
-        this.clientSecret = clientSecret;
-        this.ephemeralKey = ephemeralKey;
-        this.customerId = customerId;
-    }
-
-    // Getters and Setters
     public Long getTransactionId() {
         return transactionId;
     }

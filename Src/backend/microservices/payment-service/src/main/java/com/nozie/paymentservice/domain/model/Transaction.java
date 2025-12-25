@@ -1,11 +1,11 @@
-package com.nozie.paymentservice.model;
+package com.nozie.paymentservice.domain.model;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Transaction Entity
+ * Transaction Entity - Domain Model
  */
 @Entity
 @Table(name = "transactions")
@@ -52,10 +52,50 @@ public class Transaction {
     @Column(name = "canceled_at")
     private LocalDateTime canceledAt;
 
-    public Transaction() {
+    // Protected constructor for Hibernate
+    protected Transaction() {
     }
 
-    // Getters and Setters
+    private Transaction(Long customerId, Long movieId, BigDecimal amount, String currency) {
+        this.customerId = customerId;
+        this.movieId = movieId;
+        this.amount = amount;
+        this.currency = currency;
+        this.status = "pending";
+        this.createdAt = LocalDateTime.now();
+    }
+
+    // Static factory method for creation
+    public static Transaction create(Long customerId, Long movieId, BigDecimal amount, String currency) {
+        return new Transaction(customerId, movieId, amount, currency);
+    }
+
+    // Domain logic - Intent revealing methods
+    public void markAsSucceeded(String stripePaymentIntentId, String stripeCustomerId, String chargeId) {
+        if ("succeeded".equals(this.status)) {
+            return; // Already succeeded
+        }
+        this.status = "succeeded";
+        this.stripePaymentIntentId = stripePaymentIntentId;
+        this.stripeCustomerId = stripeCustomerId;
+        this.chargeId = chargeId;
+        this.paidAt = LocalDateTime.now();
+    }
+
+    public void markAsFailed(String errorMessage) {
+        this.status = "failed";
+        this.errorMessage = errorMessage;
+        this.failedAt = LocalDateTime.now();
+    }
+
+    public void cancel() {
+        if ("pending".equals(this.status)) {
+            this.status = "canceled";
+            this.canceledAt = LocalDateTime.now();
+        }
+    }
+
+    // Getters and Setters (Setters kept for JPA but ideally would be minimized)
     public Long getId() {
         return id;
     }

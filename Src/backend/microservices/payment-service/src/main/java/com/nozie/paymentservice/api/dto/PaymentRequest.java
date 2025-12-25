@@ -1,6 +1,8 @@
-package com.nozie.paymentservice.dto;
+package com.nozie.paymentservice.api.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 /**
@@ -15,15 +17,12 @@ public class PaymentRequest {
     private Long movieId;
 
     @NotNull(message = "Amount is required")
-    @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Amount must be greater than zero")
     private BigDecimal amount;
 
+    @NotBlank(message = "Currency is required")
     private String currency = "usd";
 
-    public PaymentRequest() {
-    }
-
-    // Getters and Setters
     public Long getCustomerId() {
         return customerId;
     }
