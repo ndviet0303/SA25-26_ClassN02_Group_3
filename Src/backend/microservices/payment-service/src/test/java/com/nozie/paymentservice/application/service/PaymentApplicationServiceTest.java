@@ -49,12 +49,12 @@ class PaymentApplicationServiceTest {
     void setUp() {
         paymentRequest = new PaymentRequest();
         paymentRequest.setCustomerId(1L);
-        paymentRequest.setMovieId(1L);
+        paymentRequest.setMovieId("movie_123");
         paymentRequest.setAmount(new BigDecimal("10.00"));
         paymentRequest.setCurrency("usd");
 
         movieDTO = new MovieDTO();
-        movieDTO.setId(1L);
+        movieDTO.setId("movie_123");
         movieDTO.setTitle("Test Movie");
         movieDTO.setPrice(new BigDecimal("10.00"));
 
@@ -67,10 +67,10 @@ class PaymentApplicationServiceTest {
     @Test
     void createPayment_Success() {
         // Arrange
-        when(movieClient.getMovieById(1L)).thenReturn(ApiResponse.success(movieDTO));
+        when(movieClient.getMovieById("movie_123")).thenReturn(ApiResponse.success(movieDTO));
         when(customerClient.getCustomerById(1L)).thenReturn(ApiResponse.success(customerDTO));
 
-        Transaction mockTransaction = Transaction.create(1L, 1L, new BigDecimal("10.00"), "usd");
+        Transaction mockTransaction = Transaction.create(1L, "movie_123", new BigDecimal("10.00"), "usd");
         mockTransaction.setId(100L);
         when(transactionRepository.save(any(Transaction.class))).thenReturn(mockTransaction);
 
@@ -80,7 +80,7 @@ class PaymentApplicationServiceTest {
         // Assert
         assertNotNull(response);
         assertEquals(100L, response.getTransactionId());
-        verify(movieClient).getMovieById(1L);
+        verify(movieClient).getMovieById("movie_123");
         verify(customerClient).getCustomerById(1L);
         verify(transactionRepository).save(any(Transaction.class));
     }
@@ -88,21 +88,21 @@ class PaymentApplicationServiceTest {
     @Test
     void createPayment_MovieNotFound() {
         // Arrange
-        when(movieClient.getMovieById(1L)).thenReturn(ApiResponse.error("Not Found"));
+        when(movieClient.getMovieById("movie_123")).thenReturn(ApiResponse.error("Not Found"));
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> paymentApplicationService.createPayment(paymentRequest));
 
         assertTrue(exception.getMessage().contains("Movie not found"));
-        verify(movieClient).getMovieById(1L);
+        verify(movieClient).getMovieById("movie_123");
         verifyNoInteractions(customerClient, transactionRepository);
     }
 
     @Test
     void createPayment_CustomerNotFound() {
         // Arrange
-        when(movieClient.getMovieById(1L)).thenReturn(ApiResponse.success(movieDTO));
+        when(movieClient.getMovieById("movie_123")).thenReturn(ApiResponse.success(movieDTO));
         when(customerClient.getCustomerById(1L)).thenReturn(ApiResponse.error("Not Found"));
 
         // Act & Assert
@@ -117,7 +117,7 @@ class PaymentApplicationServiceTest {
     @Test
     void createPayment_MovieClientError() {
         // Arrange
-        when(movieClient.getMovieById(1L)).thenThrow(new RuntimeException("Connection Failed"));
+        when(movieClient.getMovieById("movie_123")).thenThrow(new RuntimeException("Connection Failed"));
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class,

@@ -19,7 +19,7 @@ public class Transaction {
     private Long customerId;
 
     @Column(name = "movie_id", nullable = false)
-    private Long movieId;
+    private String movieId;
 
     @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal amount;
@@ -56,7 +56,7 @@ public class Transaction {
     protected Transaction() {
     }
 
-    private Transaction(Long customerId, Long movieId, BigDecimal amount, String currency) {
+    private Transaction(Long customerId, String movieId, BigDecimal amount, String currency) {
         this.customerId = customerId;
         this.movieId = movieId;
         this.amount = amount;
@@ -66,7 +66,7 @@ public class Transaction {
     }
 
     // Static factory method for creation
-    public static Transaction create(Long customerId, Long movieId, BigDecimal amount, String currency) {
+    public static Transaction create(Long customerId, String movieId, BigDecimal amount, String currency) {
         return new Transaction(customerId, movieId, amount, currency);
     }
 
@@ -112,11 +112,11 @@ public class Transaction {
         this.customerId = customerId;
     }
 
-    public Long getMovieId() {
+    public String getMovieId() {
         return movieId;
     }
 
-    public void setMovieId(Long movieId) {
+    public void setMovieId(String movieId) {
         this.movieId = movieId;
     }
 

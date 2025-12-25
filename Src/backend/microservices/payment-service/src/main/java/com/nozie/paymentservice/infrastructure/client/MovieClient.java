@@ -13,5 +13,5 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface MovieClient {
 
     @GetMapping("/api/movies/{id}")
-    ApiResponse<MovieDTO> getMovieById(@PathVariable("id") Long id);
+    ApiResponse<MovieDTO> getMovieById(@PathVariable("id") String id);
 }

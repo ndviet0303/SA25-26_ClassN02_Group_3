@@ -105,7 +105,7 @@ public class PaymentApplicationService {
                 .orElseThrow(() -> new RuntimeException("Transaction not found"));
     }
 
-    public boolean hasPurchased(Long customerId, Long movieId) {
+    public boolean hasPurchased(Long customerId, String movieId) {
         return transactionRepository.existsByCustomerIdAndMovieIdAndStatus(customerId, movieId, "succeeded");
     }
 }

@@ -14,7 +14,7 @@ public class PaymentRequest {
     private Long customerId;
 
     @NotNull(message = "Movie ID is required")
-    private Long movieId;
+    private String movieId;
 
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Amount must be greater than zero")
@@ -31,11 +31,11 @@ public class PaymentRequest {
         this.customerId = customerId;
     }
 
-    public Long getMovieId() {
+    public String getMovieId() {
         return movieId;
     }
 
-    public void setMovieId(Long movieId) {
+    public void setMovieId(String movieId) {
         this.movieId = movieId;
     }
 

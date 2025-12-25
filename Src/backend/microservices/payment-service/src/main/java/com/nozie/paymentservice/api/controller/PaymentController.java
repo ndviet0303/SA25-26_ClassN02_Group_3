@@ -54,7 +54,7 @@ public class PaymentController {
     @GetMapping("/check-purchase")
     public ResponseEntity<ApiResponse<Boolean>> checkPurchase(
             @RequestParam Long customerId,
-            @RequestParam Long movieId) {
+            @RequestParam String movieId) {
         log.info("GET /api/payments/check-purchase - Checking purchase for customer: {}, movie: {}", customerId,
                 movieId);
         boolean hasPurchased = paymentService.hasPurchased(customerId, movieId);

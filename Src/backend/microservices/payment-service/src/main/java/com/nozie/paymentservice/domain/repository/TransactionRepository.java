@@ -14,7 +14,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     List<Transaction> findByCustomerId(Long customerId);
 
-    boolean existsByCustomerIdAndMovieIdAndStatus(Long customerId, Long movieId, String status);
+    boolean existsByCustomerIdAndMovieIdAndStatus(Long customerId, String movieId, String status);
 
     Transaction findByStripePaymentIntentId(String paymentIntentId);
 }

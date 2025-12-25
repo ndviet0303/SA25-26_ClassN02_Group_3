@@ -9,14 +9,14 @@ import java.io.Serializable;
 public class PaymentSucceededEvent implements Serializable {
     private Long transactionId;
     private Long customerId;
-    private Long movieId;
+    private String movieId;
     private BigDecimal amount;
     private String currency;
 
     public PaymentSucceededEvent() {
     }
 
-    public PaymentSucceededEvent(Long transactionId, Long customerId, Long movieId, BigDecimal amount,
+    public PaymentSucceededEvent(Long transactionId, Long customerId, String movieId, BigDecimal amount,
             String currency) {
         this.transactionId = transactionId;
         this.customerId = customerId;
@@ -41,11 +41,11 @@ public class PaymentSucceededEvent implements Serializable {
         this.customerId = customerId;
     }
 
-    public Long getMovieId() {
+    public String getMovieId() {
         return movieId;
     }
 
-    public void setMovieId(Long movieId) {
+    public void setMovieId(String movieId) {
         this.movieId = movieId;
     }
 
