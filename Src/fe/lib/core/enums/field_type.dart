@@ -1,1 +1,0 @@
-enum FieldType { email, username }
