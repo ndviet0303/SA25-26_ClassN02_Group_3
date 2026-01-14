@@ -41,7 +41,7 @@ spring:
         - id: identity-service
           uri: lb://identity-service
           predicates:
-            - Path=/api/auth/**
+            - Path=/api/auth/**, /api/admin/**
 
 jwt:
   secret: nozie-secret-key-for-jwt-token-generation-must-be-at-least-256-bits-long
