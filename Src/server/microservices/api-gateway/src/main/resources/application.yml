@@ -57,6 +57,12 @@ spring:
                 name: notificationServiceCircuitBreaker
                 fallbackUri: forward:/fallback/notifications
 
+        # Identity Service (Auth)
+        - id: identity-service
+          uri: lb://identity-service
+          predicates:
+            - Path=/api/auth/**
+
       # CORS Configuration
       globalcors:
         cors-configurations:
@@ -104,3 +110,5 @@ management:
       exposure:
         include: "*"
 
+jwt:
+  secret: nozie-secret-key-for-jwt-token-generation-must-be-at-least-256-bits-long

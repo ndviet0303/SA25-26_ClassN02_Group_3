@@ -137,6 +137,23 @@ services:
       SPRING_REDIS_HOST: redis
       SPRING_RABBITMQ_HOST: rabbitmq
 
+  identity-service:
+    build: ./identity-service
+    container_name: identity-service
+    ports:
+      - "8085:8085"
+    depends_on:
+      postgres:
+        condition: service_started
+      discovery-server:
+        condition: service_started
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/identitydb
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: password
+      JWT_SECRET: nozie-secret-key-for-jwt-token-generation-must-be-at-least-256-bits-long
+
 volumes:
   postgres_data:
   mongodb_data:

@@ -1,0 +1,7 @@
+# Identity Service Configuration
+server:
+  port: 8085
+
+jwt:
+  secret: nozie-secret-key-for-jwt-token-generation-must-be-at-least-256-bits-long
+  expiration: 86400000 # 24 hours

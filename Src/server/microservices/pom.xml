@@ -29,6 +29,7 @@
         <module>customer-service</module>
         <module>payment-service</module>
         <module>notification-service</module>
+        <module>identity-service</module>
     </modules>
 
     <properties>

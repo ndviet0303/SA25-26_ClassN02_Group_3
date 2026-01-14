@@ -38,3 +38,11 @@ spring:
           filters:
             - StripPrefix=0
 
+        - id: identity-service
+          uri: lb://identity-service
+          predicates:
+            - Path=/api/auth/**
+
+jwt:
+  secret: nozie-secret-key-for-jwt-token-generation-must-be-at-least-256-bits-long
+
