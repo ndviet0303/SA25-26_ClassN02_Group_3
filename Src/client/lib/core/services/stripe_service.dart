@@ -1,22 +1,23 @@
 import 'package:dio/dio.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
+import '../auth/auth_providers.dart';
 import '../constants/stripe_constants.dart';
 
 final stripeServiceProvider = Provider<StripeService>((ref) {
-  return StripeService();
+  return StripeService(ref: ref);
 });
 
 class StripeService {
-  StripeService({Dio? dio}) : _dio = dio ?? Dio() {
+  StripeService({Dio? dio, required Ref ref}) : _dio = dio ?? Dio(), _ref = ref {
     _dio.options.baseUrl = StripeConstants.backendBaseUrl;
     _dio.options.connectTimeout = const Duration(seconds: 30);
     _dio.options.receiveTimeout = const Duration(seconds: 30);
   }
 
   final Dio _dio;
+  final Ref _ref;
 
   /// Create Payment Intent via backend
   Future<PaymentIntentResponse> createPaymentIntent({
@@ -27,14 +28,14 @@ class StripeService {
     String? movieImageUrl,
     String? movieSlug,
   }) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
+    final userId = _ref.read(currentUserIdProvider);
+    if (userId == null) {
       throw Exception('User not authenticated');
     }
 
     try {
       final requestData = {
-        'userId': user.uid,
+        'userId': userId,
         'movieId': movieId,
         'amount': amount,
         'currency': currency,
@@ -88,11 +89,11 @@ class StripeService {
   /// Get transaction status from backend
   Future<TransactionStatus> getTransactionStatus(String transactionId) async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
+      final userId = _ref.read(currentUserIdProvider);
+      if (userId == null) {
         throw Exception('User not authenticated');
       }
-      final response = await _dio.get('/transaction/${user.uid}/$transactionId');
+      final response = await _dio.get('/transaction/$userId/$transactionId');
       return TransactionStatus.fromJson(response.data);
     } catch (e) {
       throw Exception('Failed to get transaction status: ${e.toString()}');
