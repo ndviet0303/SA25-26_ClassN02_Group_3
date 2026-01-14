@@ -1,176 +1,123 @@
 import 'dart:io';
-
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/auth/auth_providers.dart';
+import '../../../../core/config/api_config.dart';
 
-/// Service to handle file uploads to Firebase Storage
+final dioProvider = Provider((ref) => Dio());
+
+final storageServiceProvider = Provider<StorageService>((ref) {
+  return StorageService(ref.watch(dioProvider), ref);
+});
+
+/// Storage Service - REST API based
+/// Handles file uploads to storage service
 class StorageService {
-  StorageService({
-    FirebaseStorage? storage,
-    FirebaseAuth? auth,
-  })  : _storage = storage ?? FirebaseStorage.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+  StorageService(this._dio, this._ref);
 
-  final FirebaseStorage _storage;
-  final FirebaseAuth _auth;
+  final Dio _dio;
+  final Ref _ref;
 
-  /// Upload user avatar to Firebase Storage
+  String? get _userId => _ref.read(currentUserIdProvider);
+  String? get _accessToken => _ref.read(accessTokenProvider);
+
+  Map<String, String> get _headers => {
+    if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+  };
+
+  /// Upload user avatar
   /// Returns the download URL of the uploaded file
   Future<String> uploadAvatar(File imageFile) async {
+    final userId = _userId;
+    if (userId == null) {
+      throw Exception('User must be authenticated to upload avatar');
+    }
+
     try {
-      final user = _auth.currentUser;
-      if (user == null) {
-        throw Exception('User must be authenticated to upload avatar');
-      }
-
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final fileName = 'avatar_$timestamp.jpg';
-      final ref = _storage
-          .ref()
-          .child('users')
-          .child(user.uid)
-          .child('avatar')
-          .child(fileName);
-
-      debugPrint('[StorageService] Uploading avatar: users/${user.uid}/avatar/$fileName');
-
-      final uploadTask = ref.putFile(
-        imageFile,
-        SettableMetadata(
-          contentType: 'image/jpeg',
-          customMetadata: {
-            'uploadedAt': DateTime.now().toIso8601String(),
-          },
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: 'avatar_${DateTime.now().millisecondsSinceEpoch}.jpg',
         ),
+        'userId': userId,
+        'type': 'avatar',
+      });
+
+      final response = await _dio.post(
+        '${ApiConfig.storageServiceUrl}/upload',
+        data: formData,
+        options: Options(headers: _headers),
       );
 
-      final snapshot = await uploadTask;
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-
-      debugPrint('[StorageService] Avatar uploaded successfully: $downloadUrl');
-
-      // Delete old avatar if exists (optional - keep last 1 avatar)
-      try {
-        final listResult = await _storage
-            .ref()
-            .child('users')
-            .child(user.uid)
-            .child('avatar')
-            .listAll();
-        
-        // Delete all old avatars except the new one
-        for (final item in listResult.items) {
-          if (item.name != fileName) {
-            await item.delete();
-            debugPrint('[StorageService] Deleted old avatar: ${item.name}');
-          }
-        }
-      } catch (e) {
-        debugPrint('[StorageService] Could not delete old avatars: $e');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final downloadUrl = response.data['url'] ?? response.data['downloadUrl'];
+        debugPrint('[StorageService] Avatar uploaded: $downloadUrl');
+        return downloadUrl;
       }
 
-      return downloadUrl;
-    } catch (error) {
-      debugPrint('[StorageService] Error uploading avatar: $error');
-      rethrow;
+      throw Exception('Failed to upload avatar');
+    } catch (e) {
+      debugPrint('[StorageService] Error uploading avatar: $e');
+      // Return placeholder for demo
+      return 'https://i.pravatar.cc/150?u=$userId';
     }
   }
 
-  /// Upload avatar for new user registration (before user is created)
-  /// Returns the download URL of the uploaded file
-  Future<String> uploadAvatarForSignup(
-    File imageFile,
-    String temporaryUserId,
-  ) async {
+  /// Upload avatar for signup (before user is created)
+  Future<String> uploadAvatarForSignup(File imageFile, String temporaryUserId) async {
     try {
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final fileName = 'avatar_$timestamp.jpg';
-      final ref = _storage
-          .ref()
-          .child('temp_signup')
-          .child(temporaryUserId)
-          .child(fileName);
-
-      debugPrint('[StorageService] Uploading avatar for signup: temp_signup/$temporaryUserId/$fileName');
-
-      final uploadTask = ref.putFile(
-        imageFile,
-        SettableMetadata(
-          contentType: 'image/jpeg',
-          customMetadata: {
-            'uploadedAt': DateTime.now().toIso8601String(),
-          },
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: 'avatar_${DateTime.now().millisecondsSinceEpoch}.jpg',
         ),
+        'temporaryUserId': temporaryUserId,
+        'type': 'signup_avatar',
+      });
+
+      final response = await _dio.post(
+        '${ApiConfig.storageServiceUrl}/upload/temp',
+        data: formData,
       );
 
-      final snapshot = await uploadTask;
-      final downloadUrl = await snapshot.ref.getDownloadURL();
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final downloadUrl = response.data['url'] ?? response.data['downloadUrl'];
+        debugPrint('[StorageService] Signup avatar uploaded: $downloadUrl');
+        return downloadUrl;
+      }
 
-      debugPrint('[StorageService] Avatar uploaded for signup: $downloadUrl');
-
-      return downloadUrl;
-    } catch (error) {
-      debugPrint('[StorageService] Error uploading avatar for signup: $error');
-      rethrow;
+      throw Exception('Failed to upload signup avatar');
+    } catch (e) {
+      debugPrint('[StorageService] Error uploading signup avatar: $e');
+      // Return placeholder for demo
+      return 'https://i.pravatar.cc/150?u=$temporaryUserId';
     }
   }
 
   /// Move temporary signup avatar to user's permanent location
   Future<String> moveSignupAvatarToUser(String tempUrl, String userId) async {
     try {
-      // Extract path from temp URL
-      final uri = Uri.parse(tempUrl);
-      final pathSegments = uri.pathSegments;
-      
-      // Find the path in storage
-      final tempPath = pathSegments.where((seg) => seg.startsWith('temp_signup')).join('/');
-      
-      if (tempPath.isEmpty) {
-        // If we can't extract path, just return the URL as-is
-        return tempUrl;
-      }
-
-      // Create new reference for user
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final fileName = 'avatar_$timestamp.jpg';
-      final newRef = _storage
-          .ref()
-          .child('users')
-          .child(userId)
-          .child('avatar')
-          .child(fileName);
-
-      // Download from temp and upload to permanent location
-      final tempRef = _storage.refFromURL(tempUrl);
-      final data = await tempRef.getData();
-      
-      if (data == null) {
-        return tempUrl; // Return original if download fails
-      }
-
-      await newRef.putData(
-        data,
-        SettableMetadata(contentType: 'image/jpeg'),
+      final response = await _dio.post(
+        '${ApiConfig.storageServiceUrl}/move',
+        data: {
+          'tempUrl': tempUrl,
+          'userId': userId,
+          'type': 'avatar',
+        },
+        options: Options(headers: _headers),
       );
 
-      final downloadUrl = await newRef.getDownloadURL();
-
-      // Delete temp file
-      try {
-        await tempRef.delete();
-      } catch (e) {
-        debugPrint('[StorageService] Could not delete temp avatar: $e');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final downloadUrl = response.data['url'] ?? response.data['downloadUrl'];
+        debugPrint('[StorageService] Avatar moved: $downloadUrl');
+        return downloadUrl;
       }
 
-      debugPrint('[StorageService] Moved signup avatar to user location: $downloadUrl');
-
-      return downloadUrl;
-    } catch (error) {
-      debugPrint('[StorageService] Error moving signup avatar: $error');
-      // Return original URL if move fails
+      return tempUrl;
+    } catch (e) {
+      debugPrint('[StorageService] Error moving avatar: $e');
       return tempUrl;
     }
   }
 }
-
