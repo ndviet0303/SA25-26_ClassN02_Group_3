@@ -1,351 +1,287 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import '../../../../core/models/movie_item.dart';
-import '../../../../core/models/movie.dart';
-import '../../../core/utils/api/firebase_query.dart';
+import '../../../../core/config/api_config.dart';
 import '../entities/search_result.dart';
 import '../entities/search_filter.dart';
 import '../entities/filter_section.dart';
 import '../mappers/search_mapper.dart';
-import '../services/search_query_builder.dart';
-import '../services/search_logger.dart';
 
-final firestoreProvider = Provider((_) => FirebaseFirestore.instance);
+final dioProvider = Provider((ref) => Dio());
 
 final searchRepositoryProvider = Provider((ref) => SearchRepository(
-  ref.watch(firestoreProvider),
+  ref.watch(dioProvider),
 ));
 
+/// Search Repository - REST API based
+/// Handles movie search and filtering
 class SearchRepository {
-  final FirebaseFirestore _db;
+  final Dio _dio;
 
-  SearchRepository(this._db);
+  SearchRepository(this._dio);
 
-
+  /// Search movies with filters and pagination
   Future<SearchResultsPage<SearchResult>> search(
     String query, {
     SearchFilters filters = const SearchFilters(),
     int page = 1,
-    DocumentSnapshot? startAfter,
+    dynamic startAfter,
     List<String>? wishlistMovieIds,
   }) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
-      
       const pageSize = 10;
-      // Nếu search trong wishlist hoặc purchase, fetch movies trực tiếp từ IDs
-      List<Movie> allMoviesData;
-      var firestoreQuery = FirebaseQuery.collection('movies', firestore: _db);
-      
-      if (wishlistMovieIds != null && wishlistMovieIds.isNotEmpty) {
-        // Firestore whereIn có giới hạn 10 items, cần chunk nếu nhiều hơn
-        final chunks = <List<String>>[];
-        for (int i = 0; i < wishlistMovieIds.length; i += 10) {
-          chunks.add(wishlistMovieIds.sublist(
-            i, 
-            i + 10 > wishlistMovieIds.length ? wishlistMovieIds.length : i + 10,
-          ));
-        }
-        
-        allMoviesData = <Movie>[];
-        for (final chunk in chunks) {
-          final snapshot = await _db
-              .collection('movies')
-              .where(FieldPath.documentId, whereIn: chunk)
-              .get();
-          allMoviesData.addAll(snapshot.docs.map((doc) => Movie.fromDoc(doc)));
-        }
-      } else {
-        // Normal search - query từ movies collection
-        firestoreQuery = SearchQueryBuilder.buildFirestoreQuery(firestoreQuery, filters);
-        
-        if (query.isNotEmpty && 
-            query.toLowerCase() != 'trending' && 
-            query.toLowerCase() != 'popular') {
-          var snapshot = await firestoreQuery.limit(100).get();
-          allMoviesData = snapshot.docs.map((doc) => Movie.fromDoc(doc)).toList();
-        } else {
-          // Handle trending/popular case - continue with existing logic
-          final hasPriceFilter = filters.priceMin != null || filters.priceMax != null;
-          final needsManualSort = hasPriceFilter && 
-              filters.sortBy != SortOption.highestPrice && 
-              filters.sortBy != SortOption.lowestPrice;
-          
-          if (needsManualSort) {
-            var snapshot = await firestoreQuery.limit(pageSize * 10).get();
-            var docs = snapshot.docs;
-            allMoviesData = docs.map((doc) => Movie.fromDoc(doc)).toList();
-          } else {
-            var snapshot = await firestoreQuery.limit(pageSize).get();
-            allMoviesData = snapshot.docs.map((doc) => Movie.fromDoc(doc)).toList();
-          }
-        }
+
+      // Build query parameters
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'pageSize': pageSize,
+      };
+
+      if (query.isNotEmpty) {
+        queryParams['q'] = query;
       }
-      
-      // Process query if not empty and not trending/popular
-      // Nếu search trong wishlist hoặc purchase, luôn filter theo query (không có trending/popular)
+
+      if (filters.genres.isNotEmpty) {
+        queryParams['genres'] = filters.genres.join(',');
+      }
+
+      if (filters.year != null) {
+        queryParams['year'] = filters.year;
+      }
+
+      if (filters.priceMin != null) {
+        queryParams['priceMin'] = filters.priceMin;
+      }
+
+      if (filters.priceMax != null) {
+        queryParams['priceMax'] = filters.priceMax;
+      }
+
+      if (filters.sortBy != SortOption.trending) {
+        queryParams['sortBy'] = filters.sortBy.name;
+      }
+
       if (wishlistMovieIds != null && wishlistMovieIds.isNotEmpty) {
-        // Wishlist/Purchase search - filter theo query
-        var allMovies = allMoviesData.map((m) => MovieItem.fromMovie(m)).toList();
-        
-        if (query.isNotEmpty) {
-          final lowerQuery = query.toLowerCase();
-          allMovies = allMovies.where((m) => 
-            m.title.toLowerCase().contains(lowerQuery) ||
-            (m.id.toLowerCase().contains(lowerQuery))
-          ).toList();
-        }
-        
-        final startIndex = (page - 1) * pageSize;
-        final endIndex = startIndex + pageSize;
-        final paginatedMovies = allMovies.skip(startIndex).take(pageSize).toList();
-        final paginatedMoviesData = paginatedMovies.map((m) {
-          return allMoviesData.firstWhere((md) => md.id == m.id);
-        }).toList();
-        
-        final hasNext = endIndex < allMovies.length;
-        
-        SearchLogger.logMovies(paginatedMovies, page, filters, paginatedMoviesData);
-        
-        final results = paginatedMovies.map((m) => SearchMapper.movieItemToSearchResult(m)).toList();
-        
-        return SearchResultsPage<SearchResult>(
-          items: results,
-          page: page,
-          pageSize: pageSize,
-          total: allMovies.length,
-          hasNext: hasNext,
+        queryParams['movieIds'] = wishlistMovieIds.join(',');
+      }
+
+      try {
+        final response = await _dio.get(
+          '${ApiConfig.searchServiceUrl}/movies',
+          queryParameters: queryParams,
         );
-      } else if (query.isNotEmpty && 
-          query.toLowerCase() != 'trending' && 
-          query.toLowerCase() != 'popular') {
-        var allMovies = allMoviesData.map((m) => MovieItem.fromMovie(m)).toList();
-        
-        final lowerQuery = query.toLowerCase();
-        allMovies = allMovies.where((m) => 
-          m.title.toLowerCase().contains(lowerQuery) ||
-          (m.id.toLowerCase().contains(lowerQuery))
-        ).toList();
-        
-        final startIndex = (page - 1) * pageSize;
-        final endIndex = startIndex + pageSize;
-        final paginatedMovies = allMovies.skip(startIndex).take(pageSize).toList();
-        final paginatedMoviesData = paginatedMovies.map((m) {
-          return allMoviesData.firstWhere((md) => md.id == m.id);
-        }).toList();
-        
-        final hasNext = endIndex < allMovies.length;
-        
-        SearchLogger.logMovies(paginatedMovies, page, filters, paginatedMoviesData);
-        
-        final results = paginatedMovies.map((m) => SearchMapper.movieItemToSearchResult(m)).toList();
-        
-        return SearchResultsPage<SearchResult>(
-          items: results,
-          page: page,
-          pageSize: pageSize,
-          total: allMovies.length,
-          hasNext: hasNext,
-        );
-      } else {
-        final hasPriceFilter = filters.priceMin != null || filters.priceMax != null;
-        final needsManualSort = hasPriceFilter && 
-            filters.sortBy != SortOption.highestPrice && 
-            filters.sortBy != SortOption.lowestPrice;
-        
-        if (needsManualSort) {
-          var snapshot = await firestoreQuery.limit(pageSize * 10).get();
-          var docs = snapshot.docs;
-          var allMoviesData = docs.map((doc) => Movie.fromDoc(doc)).toList();
-          var allMovies = allMoviesData.map((m) => MovieItem.fromMovie(m)).toList();
-          
-          final moviesWithData = allMovies.map((m) {
-            final movieData = allMoviesData.firstWhere((md) => md.id == m.id);
-            return (item: m, data: movieData);
-          }).toList();
-          
-          moviesWithData.sort((a, b) {
-            if (filters.sortBy == SortOption.trending) {
-              final aView = a.data.view ?? 0;
-              final bView = b.data.view ?? 0;
-              return bView.compareTo(aView);
-            } else if (filters.sortBy == SortOption.newReleases) {
-              if (a.data.status == 'upcoming' && b.data.status != 'upcoming') return 1;
-              if (b.data.status == 'upcoming' && a.data.status != 'upcoming') return -1;
-              
-              final yearCompare = (b.data.year ?? 0).compareTo(a.data.year ?? 0);
-              if (yearCompare != 0) return yearCompare;
-              final aView = a.data.view ?? 0;
-              final bView = b.data.view ?? 0;
-              return bView.compareTo(aView);
-            } else if (filters.sortBy == SortOption.highestRating) {
-              final aRating = a.item.rating ?? 0.0;
-              final bRating = b.item.rating ?? 0.0;
-              return bRating.compareTo(aRating);
-            } else if (filters.sortBy == SortOption.lowestRating) {
-              final aRating = a.item.rating ?? 0.0;
-              final bRating = b.item.rating ?? 0.0;
-              return aRating.compareTo(bRating);
-            }
-            return 0;
-          });
-          
-          final startIndex = (page - 1) * pageSize;
-          final paginated = moviesWithData.skip(startIndex).take(pageSize).toList();
-          final hasNext = startIndex + pageSize < moviesWithData.length;
-          
-          final movies = paginated.map((e) => e.item).toList();
-          final moviesData = paginated.map((e) => e.data).toList();
-          
-          SearchLogger.logMovies(movies, page, filters, moviesData);
-          
-          final results = movies.map((m) => SearchMapper.movieItemToSearchResult(m)).toList();
-          
+
+        if (response.statusCode == 200) {
+          final data = response.data;
+          final List<dynamic> items = data['data'] ?? data['items'] ?? [];
+          final total = data['total'] ?? items.length;
+          final hasNext = data['hasNext'] ?? (page * pageSize < total);
+
+          final movies = items.map<MovieItem>((json) => MovieItem.fromJson(json as Map<String, dynamic>)).toList();
+          final results = movies.map<SearchResult>((m) => SearchMapper.movieItemToSearchResult(m)).toList();
+
           return SearchResultsPage<SearchResult>(
             items: results,
             page: page,
             pageSize: pageSize,
-            total: moviesWithData.length,
+            total: total,
             hasNext: hasNext,
-          );
-        } else {
-          final isNewReleases = filters.sortBy == SortOption.newReleases;
-          
-          if (isNewReleases) {
-            var snapshot = await firestoreQuery.limit(pageSize * 10).get();
-            var docs = snapshot.docs;
-            var allMoviesData = docs.map((doc) => Movie.fromDoc(doc)).toList();
-            
-            final filteredMoviesData = allMoviesData.where((m) => 
-              m.status != 'upcoming' && m.year != null
-            ).toList();
-            
-            var allMovies = filteredMoviesData.map((m) => MovieItem.fromMovie(m)).toList();
-            
-            final moviesWithData = allMovies.map((m) {
-              final movieData = filteredMoviesData.firstWhere((md) => md.id == m.id);
-              return (item: m, data: movieData);
-            }).toList();
-            
-            moviesWithData.sort((a, b) {
-              final yearCompare = (b.data.year ?? 0).compareTo(a.data.year ?? 0);
-              if (yearCompare != 0) return yearCompare;
-              final aView = a.data.view ?? 0;
-              final bView = b.data.view ?? 0;
-              return bView.compareTo(aView);
-            });
-            
-            final startIndex = (page - 1) * pageSize;
-            final paginated = moviesWithData.skip(startIndex).take(pageSize).toList();
-            final hasNext = startIndex + pageSize < moviesWithData.length;
-            
-            final movies = paginated.map((e) => e.item).toList();
-            final moviesData = paginated.map((e) => e.data).toList();
-            
-            SearchLogger.logMovies(movies, page, filters, moviesData);
-            
-            final results = movies.map((m) => SearchMapper.movieItemToSearchResult(m)).toList();
-            
-            return SearchResultsPage<SearchResult>(
-              items: results,
-              page: page,
-              pageSize: pageSize,
-              total: moviesWithData.length,
-              hasNext: hasNext,
-            );
-          }
-          
-          if (page > 1 && startAfter != null) {
-            firestoreQuery = firestoreQuery.startAfter([startAfter]);
-          }
-          
-          var snapshot = await firestoreQuery.limit(pageSize + 1).get();
-          var docs = snapshot.docs;
-          var moviesData = docs.map((doc) => Movie.fromDoc(doc)).toList();
-          var movies = moviesData.map((m) => MovieItem.fromMovie(m)).toList();
-          
-          final hasNext = movies.length > pageSize;
-          DocumentSnapshot? lastDoc;
-          if (hasNext) {
-            lastDoc = docs[pageSize - 1];
-            movies = movies.take(pageSize).toList();
-            moviesData = moviesData.take(pageSize).toList();
-          } else if (movies.isNotEmpty) {
-            lastDoc = docs.last;
-          }
-          
-          SearchLogger.logMovies(movies, page, filters, moviesData);
-          
-          final results = movies.map((m) => SearchMapper.movieItemToSearchResult(m)).toList();
-        
-          return SearchResultsPage<SearchResult>(
-            items: results,
-            page: page,
-            pageSize: pageSize,
-            total: hasNext ? page * pageSize + 1 : page * pageSize,
-            hasNext: hasNext,
-            lastDoc: lastDoc,
           );
         }
+      } catch (e) {
+        // Fall back to sample data
       }
+
+      // Return sample data for demo
+      final sampleMovies = _getSampleMovies();
+      final filteredMovies = _filterMovies(sampleMovies, query, filters);
+      
+      final startIndex = (page - 1) * pageSize;
+      final paginatedMovies = filteredMovies.skip(startIndex).take(pageSize).toList();
+      final hasNext = startIndex + pageSize < filteredMovies.length;
+
+      final results = paginatedMovies.map((m) => SearchMapper.movieItemToSearchResult(m)).toList();
+
+      return SearchResultsPage<SearchResult>(
+        items: results,
+        page: page,
+        pageSize: pageSize,
+        total: filteredMovies.length,
+        hasNext: hasNext,
+      );
     } catch (e) {
       throw Exception('Failed to search: $e');
     }
   }
 
-
+  /// Get search suggestions
   Future<List<String>> getSuggestions(String query) async {
+    if (query.isEmpty) return [];
+
     try {
-      await Future.delayed(const Duration(milliseconds: 200));
-      if (query.isEmpty) return [];
-      
-      final snapshot = await FirebaseQuery.collection('movies', firestore: _db)
-          .orderBy('year', descending: true)
-          .get();
-      
-      final allMovies = snapshot.docs.map((doc) => Movie.fromDoc(doc)).toList();
-      final suggestions = allMovies
-          .where((movie) => movie.name.toLowerCase().contains(query.toLowerCase()))
-          .map((movie) => movie.name)
-          .toSet()
-          .toList();
-      
-      return suggestions.take(5).toList();
+      final response = await _dio.get(
+        '${ApiConfig.searchServiceUrl}/suggestions',
+        queryParameters: {'q': query},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.cast<String>();
+      }
     } catch (e) {
-      return [];
+      // Fall back to sample suggestions
     }
+
+    // Sample suggestions
+    final sampleMovies = _getSampleMovies();
+    final suggestions = sampleMovies
+        .where((m) => m.title.toLowerCase().contains(query.toLowerCase()))
+        .map((m) => m.title)
+        .take(5)
+        .toList();
+    return suggestions;
   }
 
+  /// Get trending movies
   Future<List<SearchResult>> getTrendingMovies() async {
     try {
-      await Future.delayed(const Duration(milliseconds: 300));
-      final snapshot = await FirebaseQuery.collection('movies', firestore: _db)
-          .orderBy('view', descending: true)
-          .limit(8)
-          .get();
-      final movies = snapshot.docs
-          .map((doc) => MovieItem.fromMovie(Movie.fromDoc(doc)))
-          .toList();
-      return movies.map((m) => SearchMapper.movieItemToSearchResult(m)).toList();
+      final response = await _dio.get(
+        '${ApiConfig.searchServiceUrl}/movies/trending',
+        queryParameters: {'limit': 8},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        final movies = data.map((json) => MovieItem.fromJson(json)).toList();
+        return movies.map((m) => SearchMapper.movieItemToSearchResult(m)).toList();
+      }
     } catch (e) {
-      throw Exception('Failed to get trending movies: $e');
+      // Fall back to sample data
     }
+
+    final sampleMovies = _getSampleMovies().take(8).toList();
+    return sampleMovies.map((m) => SearchMapper.movieItemToSearchResult(m)).toList();
   }
 
+  /// Get popular movies
   Future<List<SearchResult>> getPopularMovies() async {
     try {
-      await Future.delayed(const Duration(milliseconds: 300));
-      final snapshot = await FirebaseQuery.collection('movies', firestore: _db)
-          .orderBy('view', descending: true)
-          .limit(8)
-          .get();
-      final movies = snapshot.docs
-          .map((doc) => MovieItem.fromMovie(Movie.fromDoc(doc)))
-          .toList();
-      return movies.map((m) => SearchMapper.movieItemToSearchResult(m)).toList();
+      final response = await _dio.get(
+        '${ApiConfig.searchServiceUrl}/movies/popular',
+        queryParameters: {'limit': 8},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        final movies = data.map((json) => MovieItem.fromJson(json)).toList();
+        return movies.map((m) => SearchMapper.movieItemToSearchResult(m)).toList();
+      }
     } catch (e) {
-      throw Exception('Failed to get popular movies: $e');
+      // Fall back to sample data
     }
+
+    final sampleMovies = _getSampleMovies().take(8).toList();
+    return sampleMovies.map((m) => SearchMapper.movieItemToSearchResult(m)).toList();
   }
 
+  // ============= SAMPLE DATA =============
+  
+  List<MovieItem> _getSampleMovies() {
+    return [
+      MovieItem(
+        id: 'sample-1',
+        title: 'Avengers: Endgame',
+        imageUrl: 'https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg',
+        rating: 8.4,
+        price: 4.99,
+      ),
+      MovieItem(
+        id: 'sample-2',
+        title: 'The Dark Knight',
+        imageUrl: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
+        rating: 9.0,
+        price: 3.99,
+      ),
+      MovieItem(
+        id: 'sample-3',
+        title: 'Inception',
+        imageUrl: 'https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Ber.jpg',
+        rating: 8.8,
+        price: 2.99,
+      ),
+      MovieItem(
+        id: 'sample-4',
+        title: 'Interstellar',
+        imageUrl: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
+        rating: 8.6,
+        price: 4.99,
+      ),
+      MovieItem(
+        id: 'sample-5',
+        title: 'The Matrix',
+        imageUrl: 'https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg',
+        rating: 8.7,
+        price: 1.99,
+      ),
+      MovieItem(
+        id: 'sample-6',
+        title: 'Pulp Fiction',
+        imageUrl: 'https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg',
+        rating: 8.9,
+        price: 2.99,
+      ),
+      MovieItem(
+        id: 'sample-7',
+        title: 'Fight Club',
+        imageUrl: 'https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg',
+        rating: 8.8,
+        price: 3.99,
+      ),
+      MovieItem(
+        id: 'sample-8',
+        title: 'Forrest Gump',
+        imageUrl: 'https://image.tmdb.org/t/p/w500/saHP97rTPS5eLmrLQEcANmKrsFl.jpg',
+        rating: 8.8,
+        price: 2.99,
+      ),
+    ];
+  }
+
+  List<MovieItem> _filterMovies(List<MovieItem> movies, String query, SearchFilters filters) {
+    var filtered = movies;
+
+    // Filter by query
+    if (query.isNotEmpty) {
+      final lowerQuery = query.toLowerCase();
+      filtered = filtered.where((m) => m.title.toLowerCase().contains(lowerQuery)).toList();
+    }
+
+    // Filter by price
+    if (filters.priceMin != null) {
+      filtered = filtered.where((m) => (m.price ?? 0) >= filters.priceMin!).toList();
+    }
+    if (filters.priceMax != null) {
+      filtered = filtered.where((m) => (m.price ?? 0) <= filters.priceMax!).toList();
+    }
+
+    // Sort
+    switch (filters.sortBy) {
+      case SortOption.highestRating:
+        filtered.sort((a, b) => (b.rating ?? 0).compareTo(a.rating ?? 0));
+        break;
+      case SortOption.lowestRating:
+        filtered.sort((a, b) => (a.rating ?? 0).compareTo(b.rating ?? 0));
+        break;
+      case SortOption.highestPrice:
+        filtered.sort((a, b) => (b.price ?? 0).compareTo(a.price ?? 0));
+        break;
+      case SortOption.lowestPrice:
+        filtered.sort((a, b) => (a.price ?? 0).compareTo(b.price ?? 0));
+        break;
+      default:
+        break;
+    }
+
+    return filtered;
+  }
 }

@@ -1,4 +1,3 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +10,6 @@ import 'core/constants/stripe_constants.dart';
 import 'core/services/locale_setting.dart';
 import 'core/services/shared_prefs_provider.dart';
 import 'core/utils/api/dio_client.dart';
-import 'firebase_options.dart';
 import 'i18n/translations.g.dart';
 
 Future<void> main() async {
@@ -20,9 +18,7 @@ Future<void> main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  
   final sp = await SharedPreferences.getInstance();
   DioClient.init();
 

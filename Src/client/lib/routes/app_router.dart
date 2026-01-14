@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -36,10 +35,17 @@ import 'package:movie_fe/features/movie/presentation/screens/movie_info_screen.d
 import 'package:movie_fe/features/movie/presentation/screens/ratings_detail_screen.dart';
 import 'package:movie_fe/features/purchase/presentation/widgets/checkout_screen.dart';
 import 'package:movie_fe/core/models/movie.dart';
+import '../core/auth/auth_providers.dart';
+import '../core/auth/auth_state_notifier.dart';
 import '../core/layouts/main_layout.dart';
 import '../core/services/locale_setting.dart';
 import 'transition_page.dart';
 import 'auth_guard.dart';
+
+/// Provides the GoRouter instance configured with auth state from AuthStateNotifier
+final routerProvider = Provider<GoRouter>((ref) {
+  return AppRouter.createRouter(ref);
+});
 
 class AppRouter {
   static const welcome = '/';
@@ -88,17 +94,19 @@ class AppRouter {
     signup,
   };
 
-  static GoRouter? _router;
-
-  static GoRouter get router => _router ??= _createRouter();
-
-  static GoRouter _createRouter() {
-    final guard = AuthGuard();
+  /// Create router with auth state from Riverpod
+  static GoRouter createRouter(Ref ref) {
+    // Watch auth state notifier for state changes
+    final authNotifier = ref.watch(authStateNotifierProvider.notifier);
+    
+    // Create auth guard with callback to check login state
+    final guard = AuthGuard(
+      isLoggedIn: () => ref.read(authStateNotifierProvider).isLoggedIn,
+    );
 
     return GoRouter(
       initialLocation: welcome,
-      refreshListenable:
-          _GoRouterRefreshStream(FirebaseAuth.instance.authStateChanges()),
+      refreshListenable: _AuthStateRefreshNotifier(authNotifier),
       redirect: guard.redirect,
       routes: _buildRoutes(),
       errorBuilder: (context, state) =>
@@ -284,22 +292,6 @@ class AppRouter {
             path: purchase,
             pageBuilder: (_, __) => TransitionPage(child: const PurchaseScreen()),
           ),
-          // GoRoute(
-          //   path: purchase,
-          //   pageBuilder: (_, __) => TransitionPage(
-          //     child: Consumer(
-          //       builder: (context, ref, child) {
-          //         final currentLocale = ref.watch(localeControllerProvider);
-          //         final localeController =
-          //             ref.read(localeControllerProvider.notifier);
-          //         return SettingPage(
-          //           currentLocale,
-          //           (locale) => localeController.setLocale(locale),
-          //         );
-          //       },
-          //     ),
-          //   ),
-          // ),
           GoRoute(
             path: profile,
             pageBuilder: (_, __) => TransitionPage(child: const ProfileScreen()),
@@ -317,12 +309,13 @@ class AppRouter {
   }
 }
 
-class _GoRouterRefreshStream extends ChangeNotifier {
-  _GoRouterRefreshStream(Stream<dynamic> stream) {
-    _subscription = stream.asBroadcastStream().listen((_) => notifyListeners());
+/// Listens to AuthStateNotifier's auth state changes stream and notifies GoRouter
+class _AuthStateRefreshNotifier extends ChangeNotifier {
+  _AuthStateRefreshNotifier(AuthStateNotifier notifier) {
+    _subscription = notifier.authStateChanges.listen((_) => notifyListeners());
   }
 
-  late final StreamSubscription<dynamic> _subscription;
+  late final StreamSubscription<bool> _subscription;
 
   @override
   void dispose() {

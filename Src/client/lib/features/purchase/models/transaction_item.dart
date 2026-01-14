@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class TransactionItem {
   final String id;
   final String userId;
@@ -37,30 +35,23 @@ class TransactionItem {
     this.errorMessage,
   });
 
-  factory TransactionItem.fromFirestore(String id, Map<String, dynamic> data) {
-    DateTime? parseTimestamp(dynamic value) {
+  factory TransactionItem.fromJson(Map<String, dynamic> data) {
+    DateTime? parseDateTime(dynamic value) {
       if (value == null) return null;
       if (value is DateTime) return value;
-      if (value is Timestamp) return value.toDate();
-      if (value is Map) {
-        final seconds = value['_seconds'] ?? value['seconds'];
-        if (seconds != null) {
-          final nanoseconds = value['_nanoseconds'] ?? value['nanoseconds'] ?? 0;
-          return DateTime.fromMillisecondsSinceEpoch(
-            (seconds as int) * 1000 + ((nanoseconds as int) ~/ 1000000),
-          );
-        }
-      }
       if (value is String) {
         try {
           return DateTime.parse(value);
         } catch (_) {}
       }
+      if (value is int) {
+        return DateTime.fromMillisecondsSinceEpoch(value);
+      }
       return null;
     }
 
     return TransactionItem(
-      id: id,
+      id: data['id'] as String? ?? '',
       userId: data['userId'] as String? ?? '',
       movieId: data['movieId'] as String? ?? '',
       movieTitle: data['movieTitle'] as String?,
@@ -69,14 +60,35 @@ class TransactionItem {
       amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
       currency: data['currency'] as String? ?? 'usd',
       status: data['status'] as String? ?? 'pending',
-      createdAt: parseTimestamp(data['createdAt']),
-      paidAt: parseTimestamp(data['paidAt']),
-      failedAt: parseTimestamp(data['failedAt']),
-      canceledAt: parseTimestamp(data['canceledAt']),
+      createdAt: parseDateTime(data['createdAt']),
+      paidAt: parseDateTime(data['paidAt']),
+      failedAt: parseDateTime(data['failedAt']),
+      canceledAt: parseDateTime(data['canceledAt']),
       stripePaymentIntentId: data['stripePaymentIntentId'] as String?,
       chargeId: data['chargeId'] as String?,
       errorMessage: data['errorMessage'] as String?,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'movieId': movieId,
+      'movieTitle': movieTitle,
+      'movieImageUrl': movieImageUrl,
+      'movieSlug': movieSlug,
+      'amount': amount,
+      'currency': currency,
+      'status': status,
+      'createdAt': createdAt?.toIso8601String(),
+      'paidAt': paidAt?.toIso8601String(),
+      'failedAt': failedAt?.toIso8601String(),
+      'canceledAt': canceledAt?.toIso8601String(),
+      'stripePaymentIntentId': stripePaymentIntentId,
+      'chargeId': chargeId,
+      'errorMessage': errorMessage,
+    };
   }
 
   bool get isSuccess => status == 'succeeded';

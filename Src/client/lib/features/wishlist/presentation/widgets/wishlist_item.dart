@@ -9,7 +9,7 @@ import 'package:movie_fe/core/models/movie_item.dart';
 import 'package:movie_fe/core/widgets/image_utils.dart';
 import '../../repositories/wishlist_repository.dart';
 import '../../../../routes/app_router.dart';
-import '../../../../core/repositories/movie_repository.dart';
+import 'package:movie_fe/core/repositories/movie_repository.dart';
 
 enum WishlistAction {
   remove,
@@ -205,7 +205,7 @@ class _WishlistItemState extends ConsumerState<WishlistItem> {
         break;
       case WishlistAction.about:
         try {
-          final movieRepo = ref.read(movieRepoProvider);
+          final movieRepo = ref.read(movieRepositoryProvider);
           final movie = await movieRepo.getMovieDetail(widget.movie.id);
           if (movie != null && context.mounted) {
             context.push(

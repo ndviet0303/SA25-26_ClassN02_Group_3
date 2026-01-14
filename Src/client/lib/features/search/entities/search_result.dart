@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Money {
   final String currency; // e.g., "USD"
   final double amount;
@@ -99,7 +97,7 @@ class SearchResultsPage<T> {
   final int pageSize;
   final int total;
   final bool hasNext;
-  final DocumentSnapshot? lastDoc;
+  final dynamic lastDoc; // For pagination cursor
 
   const SearchResultsPage({
     required this.items,

@@ -1,11 +1,12 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/auth/auth_providers.dart';
 import '../entities/search_result.dart';
 import '../entities/search_filter.dart';
 import '../repositories/search_repository.dart';
 import '../presentation/screens/search_screen.dart';
+import '../../wishlist/repositories/wishlist_repository.dart';
+import '../../purchase/data/repositories/purchase_repository.dart';
 
 final searchStateProvider = StateNotifierProvider<SearchStateNotifier, SearchState>(
       (ref) => SearchStateNotifier(ref),
@@ -90,6 +91,8 @@ class SearchStateNotifier extends StateNotifier<SearchState> {
   Timer? _debounceTimer;
   
   SearchRepository get _repository => _ref.read(searchRepositoryProvider);
+  WishlistRepository get _wishlistRepository => _ref.read(wishlistRepositoryProvider);
+  PurchaseRepository get _purchaseRepository => _ref.read(purchaseRepositoryProvider);
 
   void updateQuery(String query) {
     _debounceTimer?.cancel();
@@ -122,30 +125,12 @@ class SearchStateNotifier extends StateNotifier<SearchState> {
     );
     
     try {
-      // Lấy wishlist hoặc purchase IDs tùy theo searchSource
-      List<String>? wishlistMovieIds;
+      List<String>? sourceMovieIds;
       if (state.searchSource == SearchSource.wishlist) {
-        final userId = FirebaseAuth.instance.currentUser?.uid;
-        if (userId == null) {
-          state = state.copyWith(
-            isSearching: false,
-            status: SearchStatus.success,
-            results: [],
-            hasResults: false,
-            hasMoreResults: false,
-          );
-          return;
-        }
+        final wishlist = await _wishlistRepository.getWishlist();
+        sourceMovieIds = wishlist.map((m) => m.id).toList();
         
-        final wishlistSnapshot = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userId)
-            .collection('wishlist')
-            .get();
-        
-        wishlistMovieIds = wishlistSnapshot.docs.map((doc) => doc.id).toList();
-        
-        if (wishlistMovieIds.isEmpty) {
+        if (sourceMovieIds.isEmpty) {
           state = state.copyWith(
             isSearching: false,
             status: SearchStatus.success,
@@ -156,27 +141,10 @@ class SearchStateNotifier extends StateNotifier<SearchState> {
           return;
         }
       } else if (state.searchSource == SearchSource.purchase) {
-        final userId = FirebaseAuth.instance.currentUser?.uid;
-        if (userId == null) {
-          state = state.copyWith(
-            isSearching: false,
-            status: SearchStatus.success,
-            results: [],
-            hasResults: false,
-            hasMoreResults: false,
-          );
-          return;
-        }
+        final purchases = await _purchaseRepository.getPurchases();
+        sourceMovieIds = purchases.map((p) => p.id).toList();
         
-        final purchaseSnapshot = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userId)
-            .collection('purchases')
-            .get();
-        
-        wishlistMovieIds = purchaseSnapshot.docs.map((doc) => doc.id).toList();
-        
-        if (wishlistMovieIds.isEmpty) {
+        if (sourceMovieIds.isEmpty) {
           state = state.copyWith(
             isSearching: false,
             status: SearchStatus.success,
@@ -192,7 +160,7 @@ class SearchStateNotifier extends StateNotifier<SearchState> {
         query, 
         filters: state.filters, 
         page: 1,
-        wishlistMovieIds: wishlistMovieIds,
+        wishlistMovieIds: sourceMovieIds,
       );
       state = state.copyWith(
         results: results.items,
@@ -233,37 +201,20 @@ class SearchStateNotifier extends StateNotifier<SearchState> {
     state = state.copyWith(isLoadingMore: true);
     
     try {
-      // Lấy wishlist hoặc purchase IDs tùy theo searchSource
-      List<String>? wishlistMovieIds;
+      List<String>? sourceMovieIds;
       if (state.searchSource == SearchSource.wishlist) {
-        final userId = FirebaseAuth.instance.currentUser?.uid;
-        if (userId != null) {
-          final wishlistSnapshot = await FirebaseFirestore.instance
-              .collection('users')
-              .doc(userId)
-              .collection('wishlist')
-              .get();
-          
-          wishlistMovieIds = wishlistSnapshot.docs.map((doc) => doc.id).toList();
-        }
+        final wishlist = await _wishlistRepository.getWishlist();
+        sourceMovieIds = wishlist.map((m) => m.id).toList();
       } else if (state.searchSource == SearchSource.purchase) {
-        final userId = FirebaseAuth.instance.currentUser?.uid;
-        if (userId != null) {
-          final purchaseSnapshot = await FirebaseFirestore.instance
-              .collection('users')
-              .doc(userId)
-              .collection('purchases')
-              .get();
-          
-          wishlistMovieIds = purchaseSnapshot.docs.map((doc) => doc.id).toList();
-        }
+        final purchases = await _purchaseRepository.getPurchases();
+        sourceMovieIds = purchases.map((p) => p.id).toList();
       }
       
       final results = await _repository.search(
         state.query, 
         filters: state.filters, 
         page: state.currentPage + 1,
-        wishlistMovieIds: wishlistMovieIds,
+        wishlistMovieIds: sourceMovieIds,
       );
       
       state = state.copyWith(

@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/app_export.dart';
 import '../../../../core/widgets/image_utils.dart';
 import '../../../../core/widgets/feedback/toast_notification.dart';
-import '../../../../core/repositories/movie_repository.dart';
+import 'package:movie_fe/core/repositories/movie_repository.dart';
 import '../../../../routes/app_router.dart';
 import '../../models/purchase_item.dart' as purchase_model;
 import '../../application/purchase_state_notifier.dart';
@@ -205,7 +205,7 @@ class _PurchaseItemWidgetState extends ConsumerState<PurchaseItemWidget> {
       case PurchaseAction.removeDownload:
         // Navigate to video player
         try {
-          final movieRepo = ref.read(movieRepoProvider);
+          final movieRepo = ref.read(movieRepositoryProvider);
           final movie = await movieRepo.getMovieDetail(widget.item.id);
           if (movie != null && context.mounted) {
             final videoUrl = _getVideoUrl(movie);
@@ -249,7 +249,7 @@ class _PurchaseItemWidgetState extends ConsumerState<PurchaseItemWidget> {
         break;
       case PurchaseAction.aboutEbook:
         try {
-          final movieRepo = ref.read(movieRepoProvider);
+          final movieRepo = ref.read(movieRepositoryProvider);
           final movie = await movieRepo.getMovieDetail(widget.item.id);
           if (movie != null && context.mounted) {
             context.push(

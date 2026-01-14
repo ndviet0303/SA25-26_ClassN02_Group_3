@@ -1,109 +1,119 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/models/movie_item.dart';
-import '../../../../core/models/movie.dart';
-import '../../../../core/repositories/movie_repository.dart';
+import 'package:dio/dio.dart';
+import '../../../core/auth/auth_providers.dart';
+import '../../../core/models/movie_item.dart';
+import '../../../core/config/api_config.dart';
 
 final wishlistRepositoryProvider = Provider((ref) => WishlistRepository(
-  ref.watch(firestoreProvider),
-  FirebaseAuth.instance,
+  ref.watch(dioProvider),
+  ref,
 ));
 
+final dioProvider = Provider((ref) => Dio());
+
+/// Wishlist Repository - REST API based
+/// TODO: Connect to actual REST API endpoints
 class WishlistRepository {
-  WishlistRepository(this._db, this._auth);
+  WishlistRepository(this._dio, this._ref);
   
-  final FirebaseFirestore _db;
-  final FirebaseAuth _auth;
+  final Dio _dio;
+  final Ref _ref;
 
-  String? get _userId => _auth.currentUser?.uid;
+  String? get _userId => _ref.read(currentUserIdProvider);
+  String? get _accessToken => _ref.read(accessTokenProvider);
 
-  /// Stream wishlist items cho user hiện tại
-  Stream<List<MovieItem>> streamWishlist() {
+  Map<String, String> get _headers => {
+    if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+  };
+
+  // In-memory cache for sample data
+  final List<MovieItem> _sampleWishlist = [];
+
+  /// Get wishlist items for current user
+  Future<List<MovieItem>> getWishlist() async {
     final userId = _userId;
-    if (userId == null) {
-      return Stream.value([]);
-    }
+    if (userId == null) return [];
 
-    return _db
-        .collection('users')
-        .doc(userId)
-        .collection('wishlist')
-        .orderBy('addedAt', descending: true)
-        .snapshots()
-        .asyncMap((snapshot) async {
-      if (snapshot.docs.isEmpty) return <MovieItem>[];
-
-      // Fetch movie details từ movies collection
-      final movieIds = snapshot.docs.map((doc) => doc.id).toList();
-      final movies = <MovieItem>[];
-
-      for (final movieId in movieIds) {
-        try {
-          final movieDoc = await _db.collection('movies').doc(movieId).get();
-          if (movieDoc.exists) {
-            final movie = Movie.fromDoc(movieDoc);
-            movies.add(MovieItem.fromMovie(movie));
-          }
-        } catch (e) {
-          // Ignore errors for missing movies
-          continue;
-        }
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.wishlistServiceUrl}/users/$userId/wishlist',
+        options: Options(headers: _headers),
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.map((json) => MovieItem.fromJson(json)).toList();
       }
-
-      return movies;
-    });
+      return _sampleWishlist;
+    } catch (e) {
+      return _sampleWishlist;
+    }
   }
 
-  /// Thêm movie vào wishlist
+  /// Stream wishlist items (converts Future to Stream for backward compatibility)
+  Stream<List<MovieItem>> streamWishlist() {
+    return Stream.fromFuture(getWishlist());
+  }
+
+  /// Add movie to wishlist
   Future<void> addToWishlist(String movieId) async {
     final userId = _userId;
     if (userId == null) {
       throw Exception('User not authenticated');
     }
 
-    await _db
-        .collection('users')
-        .doc(userId)
-        .collection('wishlist')
-        .doc(movieId)
-        .set({
-      'movieId': movieId,
-      'addedAt': FieldValue.serverTimestamp(),
-    });
+    try {
+      await _dio.post(
+        '${ApiConfig.wishlistServiceUrl}/users/$userId/wishlist',
+        data: {'movieId': movieId},
+        options: Options(headers: _headers),
+      );
+    } catch (e) {
+      // Add to local sample for demo
+      _sampleWishlist.add(MovieItem(
+        id: movieId,
+        title: 'Movie $movieId',
+        imageUrl: 'https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg',
+        rating: 8.0,
+        price: 4.99,
+      ));
+    }
   }
 
-  /// Xóa movie khỏi wishlist
+  /// Remove movie from wishlist
   Future<void> removeFromWishlist(String movieId) async {
     final userId = _userId;
     if (userId == null) {
       throw Exception('User not authenticated');
     }
 
-    await _db
-        .collection('users')
-        .doc(userId)
-        .collection('wishlist')
-        .doc(movieId)
-        .delete();
+    try {
+      await _dio.delete(
+        '${ApiConfig.wishlistServiceUrl}/users/$userId/wishlist/$movieId',
+        options: Options(headers: _headers),
+      );
+    } catch (e) {
+      // Remove from local sample for demo
+      _sampleWishlist.removeWhere((m) => m.id == movieId);
+    }
   }
 
-  /// Kiểm tra movie có trong wishlist không
+  /// Check if movie is in wishlist
   Future<bool> isInWishlist(String movieId) async {
     final userId = _userId;
     if (userId == null) return false;
 
-    final doc = await _db
-        .collection('users')
-        .doc(userId)
-        .collection('wishlist')
-        .doc(movieId)
-        .get();
-
-    return doc.exists;
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.wishlistServiceUrl}/users/$userId/wishlist/$movieId',
+        options: Options(headers: _headers),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return _sampleWishlist.any((m) => m.id == movieId);
+    }
   }
 
-  /// Toggle wishlist (thêm nếu chưa có, xóa nếu đã có)
+  /// Toggle wishlist (add if not exists, remove if exists)
   Future<void> toggleWishlist(String movieId) async {
     final isIn = await isInWishlist(movieId);
     if (isIn) {
@@ -113,19 +123,10 @@ class WishlistRepository {
     }
   }
 
-  /// Lấy số lượng items trong wishlist
+  /// Get wishlist count
   Future<int> getWishlistCount() async {
-    final userId = _userId;
-    if (userId == null) return 0;
-
-    final snapshot = await _db
-        .collection('users')
-        .doc(userId)
-        .collection('wishlist')
-        .count()
-        .get();
-
-    return snapshot.count ?? 0;
+    final items = await getWishlist();
+    return items.length;
   }
 }
 
@@ -137,32 +138,17 @@ final wishlistProvider = StreamProvider.autoDispose<List<MovieItem>>(
   },
 );
 
-final wishlistCountProvider = StreamProvider.autoDispose<int>(
-  (ref) {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return Stream.value(0);
-
-    return FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('wishlist')
-        .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+final wishlistCountProvider = FutureProvider.autoDispose<int>(
+  (ref) async {
+    final repo = ref.watch(wishlistRepositoryProvider);
+    return repo.getWishlistCount();
   },
 );
 
-// Provider để check movie có trong wishlist không (real-time)
-final isInWishlistProvider = StreamProvider.autoDispose.family<bool, String>(
-  (ref, movieId) {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return Stream.value(false);
-
-    return FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('wishlist')
-        .doc(movieId)
-        .snapshots()
-        .map((doc) => doc.exists);
+// Provider to check if movie is in wishlist (not real-time, but update on change)
+final isInWishlistProvider = FutureProvider.autoDispose.family<bool, String>(
+  (ref, movieId) async {
+    final repo = ref.watch(wishlistRepositoryProvider);
+    return repo.isInWishlist(movieId);
   },
 );

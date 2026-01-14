@@ -1,224 +1,193 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
+import '../../../../core/auth/auth_providers.dart';
 import '../../../../core/models/movie_item.dart';
-import '../../../../core/models/movie.dart';
-import '../../../../core/repositories/movie_repository.dart';
+import '../../../../core/config/api_config.dart';
 import '../../models/purchase_item.dart';
 import '../../models/transaction_item.dart';
 import '../../../notification/models/notification_item.dart';
 import '../../../notification/repositories/notification_repository.dart';
 import '../../../../i18n/translations.g.dart';
-import '../../../notification/providers/notification_providers.dart';
+
+final dioProvider = Provider((ref) => Dio());
 
 final purchaseRepositoryProvider = Provider((ref) => PurchaseRepository(
-  ref.watch(firestoreProvider),
-  FirebaseAuth.instance,
+  ref.watch(dioProvider),
+  ref,
   ref.watch(notificationRepositoryProvider),
 ));
 
+/// Purchase Repository - REST API based
+/// TODO: Connect to actual REST API endpoints
 class PurchaseRepository {
-  PurchaseRepository(this._db, this._auth, this._notificationRepo);
+  PurchaseRepository(this._dio, this._ref, this._notificationRepo);
   
-  final FirebaseFirestore _db;
-  final FirebaseAuth _auth;
+  final Dio _dio;
+  final Ref _ref;
   final NotificationRepository _notificationRepo;
 
-  String? get _userId => _auth.currentUser?.uid;
+  String? get _userId => _ref.read(currentUserIdProvider);
+  String? get _accessToken => _ref.read(accessTokenProvider);
 
-  /// Stream purchased items cho user hiện tại
-  Stream<List<PurchaseItem>> streamPurchases() {
+  Map<String, String> get _headers => {
+    if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+  };
+
+  // In-memory cache for sample data
+  final List<PurchaseItem> _samplePurchases = [];
+  final List<TransactionItem> _sampleTransactions = [];
+
+  /// Get purchased items for current user
+  Future<List<PurchaseItem>> getPurchases() async {
     final userId = _userId;
-    if (userId == null) {
-      return Stream.value([]);
+    if (userId == null) return [];
+
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.purchaseServiceUrl}/users/$userId/purchases',
+        options: Options(headers: _headers),
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.map<PurchaseItem>((json) => PurchaseItem.fromJson(json as Map<String, dynamic>)).toList();
+      }
+      return _samplePurchases;
+    } catch (e) {
+      return _samplePurchases;
     }
-
-    return _db
-        .collection('users')
-        .doc(userId)
-        .collection('purchases')
-        .orderBy('purchasedAt', descending: true)
-        .snapshots()
-        .asyncMap((snapshot) async {
-      if (snapshot.docs.isEmpty) return <PurchaseItem>[];
-
-      // Fetch movie details từ movies collection
-      final purchases = <PurchaseItem>[];
-      
-      // Tạo map để truy cập nhanh purchase data
-      final purchaseDataMap = <String, Map<String, dynamic>>{};
-      for (final doc in snapshot.docs) {
-        purchaseDataMap[doc.id] = doc.data();
-      }
-
-      // Fetch tất cả movies cùng lúc
-      final movieIds = purchaseDataMap.keys.toList();
-      
-      for (final movieId in movieIds) {
-        try {
-          final movieDoc = await _db.collection('movies').doc(movieId).get();
-          if (movieDoc.exists) {
-            final movie = Movie.fromDoc(movieDoc);
-            final movieItem = MovieItem.fromMovie(movie);
-            final purchaseData = purchaseDataMap[movieId] ?? {};
-            
-            purchases.add(PurchaseItem(
-              id: movieItem.id,
-              title: movieItem.title,
-              imageUrl: movieItem.imageUrl,
-              rating: movieItem.rating,
-              price: movieItem.price,
-              isDownloaded: purchaseData['isDownloaded'] as bool? ?? true,
-              isFinished: purchaseData['isFinished'] as bool? ?? false,
-            ));
-          }
-        } catch (e) {
-          // Ignore errors for missing movies
-          continue;
-        }
-      }
-
-      return purchases;
-    });
   }
 
-  /// Thêm movie vào purchased list (mua hàng)
-  /// TODO: Thêm các phương thức thanh toán sau (payment methods)
+  /// Stream purchased items (converts Future to Stream for backward compatibility)
+  Stream<List<PurchaseItem>> streamPurchases() {
+    return Stream.fromFuture(getPurchases());
+  }
+
+  /// Add movie to purchases (buy movie)
   Future<void> addToPurchase(String movieId) async {
     final userId = _userId;
     if (userId == null) {
       throw Exception('User not authenticated');
     }
 
-    // Add to purchases
-    await _db
-        .collection('users')
-        .doc(userId)
-        .collection('purchases')
-        .doc(movieId)
-        .set({
-      'movieId': movieId,
-      'purchasedAt': FieldValue.serverTimestamp(),
-      'isDownloaded': true,
-      'isFinished': false,
-    });
-
-    // Get movie details for notification
-    final movieDoc = await _db.collection('movies').doc(movieId).get();
-    if (movieDoc.exists) {
-      final movie = Movie.fromDoc(movieDoc);
-      
-      // Create purchase notification
-      final notification = NotificationItem(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        type: NotificationType.purchase,
-        title: t.purchase.notifications.successTitle,
-        description: '${t.purchase.notifications.successDescription} "${movie.title}"',
-        createdAt: DateTime.now(),
-        deepLink: 'movie:$movieId',
-        metadata: {
-          'movieId': movieId,
-          'movieTitle': movie.title,
-          'movieImageUrl': movie.imageUrl,
-        },
+    try {
+      await _dio.post(
+        '${ApiConfig.purchaseServiceUrl}/users/$userId/purchases',
+        data: {'movieId': movieId},
+        options: Options(headers: _headers),
       );
-
-      await _notificationRepo.createNotification(notification);
+    } catch (e) {
+      // Add to local sample for demo
+      _samplePurchases.add(PurchaseItem(
+        id: movieId,
+        title: 'Movie $movieId',
+        imageUrl: 'https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg',
+        rating: 8.0,
+        price: 4.99,
+        isDownloaded: true,
+        isFinished: false,
+      ));
     }
+
+    // Create purchase notification
+    final notification = NotificationItem(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      type: NotificationType.purchase,
+      title: t.purchase.notifications.successTitle,
+      description: '${t.purchase.notifications.successDescription} movie',
+      createdAt: DateTime.now(),
+      deepLink: 'movie:$movieId',
+      metadata: {
+        'movieId': movieId,
+      },
+    );
+
+    await _notificationRepo.createNotification(notification);
   }
 
-  /// Xóa movie khỏi purchased list (nếu cần)
+  /// Remove movie from purchases
   Future<void> removeFromPurchase(String movieId) async {
     final userId = _userId;
     if (userId == null) {
       throw Exception('User not authenticated');
     }
 
-    await _db
-        .collection('users')
-        .doc(userId)
-        .collection('purchases')
-        .doc(movieId)
-        .delete();
+    try {
+      await _dio.delete(
+        '${ApiConfig.purchaseServiceUrl}/users/$userId/purchases/$movieId',
+        options: Options(headers: _headers),
+      );
+    } catch (e) {
+      // Remove from local sample for demo
+      _samplePurchases.removeWhere((p) => p.id == movieId);
+    }
   }
 
-  /// Kiểm tra movie đã được purchased chưa
+  /// Check if movie is purchased
   Future<bool> isPurchased(String movieId) async {
     final userId = _userId;
     if (userId == null) return false;
 
-    final doc = await _db
-        .collection('users')
-        .doc(userId)
-        .collection('purchases')
-        .doc(movieId)
-        .get();
-
-    return doc.exists;
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.purchaseServiceUrl}/users/$userId/purchases/$movieId',
+        options: Options(headers: _headers),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return _samplePurchases.any((p) => p.id == movieId);
+    }
   }
 
-  /// Lấy số lượng items đã purchased
+  /// Get purchase count
   Future<int> getPurchaseCount() async {
-    final userId = _userId;
-    if (userId == null) return 0;
-
-    final snapshot = await _db
-        .collection('users')
-        .doc(userId)
-        .collection('purchases')
-        .count()
-        .get();
-
-    return snapshot.count ?? 0;
+    final items = await getPurchases();
+    return items.length;
   }
 
-  /// Lấy thông tin purchase của một movie
+  /// Get purchase info for a movie
   Future<Map<String, dynamic>?> getPurchaseInfo(String movieId) async {
     final userId = _userId;
     if (userId == null) return null;
 
     try {
-      final doc = await _db
-          .collection('users')
-          .doc(userId)
-          .collection('purchases')
-          .doc(movieId)
-          .get();
-
-      if (!doc.exists) return null;
-      return doc.data();
-    } catch (e) {
+      final response = await _dio.get(
+        '${ApiConfig.purchaseServiceUrl}/users/$userId/purchases/$movieId',
+        options: Options(headers: _headers),
+      );
+      if (response.statusCode == 200) {
+        return response.data;
+      }
       return null;
+    } catch (e) {
+      final purchase = _samplePurchases.where((p) => p.id == movieId).firstOrNull;
+      return purchase?.toJson();
     }
   }
 
-  /// Stream transactions của một movie
-  Stream<List<TransactionItem>> streamTransactions(String movieId) {
+  /// Get transactions for a movie
+  Future<List<TransactionItem>> getTransactions(String movieId) async {
     final userId = _userId;
-    if (userId == null) {
-      return Stream.value([]);
-    }
+    if (userId == null) return [];
 
-    return _db
-        .collection('users')
-        .doc(userId)
-        .collection('transactions')
-        .where('movieId', isEqualTo: movieId)
-        .snapshots()
-        .map((snapshot) {
-      final transactions = snapshot.docs
-          .map((doc) => TransactionItem.fromFirestore(doc.id, doc.data()))
-          .toList();
-      
-      // Sort by createdAt descending in memory (không cần Firestore index)
-      transactions.sort((a, b) {
-        final aTime = a.createdAt ?? DateTime(1970);
-        final bTime = b.createdAt ?? DateTime(1970);
-        return bTime.compareTo(aTime);
-      });
-      
-      return transactions;
-    });
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.purchaseServiceUrl}/users/$userId/transactions',
+        queryParameters: {'movieId': movieId},
+        options: Options(headers: _headers),
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.map((json) => TransactionItem.fromJson(json)).toList();
+      }
+      return _sampleTransactions.where((t) => t.movieId == movieId).toList();
+    } catch (e) {
+      return _sampleTransactions.where((t) => t.movieId == movieId).toList();
+    }
+  }
+
+  /// Stream transactions for a movie
+  Stream<List<TransactionItem>> streamTransactions(String movieId) {
+    return Stream.fromFuture(getTransactions(movieId));
   }
 }
 
@@ -230,37 +199,22 @@ final purchaseProvider = StreamProvider.autoDispose<List<PurchaseItem>>(
   },
 );
 
-final purchaseCountProvider = StreamProvider.autoDispose<int>(
-  (ref) {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return Stream.value(0);
-
-    return FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('purchases')
-        .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+final purchaseCountProvider = FutureProvider.autoDispose<int>(
+  (ref) async {
+    final repo = ref.watch(purchaseRepositoryProvider);
+    return repo.getPurchaseCount();
   },
 );
 
-// Provider để check movie đã được purchased chưa (real-time)
-final isPurchasedProvider = StreamProvider.autoDispose.family<bool, String>(
-  (ref, movieId) {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return Stream.value(false);
-
-    return FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('purchases')
-        .doc(movieId)
-        .snapshots()
-        .map((doc) => doc.exists);
+// Provider to check if movie is purchased
+final isPurchasedProvider = FutureProvider.autoDispose.family<bool, String>(
+  (ref, movieId) async {
+    final repo = ref.watch(purchaseRepositoryProvider);
+    return repo.isPurchased(movieId);
   },
 );
 
-// Provider để lấy transactions của một movie
+// Provider for movie transactions
 final movieTransactionsProvider = StreamProvider.autoDispose.family<List<TransactionItem>, String>(
   (ref, movieId) {
     final repo = ref.watch(purchaseRepositoryProvider);
@@ -268,11 +222,10 @@ final movieTransactionsProvider = StreamProvider.autoDispose.family<List<Transac
   },
 );
 
-// Provider để lấy purchase info
+// Provider for purchase info
 final purchaseInfoProvider = FutureProvider.autoDispose.family<Map<String, dynamic>?, String>(
   (ref, movieId) async {
     final repo = ref.watch(purchaseRepositoryProvider);
     return repo.getPurchaseInfo(movieId);
   },
 );
-

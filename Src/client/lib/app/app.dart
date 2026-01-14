@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-
 import '../i18n/translations.g.dart';
 import '../core/services/locale_setting.dart';
 import '../core/services/theme_mode_notifier.dart';
@@ -10,15 +9,16 @@ import '../core/theme/app_theme.dart';
 import '../core/widgets/orientation_lock_widget.dart';
 import '../routes/app_router.dart';
 
-
-
 class NozieApp extends ConsumerWidget {
   const NozieApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
-    final locale = ref.watch(localeControllerProvider); // locale từ Riverpod
+    final locale = ref.watch(localeControllerProvider);
+    
+    // Use routerProvider to get GoRouter with auth state integration
+    final router = ref.watch(routerProvider);
 
     return OrientationLockWidget(
       child: MaterialApp.router(
@@ -38,8 +38,8 @@ class NozieApp extends ConsumerWidget {
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
 
-        // routing with go_router
-        routerConfig: AppRouter.router,
+        // routing with go_router (now uses auth state from AuthStateNotifier)
+        routerConfig: router,
       ),
     );
   }

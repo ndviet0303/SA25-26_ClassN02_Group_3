@@ -8,6 +8,7 @@ class SearchFilters {
   final List<String> genres;
   final LanguageOption language;
   final AgeOption age;
+  final int? year;
 
   const SearchFilters({
     this.sortBy = SortOption.trending,
@@ -17,6 +18,7 @@ class SearchFilters {
     this.genres = const [],
     this.language = LanguageOption.all,
     this.age = AgeOption.all,
+    this.year,
   });
 
   SearchFilters copyWith({
@@ -27,6 +29,7 @@ class SearchFilters {
     List<String>? genres,
     LanguageOption? language,
     AgeOption? age,
+    int? year,
   }) {
     return SearchFilters(
       sortBy: sortBy ?? this.sortBy,
@@ -36,7 +39,7 @@ class SearchFilters {
       genres: genres ?? this.genres,
       language: language ?? this.language,
       age: age ?? this.age,
+      year: year ?? this.year,
     );
   }
 }
-

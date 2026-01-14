@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:movie_fe/core/app_export.dart';
 import 'package:movie_fe/core/widgets/feedback/toast_notification.dart';
 import 'package:movie_fe/features/notification/presentation/widgets/notification_card.dart';
-import 'package:movie_fe/features/notification/providers/notification_providers.dart';
+import 'package:movie_fe/features/notification/repositories/notification_repository.dart';
 import 'package:movie_fe/routes/app_router.dart';
 
 class NotificationScreen extends ConsumerWidget {

@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
 class NotificationItem extends Equatable {
@@ -25,26 +24,24 @@ class NotificationItem extends Equatable {
   final Map<String, dynamic>? metadata; // Additional data
 
   factory NotificationItem.fromJson(Map<String, dynamic> json) {
-    Timestamp? readTimestamp;
-    Timestamp? createdAtTimestamp;
+    DateTime? readAtDate;
+    DateTime? createdAtDate;
 
+    // Parse readAt
     if (json['readAt'] != null) {
-      if (json['readAt'] is Timestamp) {
-        readTimestamp = json['readAt'] as Timestamp;
-      } else if (json['readAt'] is Map) {
-        readTimestamp = Timestamp.fromMillisecondsSinceEpoch(
-          (json['readAt']['_seconds'] as int) * 1000,
-        );
+      if (json['readAt'] is String) {
+        readAtDate = DateTime.tryParse(json['readAt'] as String);
+      } else if (json['readAt'] is int) {
+        readAtDate = DateTime.fromMillisecondsSinceEpoch(json['readAt'] as int);
       }
     }
 
+    // Parse createdAt
     if (json['createdAt'] != null) {
-      if (json['createdAt'] is Timestamp) {
-        createdAtTimestamp = json['createdAt'] as Timestamp;
-      } else if (json['createdAt'] is Map) {
-        createdAtTimestamp = Timestamp.fromMillisecondsSinceEpoch(
-          (json['createdAt']['_seconds'] as int) * 1000,
-        );
+      if (json['createdAt'] is String) {
+        createdAtDate = DateTime.tryParse(json['createdAt'] as String);
+      } else if (json['createdAt'] is int) {
+        createdAtDate = DateTime.fromMillisecondsSinceEpoch(json['createdAt'] as int);
       }
     }
 
@@ -53,8 +50,8 @@ class NotificationItem extends Equatable {
       type: NotificationType.fromString(json['type'] as String? ?? 'general'),
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
-      createdAt: createdAtTimestamp?.toDate() ?? DateTime.now(),
-      readAt: readTimestamp?.toDate(),
+      createdAt: createdAtDate ?? DateTime.now(),
+      readAt: readAtDate,
       imageUrl: json['imageUrl'] as String?,
       deepLink: json['deepLink'] as String?,
       metadata: json['metadata'] as Map<String, dynamic>?,
@@ -67,8 +64,8 @@ class NotificationItem extends Equatable {
       'type': type.value,
       'title': title,
       'description': description,
-      'createdAt': Timestamp.fromDate(createdAt),
-      'readAt': readAt != null ? Timestamp.fromDate(readAt!) : null,
+      'createdAt': createdAt.toIso8601String(),
+      'readAt': readAt?.toIso8601String(),
       'imageUrl': imageUrl,
       'deepLink': deepLink,
       'metadata': metadata,
@@ -122,6 +119,7 @@ enum NotificationType {
   authorUpdate('authorUpdate'),
   priceDrop('priceDrop'),
   newSeries('newSeries'),
+  newRelease('newRelease'),
   system('system'),
   tips('tips'),
   survey('survey');
@@ -136,4 +134,3 @@ enum NotificationType {
     );
   }
 }
-

@@ -1,146 +1,194 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
+import '../../../core/auth/auth_providers.dart';
+import '../../../core/config/api_config.dart';
 import '../models/notification_item.dart';
 
+final dioProvider = Provider((ref) => Dio());
+
+final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
+  return NotificationRepository(
+    ref.watch(dioProvider),
+    ref,
+  );
+});
+
+/// Notification Repository - REST API based
+/// TODO: Connect to actual REST API endpoints
 class NotificationRepository {
-  NotificationRepository({
-    FirebaseFirestore? db,
-    FirebaseAuth? auth,
-  })  : _db = db ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+  NotificationRepository(this._dio, this._ref);
 
-  final FirebaseFirestore _db;
-  final FirebaseAuth _auth;
+  final Dio _dio;
+  final Ref _ref;
 
-  String get _userId => _auth.currentUser?.uid ?? '';
+  String? get _userId => _ref.read(currentUserIdProvider);
+  String? get _accessToken => _ref.read(accessTokenProvider);
 
-  CollectionReference<Map<String, dynamic>> get _notificationsRef =>
-      _db.collection('users').doc(_userId).collection('notifications');
+  Map<String, String> get _headers => {
+    if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+  };
+
+  // In-memory cache for sample data
+  final List<NotificationItem> _sampleNotifications = [
+    NotificationItem(
+      id: 'sample-1',
+      type: NotificationType.general,
+      title: 'Welcome to Nozie!',
+      description: 'Start exploring your favorite movies today.',
+      createdAt: DateTime.now().subtract(const Duration(hours: 1)),
+    ),
+    NotificationItem(
+      id: 'sample-2',
+      type: NotificationType.newRelease,
+      title: 'New Movie Released!',
+      description: 'Check out the latest blockbuster now available.',
+      createdAt: DateTime.now().subtract(const Duration(days: 1)),
+      metadata: {'movieId': 'sample-1'},
+    ),
+  ];
 
   /// Fetch all notifications for the user
-  Future<List<NotificationItem>> fetchNotifications({
-    int limit = 100,
-  }) async {
-    try {
-      final snapshot = await _notificationsRef
-          .orderBy('createdAt', descending: true)
-          .limit(limit)
-          .get();
+  Future<List<NotificationItem>> fetchNotifications({int limit = 100}) async {
+    final userId = _userId;
+    if (userId == null) return [];
 
-      return snapshot.docs
-          .map((doc) => NotificationItem.fromJson({
-                'id': doc.id,
-                ...doc.data(),
-              }))
-          .toList();
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.notificationServiceUrl}/users/$userId/notifications',
+        queryParameters: {'limit': limit},
+        options: Options(headers: _headers),
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.map<NotificationItem>((json) => NotificationItem.fromJson(json as Map<String, dynamic>)).toList();
+      }
+      return _sampleNotifications;
     } catch (e) {
-      throw Exception('Failed to fetch notifications: $e');
+      return _sampleNotifications;
     }
   }
 
-  /// Stream notifications in real-time
-  Stream<List<NotificationItem>> watchNotifications({
-    int limit = 100,
-  }) {
-    return _notificationsRef
-        .orderBy('createdAt', descending: true)
-        .limit(limit)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => NotificationItem.fromJson({
-                'id': doc.id,
-                ...doc.data(),
-              }))
-          .toList();
-    });
+  /// Stream notifications in real-time (converts Future to Stream)
+  Stream<List<NotificationItem>> watchNotifications({int limit = 100}) {
+    return Stream.fromFuture(fetchNotifications(limit: limit));
   }
 
   /// Mark a notification as read
   Future<void> markAsRead(String notificationId) async {
+    final userId = _userId;
+    if (userId == null) return;
+
     try {
-      await _notificationsRef.doc(notificationId).update({
-        'readAt': FieldValue.serverTimestamp(),
-      });
+      await _dio.patch(
+        '${ApiConfig.notificationServiceUrl}/users/$userId/notifications/$notificationId/read',
+        options: Options(headers: _headers),
+      );
     } catch (e) {
-      throw Exception('Failed to mark notification as read: $e');
+      // Update local sample for demo
+      final index = _sampleNotifications.indexWhere((n) => n.id == notificationId);
+      if (index >= 0) {
+        _sampleNotifications[index] = _sampleNotifications[index].copyWith(
+          readAt: DateTime.now(),
+        );
+      }
     }
   }
 
   /// Mark all notifications as read
   Future<void> markAllAsRead() async {
-    try {
-      final snapshot = await _notificationsRef
-          .where('readAt', isNull: true)
-          .get();
+    final userId = _userId;
+    if (userId == null) return;
 
-      final batch = _db.batch();
-      for (final doc in snapshot.docs) {
-        batch.update(doc.reference, {
-          'readAt': FieldValue.serverTimestamp(),
-        });
-      }
-      await batch.commit();
+    try {
+      await _dio.patch(
+        '${ApiConfig.notificationServiceUrl}/users/$userId/notifications/read-all',
+        options: Options(headers: _headers),
+      );
     } catch (e) {
-      throw Exception('Failed to mark all notifications as read: $e');
+      // Update local sample for demo
+      for (int i = 0; i < _sampleNotifications.length; i++) {
+        _sampleNotifications[i] = _sampleNotifications[i].copyWith(
+          readAt: DateTime.now(),
+        );
+      }
     }
   }
 
   /// Delete a notification
   Future<void> deleteNotification(String notificationId) async {
+    final userId = _userId;
+    if (userId == null) return;
+
     try {
-      await _notificationsRef.doc(notificationId).delete();
+      await _dio.delete(
+        '${ApiConfig.notificationServiceUrl}/users/$userId/notifications/$notificationId',
+        options: Options(headers: _headers),
+      );
     } catch (e) {
-      throw Exception('Failed to delete notification: $e');
+      // Remove from local sample for demo
+      _sampleNotifications.removeWhere((n) => n.id == notificationId);
     }
   }
 
   /// Delete all read notifications
   Future<void> deleteAllReadNotifications() async {
-    try {
-      final snapshot = await _notificationsRef
-          .where('readAt', isNull: false)
-          .get();
+    final userId = _userId;
+    if (userId == null) return;
 
-      final batch = _db.batch();
-      for (final doc in snapshot.docs) {
-        batch.delete(doc.reference);
-      }
-      await batch.commit();
+    try {
+      await _dio.delete(
+        '${ApiConfig.notificationServiceUrl}/users/$userId/notifications/read',
+        options: Options(headers: _headers),
+      );
     } catch (e) {
-      throw Exception('Failed to delete read notifications: $e');
+      // Remove read notifications from local sample for demo
+      _sampleNotifications.removeWhere((n) => n.readAt != null);
     }
   }
 
   /// Get unread count
   Future<int> getUnreadCount() async {
-    try {
-      final snapshot = await _notificationsRef
-          .where('readAt', isNull: true)
-          .count()
-          .get();
-
-      return snapshot.count ?? 0;
-    } catch (e) {
-      throw Exception('Failed to get unread count: $e');
-    }
+    final notifications = await fetchNotifications();
+    return notifications.where((n) => n.readAt == null).length;
   }
 
   /// Stream unread count
   Stream<int> watchUnreadCount() {
-    return _notificationsRef
-        .where('readAt', isNull: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+    return Stream.fromFuture(getUnreadCount());
   }
 
-  /// Create a notification (for testing or admin use)
+  /// Create a notification (for local/admin use)
   Future<void> createNotification(NotificationItem notification) async {
+    final userId = _userId;
+    if (userId == null) return;
+
     try {
-      await _notificationsRef.doc(notification.id).set(notification.toJson());
+      await _dio.post(
+        '${ApiConfig.notificationServiceUrl}/users/$userId/notifications',
+        data: notification.toJson(),
+        options: Options(headers: _headers),
+      );
     } catch (e) {
-      throw Exception('Failed to create notification: $e');
+      // Add to local sample for demo
+      _sampleNotifications.insert(0, notification);
     }
   }
 }
 
+// Providers
+final notificationsProvider = StreamProvider<List<NotificationItem>>((ref) {
+  final repo = ref.watch(notificationRepositoryProvider);
+  return repo.watchNotifications();
+});
+
+final unreadCountProvider = StreamProvider<int>((ref) {
+  final repo = ref.watch(notificationRepositoryProvider);
+  return repo.watchUnreadCount();
+});
+
+final hasUnreadNotificationsProvider = Provider<bool>((ref) {
+  final unreadCount = ref.watch(unreadCountProvider);
+  final count = unreadCount.value;
+  if (count == null) return false;
+  return count > 0;
+});
