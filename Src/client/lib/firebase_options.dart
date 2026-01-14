@@ -5,8 +5,9 @@ class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     switch (defaultTargetPlatform) {
       case TargetPlatform.iOS:
-      case TargetPlatform.macOS:
         return _ios;
+      case TargetPlatform.web:
+        return _web;
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for this platform.',
@@ -22,6 +23,15 @@ class DefaultFirebaseOptions {
     storageBucket: 'fir-84e19.firebasestorage.app',
     iosClientId: '133383338782-bqv8s2q9v8fv23a70bfivffsi5sg52g6.apps.googleusercontent.com',
     iosBundleId: 'com.oggy.nozie',
+  );
+
+  static const FirebaseOptions _web = FirebaseOptions(
+    apiKey: 'AIzaSyAHRbGrTcniAysk9p509sZhdPY50kgXX3g',
+    appId: '1:133383338782:web:YOUR_WEB_APP_ID',
+    messagingSenderId: '133383338782',
+    projectId: 'fir-84e19',
+    authDomain: 'fir-84e19.firebaseapp.com',
+    storageBucket: 'fir-84e19.firebasestorage.app',
   );
 }
 

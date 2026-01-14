@@ -467,10 +467,6 @@ class _DeviceSessionRow extends StatelessWidget {
     switch (platform) {
       case DevicePlatform.ios:
         return Icons.phone_iphone;
-      case DevicePlatform.android:
-        return Icons.smartphone;
-      case DevicePlatform.macos:
-        return Icons.laptop_mac;
       case DevicePlatform.web:
         return Icons.desktop_windows;
     }

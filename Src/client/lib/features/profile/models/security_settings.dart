@@ -164,17 +164,13 @@ class DeviceSession extends Equatable {
       ];
 }
 
-enum DevicePlatform { ios, android, macos, web }
+enum DevicePlatform { ios, web }
 
 extension DevicePlatformX on DevicePlatform {
   String toShortString() {
     switch (this) {
       case DevicePlatform.ios:
         return 'ios';
-      case DevicePlatform.android:
-        return 'android';
-      case DevicePlatform.macos:
-        return 'macos';
       case DevicePlatform.web:
         return 'web';
     }
@@ -182,10 +178,6 @@ extension DevicePlatformX on DevicePlatform {
 
   static DevicePlatform fromString(String? value) {
     switch (value) {
-      case 'android':
-        return DevicePlatform.android;
-      case 'macos':
-        return DevicePlatform.macos;
       case 'web':
         return DevicePlatform.web;
       case 'ios':
