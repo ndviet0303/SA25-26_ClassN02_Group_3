@@ -8,6 +8,7 @@ import com.nozie.identityservice.entity.Role;
 import com.nozie.identityservice.entity.Permission;
 import com.nozie.identityservice.service.AuthService;
 import com.nozie.identityservice.service.TokenService;
+import com.nozie.identityservice.entity.UserProfile;
 import com.nozie.identityservice.repository.UserSessionRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -55,11 +56,25 @@ public class AuthController {
                 .map(Role::getName)
                 .collect(Collectors.toSet());
 
-        Map<String, Object> userData = Map.of(
-                "id", user.getId(),
-                "username", user.getUsername(),
-                "email", user.getEmail() != null ? user.getEmail() : "",
-                "roles", roles);
+        Map<String, Object> userData = new java.util.HashMap<>();
+        userData.put("id", user.getId());
+        userData.put("username", user.getUsername());
+        userData.put("email", user.getEmail() != null ? user.getEmail() : "");
+        userData.put("roles", roles);
+
+        UserProfile profile = user.getProfile();
+        if (profile != null) {
+            userData.put("fullName", profile.getFullName());
+            userData.put("avatarUrl", profile.getAvatarUrl());
+            userData.put("phone", user.getPhoneNumber());
+            userData.put("country", profile.getCountry());
+            userData.put("dateOfBirth", profile.getDateOfBirth());
+            userData.put("gender", profile.getGender());
+            userData.put("age", profile.getAge());
+            userData.put("genres", profile.getGenres());
+        } else {
+            userData.put("phone", user.getPhoneNumber());
+        }
         return new ResponseEntity<>(ApiResponse.success("User registered successfully", userData), HttpStatus.CREATED);
     }
 
@@ -158,16 +173,29 @@ public class AuthController {
                 .map(Permission::getName)
                 .collect(Collectors.toSet());
 
-        Map<String, Object> userData = Map.of(
-                "id", user.getId(),
-                "username", user.getUsername(),
-                "email", user.getEmail() != null ? user.getEmail() : "",
-                "phoneNumber", user.getPhoneNumber() != null ? user.getPhoneNumber() : "",
-                "status", user.getStatus().name(),
-                "roles", roles,
-                "permissions", permissions,
-                "lastLoginAt", user.getLastLoginAt() != null ? user.getLastLoginAt().toString() : "",
-                "createdAt", user.getCreatedAt().toString());
+        Map<String, Object> userData = new java.util.HashMap<>();
+        userData.put("id", user.getId());
+        userData.put("username", user.getUsername());
+        userData.put("email", user.getEmail() != null ? user.getEmail() : "");
+        userData.put("status", user.getStatus().name());
+        userData.put("roles", roles);
+        userData.put("permissions", permissions);
+        userData.put("lastLoginAt", user.getLastLoginAt() != null ? user.getLastLoginAt().toString() : "");
+        userData.put("createdAt", user.getCreatedAt().toString());
+
+        UserProfile profile = user.getProfile();
+        if (profile != null) {
+            userData.put("fullName", profile.getFullName());
+            userData.put("avatarUrl", profile.getAvatarUrl());
+            userData.put("phone", user.getPhoneNumber());
+            userData.put("country", profile.getCountry());
+            userData.put("dateOfBirth", profile.getDateOfBirth());
+            userData.put("gender", profile.getGender());
+            userData.put("age", profile.getAge());
+            userData.put("genres", profile.getGenres());
+        } else {
+            userData.put("phone", user.getPhoneNumber());
+        }
 
         return ResponseEntity.ok(ApiResponse.success(userData));
     }
@@ -205,6 +233,7 @@ public class AuthController {
         Long userId = tokenService.getUserIdFromToken(token);
         String ipAddress = getClientIP(httpRequest);
         String userAgent = httpRequest.getHeader("User-Agent");
+        log.info("DELETE /api/auth/sessions/{} from {} using {}", sessionId, ipAddress, userAgent);
 
         UserSession session = userSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));

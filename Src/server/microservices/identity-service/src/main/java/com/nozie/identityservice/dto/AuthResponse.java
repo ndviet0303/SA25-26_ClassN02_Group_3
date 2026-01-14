@@ -21,4 +21,11 @@ public class AuthResponse {
     private String email;
     private Set<String> roles;
     private Set<String> permissions;
+
+    // Profile info
+    private String fullName;
+    private String avatarUrl;
+    private String phone;
+    private String country;
+    private String dateOfBirth;
 }

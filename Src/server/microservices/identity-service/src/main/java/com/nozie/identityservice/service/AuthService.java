@@ -26,6 +26,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final UserProfileRepository userProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
     private final AuditService auditService;
@@ -41,7 +42,7 @@ public class AuthService {
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
-        user.setPhoneNumber(request.getPhoneNumber());
+        user.setPhoneNumber(request.getPhone());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setStatus(User.Status.ACTIVE);
 
@@ -54,6 +55,20 @@ public class AuthService {
         user.addRole(userRole);
 
         User savedUser = userRepository.save(user);
+
+        // Create and save UserProfile
+        UserProfile profile = UserProfile.builder()
+                .user(savedUser)
+                .fullName(request.getFullName())
+                .dateOfBirth(request.getDateOfBirth())
+                .country(request.getCountry())
+                .gender(request.getGender())
+                .age(request.getAge())
+                .avatarUrl(request.getAvatarUrl())
+                .genres(request.getGenres() != null ? new java.util.HashSet<>(request.getGenres())
+                        : new java.util.HashSet<>())
+                .build();
+        userProfileRepository.save(profile);
 
         auditService.logSuccess(savedUser.getId(), AuditLog.Action.REGISTER, ipAddress, userAgent);
 
@@ -108,26 +123,7 @@ public class AuthService {
 
         auditService.logSuccess(user.getId(), AuditLog.Action.LOGIN, ipAddress, userAgent);
 
-        // Build response
-        Set<String> roles = user.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.toSet());
-
-        Set<String> permissions = user.getRoles().stream()
-                .flatMap(role -> role.getPermissions().stream())
-                .map(Permission::getName)
-                .collect(Collectors.toSet());
-
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken())
-                .expiresIn(accessTokenExpiration / 1000)
-                .userId(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .roles(roles)
-                .permissions(permissions)
-                .build();
+        return buildAuthResponse(user, accessToken, refreshToken.getToken());
     }
 
     public void logout(String refreshToken, String accessToken, String ipAddress, String userAgent) {
@@ -189,6 +185,10 @@ public class AuthService {
 
         auditService.logSuccess(user.getId(), AuditLog.Action.TOKEN_REFRESH, ipAddress, userAgent);
 
+        return buildAuthResponse(user, accessToken, newRefreshToken.getToken());
+    }
+
+    private AuthResponse buildAuthResponse(User user, String accessToken, String refreshToken) {
         Set<String> roles = user.getRoles().stream()
                 .map(Role::getName)
                 .collect(Collectors.toSet());
@@ -198,16 +198,28 @@ public class AuthService {
                 .map(Permission::getName)
                 .collect(Collectors.toSet());
 
-        return AuthResponse.builder()
+        AuthResponse.AuthResponseBuilder builder = AuthResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(newRefreshToken.getToken())
+                .refreshToken(refreshToken)
                 .expiresIn(accessTokenExpiration / 1000)
                 .userId(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .roles(roles)
-                .permissions(permissions)
-                .build();
+                .permissions(permissions);
+
+        UserProfile profile = user.getProfile();
+        if (profile != null) {
+            builder.fullName(profile.getFullName())
+                    .avatarUrl(profile.getAvatarUrl())
+                    .phone(user.getPhoneNumber())
+                    .country(profile.getCountry())
+                    .dateOfBirth(profile.getDateOfBirth());
+        } else {
+            builder.phone(user.getPhoneNumber());
+        }
+
+        return builder.build();
     }
 
     public void changePassword(Long userId, ChangePasswordRequest request, String ipAddress, String userAgent) {
