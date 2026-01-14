@@ -77,7 +77,7 @@ public class AuthService {
     public AuthResponse login(LoginRequest request, String ipAddress, String userAgent, String deviceInfo) {
         log.info("Login attempt for user: {}", request.getUsername());
 
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository.findByUsernameOrEmail(request.getUsername(), request.getUsername())
                 .orElseThrow(() -> {
                     auditService.logFailure(null, AuditLog.Action.LOGIN_FAILED, ipAddress, userAgent,
                             "User not found: " + request.getUsername());
