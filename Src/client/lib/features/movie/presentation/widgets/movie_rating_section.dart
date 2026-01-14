@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/utils/data/format_utils.dart';
 import '../../../../core/app_export.dart';
 import '../../services/ratings_service.dart';
+import '../screens/ratings_detail_screen.dart';
 
 class MovieRatingSection extends ConsumerStatefulWidget {
   const MovieRatingSection({
@@ -33,6 +33,8 @@ class _MovieRatingSectionState extends ConsumerState<MovieRatingSection> {
     final textColor = AppColors.getText(context);
     final secondaryText = AppColors.getTextSecondary(context);
 
+    final ratingSummaryAsync = ref.watch(ratingSummaryProvider(widget.movieId));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -57,16 +59,11 @@ class _MovieRatingSectionState extends ConsumerState<MovieRatingSection> {
           ],
         ),
         const Gap(24),
-        StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-          stream: FirebaseFirestore.instance
-              .collection('ratings')
-              .doc(widget.movieId)
-              .snapshots(),
-          builder: (context, snap) {
-            final data = snap.data?.data();
-            final avg = (data?['averageRating'] as num?)?.toDouble() ?? (widget.rating);
-            final total = (data?['totalReviews'] as num?)?.toInt() ?? (widget.reviewCount);
-            final stars = (data?['starsCount'] as Map?)?.map((k, v) => MapEntry(k.toString(), (v as num).toInt())) ?? {};
+        ratingSummaryAsync.when(
+          data: (summary) {
+            final avg = (summary['averageRating'] as num?)?.toDouble() ?? widget.rating;
+            final total = (summary['totalReviews'] as num?)?.toInt() ?? widget.reviewCount;
+            final stars = (summary['starsCount'] as Map?)?.map((k, v) => MapEntry(k.toString(), (v as num).toInt())) ?? {};
 
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,6 +106,8 @@ class _MovieRatingSectionState extends ConsumerState<MovieRatingSection> {
               ],
             );
           },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Error: $e')),
         ),
         const Gap(32),
         _buildRateSection(context, theme, textColor, secondaryText),
@@ -117,7 +116,6 @@ class _MovieRatingSectionState extends ConsumerState<MovieRatingSection> {
   }
 
   Widget _buildStarRating(double rating) {
-    // Clamp rating to 0-5 range for display (5-star system)
     final normalizedRating = rating.clamp(0.0, 5.0);
     final fullStars = normalizedRating.floor().clamp(0, 5);
     final remainder = normalizedRating - fullStars;
@@ -358,6 +356,8 @@ class _MovieRatingSectionState extends ConsumerState<MovieRatingSection> {
                 TextField(
                   controller: controller,
                   maxLines: 4,
+                  cursorColor: AppColors.primary500,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: textColor),
                   decoration: InputDecoration(
                     hintText: context.i18n.movie.ratings.dialog.hint,
                     hintStyle: theme.textTheme.bodyMedium?.copyWith(color: secondaryText),
@@ -366,6 +366,10 @@ class _MovieRatingSectionState extends ConsumerState<MovieRatingSection> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.primary500, width: 1.5),
                     ),
                   ),
                 ),
@@ -384,7 +388,7 @@ class _MovieRatingSectionState extends ConsumerState<MovieRatingSection> {
                 text: context.i18n.movie.ratings.dialog.submit,
                 onPressed: () async {
                   try {
-                    final svc = RatingsService();
+                    final svc = ref.read(ratingsServiceProvider);
                     await svc.submitReview(
                       movieId: widget.movieId,
                       rating: selectedStars,
@@ -392,6 +396,7 @@ class _MovieRatingSectionState extends ConsumerState<MovieRatingSection> {
                     );
                     if (context.mounted) {
                       Navigator.of(context).pop();
+                      ref.invalidate(ratingSummaryProvider(widget.movieId));
                       ToastNotification.showSuccess(
                         context,
                         message: context.i18n.movie.ratings.dialog.submitted,
@@ -416,4 +421,3 @@ class _MovieRatingSectionState extends ConsumerState<MovieRatingSection> {
     );
   }
 }
-

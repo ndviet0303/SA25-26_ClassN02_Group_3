@@ -1,53 +1,24 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gap/gap.dart';
 import '../../../../core/app_export.dart';
+import '../../../../core/auth/auth_providers.dart';
 import '../../services/ratings_service.dart';
 import '../../../../core/utils/data/format_utils.dart';
 
-final _firestoreProvider = Provider((_) => FirebaseFirestore.instance);
-final _authProvider = Provider((_) => FirebaseAuth.instance);
-
-final ratingDocProvider = StreamProvider.family.autoDispose<Map<String, dynamic>?, String>((ref, movieId) {
-  return ref.watch(_firestoreProvider).collection('ratings').doc(movieId).snapshots().map((d) => d.data());
+final ratingSummaryProvider = FutureProvider.family.autoDispose<Map<String, dynamic>, String>((ref, movieId) {
+  return ref.watch(ratingsServiceProvider).getRatingSummary(movieId);
 });
 
-final reviewsProvider = StreamProvider.family.autoDispose<List<Map<String, dynamic>>, String>((ref, movieId) {
-  return ref
-      .watch(_firestoreProvider)
-      .collection('ratings')
-      .doc(movieId)
-      .collection('reviews')
-      .orderBy('updatedAt', descending: true)
-      .snapshots()
-      .map((s) => s.docs.map((e) => e.data()).toList());
+final reviewsProvider = FutureProvider.family.autoDispose<List<Map<String, dynamic>>, String>((ref, movieId) {
+  return ref.watch(ratingsServiceProvider).getReviews(movieId);
 });
 
-final reviewLikeStatusProvider = StreamProvider.family.autoDispose<bool, Map<String, String>>((ref, params) {
+final reviewLikeStatusProvider = FutureProvider.family.autoDispose<bool, Map<String, String>>((ref, params) {
   final movieId = params['movieId']!;
   final reviewUserId = params['reviewUserId']!;
-  final currentUserId = ref.watch(_authProvider).currentUser?.uid;
-  
-  if (currentUserId == null) {
-    return Stream.value(false);
-  }
-  
-  return ref
-      .watch(_firestoreProvider)
-      .collection('ratings')
-      .doc(movieId)
-      .collection('reviews')
-      .doc(reviewUserId)
-      .snapshots()
-      .map((snap) {
-        if (!snap.exists) return false;
-        final data = snap.data();
-        final likedBy = List<String>.from((data?['likedBy'] as List?) ?? []);
-        return likedBy.contains(currentUserId);
-      });
+  return ref.watch(ratingsServiceProvider).hasLikedReview(movieId, reviewUserId);
 });
 
 class RatingsDetailScreen extends ConsumerWidget {
@@ -58,22 +29,30 @@ class RatingsDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final t = Theme.of(context);
+    final theme = Theme.of(context);
     final textColor = AppColors.getText(context);
     final secondaryText = AppColors.getTextSecondary(context);
 
-    final ratingDoc = ref.watch(ratingDocProvider(movieId));
-    final reviews = ref.watch(reviewsProvider(movieId));
+    final ratingSummaryAsync = ref.watch(ratingSummaryProvider(movieId));
+    final reviewsAsync = ref.watch(reviewsProvider(movieId));
 
     return Scaffold(
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
         title: Text(context.i18n.movie.ratings.title),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: textColor),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
-      body: ratingDoc.when(
-        data: (doc) {
-          final avg = (doc?['averageRating'] as num?)?.toDouble() ?? 0.0;
-          final total = (doc?['totalReviews'] as num?)?.toInt() ?? 0;
-          final stars = (doc?['starsCount'] as Map?)?.map((k, v) => MapEntry(int.tryParse(k.toString()) ?? 0, (v as num).toInt())) ?? {};
+      body: ratingSummaryAsync.when(
+        data: (summary) {
+          final avg = (summary['averageRating'] as num?)?.toDouble() ?? 0.0;
+          final total = (summary['totalReviews'] as num?)?.toInt() ?? 0;
+          final stars = (summary['starsCount'] as Map?)?.map((k, v) => MapEntry(int.tryParse(k.toString()) ?? 0, (v as num).toInt())) ?? {};
+          
           return Column(
             children: [
               Padding(
@@ -85,11 +64,11 @@ class RatingsDetailScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(avg.toStringAsFixed(1), style: t.textTheme.headlineLarge?.copyWith(color: textColor, fontWeight: FontWeight.w700)),
+                          Text(avg.toStringAsFixed(1), style: theme.textTheme.headlineLarge?.copyWith(color: textColor, fontWeight: FontWeight.w700)),
                           const Gap(8),
                           _buildStars(avg),
                           const Gap(8),
-                          Text('(${FormatUtils.formatCount(total)} reviews)', style: t.textTheme.bodyMedium?.copyWith(color: secondaryText)),
+                          Text('(${FormatUtils.formatCount(total)} reviews)', style: theme.textTheme.bodyMedium?.copyWith(color: secondaryText)),
                         ],
                       ),
                     ),
@@ -98,13 +77,13 @@ class RatingsDetailScreen extends ConsumerWidget {
                       child: Column(
                         children: List.generate(5, (i) {
                           final star = 5 - i;
-                          final count = stars[star] ?? 0;
+                          final count = stars[star.toString()] ?? stars[star] ?? 0;
                           final pct = total == 0 ? 0.0 : (count / total);
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Row(
                               children: [
-                                SizedBox(width: 16, child: Text('$star', style: t.textTheme.bodySmall?.copyWith(color: secondaryText, fontWeight: FontWeight.w600))),
+                                SizedBox(width: 16, child: Text('$star', style: theme.textTheme.bodySmall?.copyWith(color: secondaryText, fontWeight: FontWeight.w600))),
                                 const Gap(8),
                                 Expanded(
                                   child: ClipRRect(
@@ -128,10 +107,10 @@ class RatingsDetailScreen extends ConsumerWidget {
               ),
               const Divider(height: 1),
               Expanded(
-                child: reviews.when(
+                child: reviewsAsync.when(
                   data: (items) {
                     if (items.isEmpty) {
-                      return Center(child: Text(context.i18n.movie.ratings.noReviews, style: t.textTheme.bodyLarge?.copyWith(color: secondaryText)));
+                      return Center(child: Text(context.i18n.movie.ratings.noReviews, style: theme.textTheme.bodyLarge?.copyWith(color: secondaryText)));
                     }
                     return ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -145,7 +124,9 @@ class RatingsDetailScreen extends ConsumerWidget {
                         final comment = (r['comment'] as String?) ?? '';
                         final likes = (r['likes'] as num?)?.toInt() ?? 0;
                         final userId = (r['userId'] as String?) ?? '';
-                        final createdAt = (r['updatedAt'] ?? r['createdAt']);
+                        final createdAtStr = r['createdAt'] as String?;
+                        final createdAt = createdAtStr != null ? DateTime.tryParse(createdAtStr) : null;
+                        
                         return _ReviewTile(
                           name: name,
                           avatar: avatar,
@@ -154,7 +135,7 @@ class RatingsDetailScreen extends ConsumerWidget {
                           likes: likes,
                           userId: userId,
                           movieId: movieId,
-                          timestamp: createdAt is Timestamp ? createdAt.toDate() : null,
+                          timestamp: createdAt,
                         );
                       },
                     );
@@ -218,18 +199,23 @@ class _ReviewTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final t = Theme.of(context);
+    final theme = Theme.of(context);
     final text = AppColors.getText(context);
     final secondary = AppColors.getTextSecondary(context);
-    final me = ref.watch(_authProvider).currentUser;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            CircleAvatar(radius: 20, backgroundImage: (avatar.isNotEmpty) ? NetworkImage(avatar) : null),
+            CircleAvatar(
+              radius: 20, 
+              backgroundColor: AppColors.getSurface(context),
+              backgroundImage: (avatar.isNotEmpty) ? NetworkImage(avatar) : null,
+              child: avatar.isEmpty ? Icon(Icons.person, color: secondary) : null,
+            ),
             const Gap(12),
-            Expanded(child: Text(name, style: t.textTheme.titleMedium?.copyWith(color: text, fontWeight: FontWeight.w700))),
+            Expanded(child: Text(name, style: theme.textTheme.titleMedium?.copyWith(color: text, fontWeight: FontWeight.w700))),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
@@ -241,25 +227,27 @@ class _ReviewTile extends ConsumerWidget {
                 children: [
                   Icon(Icons.star, color: AppColors.primary500, size: 16),
                   const Gap(4),
-                  Text('$rating', style: t.textTheme.bodyMedium?.copyWith(color: AppColors.primary500, fontWeight: FontWeight.w700)),
+                  Text('$rating', style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.primary500, fontWeight: FontWeight.w700)),
                 ],
               ),
             ),
             const Gap(8),
             IconButton(
-              icon: const Icon(Icons.more_horiz),
+              icon: Icon(Icons.more_horiz, color: secondary),
               onPressed: () {},
             ),
           ],
         ),
         const Gap(8),
-        Text(comment, style: t.textTheme.bodyMedium?.copyWith(color: text, height: 1.5)),
+        Text(comment, style: theme.textTheme.bodyMedium?.copyWith(color: text, height: 1.5)),
         const Gap(8),
         Row(
           children: [
             GestureDetector(
               onTap: () async {
-                await RatingsService().toggleLike(movieId: movieId, reviewUserId: userId);
+                final svc = ref.read(ratingsServiceProvider);
+                await svc.toggleLike(movieId: movieId, reviewUserId: userId);
+                ref.invalidate(reviewLikeStatusProvider({'movieId': movieId, 'reviewUserId': userId}));
               },
               child: ref.watch(reviewLikeStatusProvider({'movieId': movieId, 'reviewUserId': userId})).when(
                 data: (isLiked) => SvgPicture.asset(
@@ -286,15 +274,13 @@ class _ReviewTile extends ConsumerWidget {
               ),
             ),
             const Gap(8),
-            Text('${likes}', style: t.textTheme.bodySmall?.copyWith(color: secondary)),
+            Text('$likes', style: theme.textTheme.bodySmall?.copyWith(color: secondary)),
             const Gap(12),
             if (timestamp != null)
-              Text(FormatUtils.timeAgo(timestamp!), style: t.textTheme.bodySmall?.copyWith(color: secondary)),
+              Text(FormatUtils.timeAgo(timestamp!), style: theme.textTheme.bodySmall?.copyWith(color: secondary)),
           ],
         )
       ],
     );
   }
 }
-
-

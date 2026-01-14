@@ -1,11 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../core/auth/auth_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import '../../../../core/app_export.dart';
 import '../../../../core/widgets/feedback/toast_notification.dart';
 import '../../../../core/models/movie.dart';
+import '../../../../core/repositories/movie_repository.dart';
 
 class VideoErrorReportModal extends ConsumerStatefulWidget {
   const VideoErrorReportModal({
@@ -58,24 +58,16 @@ class _VideoErrorReportModalState extends ConsumerState<VideoErrorReportModal> {
     setState(() => _isSubmitting = true);
 
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      await FirebaseFirestore.instance.collection('reports').add({
-        'movieId': widget.movie.id,
-        'movieTitle': widget.movie.title,
-        'movieSlug': widget.movie.slug,
-        'videoUrl': widget.videoUrl ?? '',
-        'videoUrlType': widget.videoUrl?.contains('.m3u8') == true ? 'm3u8' : 'embed',
-        'issueType': _selectedIssueType,
-        'description': _descriptionController.text.trim(),
-        'errorMessage': widget.errorMessage,
-        'userId': user?.uid ?? 'anonymous',
-        'userEmail': user?.email ?? '',
-        'userDisplayName': user?.displayName ?? '',
-        'deviceInfo': {'platform': Theme.of(context).platform.toString()},
-        'status': 'pending',
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      final movieRepo = ref.read(movieRepositoryProvider);
+      
+      await movieRepo.reportError(
+        movieId: widget.movie.id,
+        issueType: _selectedIssueType!,
+        description: _descriptionController.text.trim(),
+        videoUrl: widget.videoUrl ?? '',
+        errorMessage: widget.errorMessage,
+        deviceInfo: {'platform': Theme.of(context).platform.toString()},
+      );
 
       if (mounted) {
         ToastNotification.showSuccess(
@@ -299,4 +291,3 @@ class _VideoErrorReportModalState extends ConsumerState<VideoErrorReportModal> {
     );
   }
 }
-

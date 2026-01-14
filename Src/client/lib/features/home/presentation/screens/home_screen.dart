@@ -10,7 +10,7 @@ import 'package:movie_fe/core/models/movie_item.dart';
 import 'package:movie_fe/core/widgets/cards/movie_card.dart';
 import 'package:movie_fe/core/widgets/lists/movie_carousel.dart';
 import 'package:movie_fe/routes/app_router.dart';
-import '../../data/home_providers.dart';
+import 'package:movie_fe/features/home/data/home_providers.dart';
 import 'package:movie_fe/core/utils/data/genres.dart';
 import 'package:movie_fe/core/repositories/movie_repository.dart';
 
@@ -203,7 +203,7 @@ class _ExploreByGenreSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(preferredGenresProvider);
+    final async = ref.watch(userPreferredGenresProvider);
     return async.when(
       data: (genres) {
         final theme = Theme.of(context);

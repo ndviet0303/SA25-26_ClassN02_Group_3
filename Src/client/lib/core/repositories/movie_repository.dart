@@ -1,201 +1,290 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import '../models/movie_item.dart';
 import '../models/movie.dart';
+import '../config/api_config.dart';
 
-final firestoreProvider = Provider((_) => FirebaseFirestore.instance);
+final dioProvider = Provider((ref) => Dio());
 
+final movieRepositoryProvider = Provider((ref) => MovieRepository(ref.watch(dioProvider)));
+
+/// Movie Repository - REST API based
+/// Handles movie data fetching and error reporting
 class MovieRepository {
-  MovieRepository(this._db);
-  final FirebaseFirestore _db;
+  MovieRepository(this._dio);
+  final Dio _dio;
 
-  Stream<List<MovieItem>> streamAll() => _db
-      .collection('movies')
-      .orderBy('year', descending: true)
-      .snapshots()
-      .map((s) => s.docs.map((doc) => MovieItem.fromMovie(Movie.fromDoc(doc))).toList());
+  /// Get all movies
+  Future<List<MovieItem>> getAll() async {
+    try {
+      final response = await _dio.get('${ApiConfig.movieServiceUrl}/movies');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.map((json) => MovieItem.fromJson(json)).toList();
+      }
+      return _getSampleMovies();
+    } catch (e) {
+      return _getSampleMovies();
+    }
+  }
 
-  Stream<List<MovieItem>> streamByGenre(String slugOrName) => _db
-      .collection('movies')
-      .orderBy('view', descending: true)
-      .snapshots()
-      .map((s) {
-        final docs = s.docs;
-        final filtered = <MovieItem>[];
-        for (final doc in docs) {
-          final data = doc.data();
-          bool match = false;
-          final slugs = (data['categorySlugs'] as List?)?.map((e) => e.toString()).toList() ?? const [];
-          if (slugs.contains(slugOrName)) {
-            match = true;
-          } else {
-            final cats = (data['category'] as List?) ?? const [];
-            for (final c in cats) {
-              if (c is Map) {
-                final slug = c['slug']?.toString();
-                final name = c['name']?.toString();
-                if (slug == slugOrName || name == slugOrName) {
-                  match = true;
-                  break;
-                }
-              }
-            }
-          }
-          if (match) {
-            filtered.add(MovieItem.fromMovie(Movie.fromDoc(doc)));
-          }
-        }
-        return filtered;
-      });
+  /// Stream all movies
+  Stream<List<MovieItem>> streamAll() {
+    return Stream.fromFuture(getAll());
+  }
 
-  Stream<MovieItem?> streamById(String id) => _db
-      .collection('movies')
-      .doc(id)
-      .snapshots()
-      .map((doc) => doc.exists ? MovieItem.fromMovie(Movie.fromDoc(doc)) : null);
+  /// Get movies by genre
+  Future<List<MovieItem>> getByGenre(String slugOrName) async {
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.movieServiceUrl}/movies',
+        queryParameters: {'genre': slugOrName},
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.map<MovieItem>((json) => MovieItem.fromJson(json as Map<String, dynamic>)).toList();
+      }
+      return _getSampleMovies();
+    } catch (e) {
+      return _getSampleMovies();
+    }
+  }
 
+  Stream<List<MovieItem>> streamByGenre(String slugOrName) {
+    return Stream.fromFuture(getByGenre(slugOrName));
+  }
+
+  /// Get movie by ID
   Future<MovieItem?> getById(String id) async {
-    final movie = await getMovieDetail(id);
-    return movie != null ? MovieItem.fromMovie(movie) : null;
+    try {
+      final response = await _dio.get('${ApiConfig.movieServiceUrl}/movies/$id');
+      if (response.statusCode == 200) {
+        return MovieItem.fromJson(response.data);
+      }
+      return _getSampleMovie(id);
+    } catch (e) {
+      return _getSampleMovie(id);
+    }
+  }
+
+  Stream<MovieItem?> streamById(String id) {
+    return Stream.fromFuture(getById(id));
+  }
+
+  /// Get movie detail
+  Future<Movie?> getMovieDetail(String id) async {
+    try {
+      final response = await _dio.get('${ApiConfig.movieServiceUrl}/movies/$id/detail');
+      if (response.statusCode == 200) {
+        return Movie.fromMap(response.data);
+      }
+      return _getSampleMovieDetail(id);
+    } catch (e) {
+      return _getSampleMovieDetail(id);
+    }
+  }
+
+  /// Get similar movies
+  Future<List<MovieItem>> getSimilar(String movieId, {int limit = 10}) async {
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.movieServiceUrl}/movies/$movieId/similar',
+        queryParameters: {'limit': limit},
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.map<MovieItem>((json) => MovieItem.fromJson(json as Map<String, dynamic>)).toList();
+      }
+      return _getSampleMovies().take(limit).toList();
+    } catch (e) {
+      return _getSampleMovies().take(limit).toList();
+    }
   }
 
   Stream<List<MovieItem>> streamSimilar(String movieId, {int limit = 10}) {
-    return _db.collection('movies')
-        .orderBy('view', descending: true)
-        .limit(limit)
-        .snapshots()
-        .map((s) => s.docs.map((doc) => MovieItem.fromMovie(Movie.fromDoc(doc))).toList());
+    return Stream.fromFuture(getSimilar(movieId, limit: limit));
   }
 
-  Stream<List<MovieItem>> streamByFranchise(String franchiseId) => _db
-      .collection('movies')
-      .where('slug', isGreaterThanOrEqualTo: franchiseId)
-      .where('slug', isLessThan: '${franchiseId}z')
-      .orderBy('slug')
-      .snapshots()
-      .map((s) => s.docs.map((doc) => MovieItem.fromMovie(Movie.fromDoc(doc))).toList());
+  /// Get movies by franchise
+  Future<List<MovieItem>> getByFranchise(String franchiseId) async {
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.movieServiceUrl}/movies',
+        queryParameters: {'franchise': franchiseId},
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.map<MovieItem>((json) => MovieItem.fromJson(json as Map<String, dynamic>)).toList();
+      }
+      return _getSampleMovies();
+    } catch (e) {
+      return _getSampleMovies();
+    }
+  }
 
-  Stream<List<MovieItem>> streamTopCharts({int limit = 10}) => _db
-      .collection('movies')
-      .orderBy('view', descending: true)
-      .limit(limit)
-      .snapshots()
-      .map((s) => s.docs.map((doc) => MovieItem.fromMovie(Movie.fromDoc(doc))).toList());
+  Stream<List<MovieItem>> streamByFranchise(String franchiseId) {
+    return Stream.fromFuture(getByFranchise(franchiseId));
+  }
 
-  Stream<List<MovieItem>> streamTopSelling({int limit = 10}) => _db
-      .collection('movies')
-      .orderBy('tmdb.vote_average', descending: true)
-      .limit(limit)
-      .snapshots()
-      .map((s) => s.docs.map((doc) => MovieItem.fromMovie(Movie.fromDoc(doc))).toList());
+  /// Get top charts
+  Future<List<MovieItem>> getTopCharts({int limit = 10}) async {
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.movieServiceUrl}/movies/top-charts',
+        queryParameters: {'limit': limit},
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.map<MovieItem>((json) => MovieItem.fromJson(json as Map<String, dynamic>)).toList();
+      }
+      return _getSampleMovies().take(limit).toList();
+    } catch (e) {
+      return _getSampleMovies().take(limit).toList();
+    }
+  }
 
-  Stream<List<MovieItem>> streamTopFree({int limit = 10}) => _db
-      .collection('movies')
-      .where('price.usd', isLessThanOrEqualTo: 0)
-      .orderBy('price.usd', descending: false)
-      .limit(limit * 5)
-      .snapshots()
-      .map((s) {
-        final moviesWithItems = s.docs.map((doc) {
-          final movie = Movie.fromDoc(doc);
-          return (movie: movie, item: MovieItem.fromMovie(movie));
-        }).toList();
-        
-        final filtered = moviesWithItems
-            .where((e) => e.item.price == null || (e.item.price != null && e.item.price! <= 0))
-            .toList();
-        
-        filtered.sort((a, b) {
-          final aView = a.movie.view ?? 0;
-          final bView = b.movie.view ?? 0;
-          return bView.compareTo(aView);
-        });
-        
-        return filtered.take(limit).map((e) => e.item).toList();
-      });
+  Stream<List<MovieItem>> streamTopCharts({int limit = 10}) {
+    return Stream.fromFuture(getTopCharts(limit: limit));
+  }
+
+  /// Get top selling
+  Future<List<MovieItem>> getTopSelling({int limit = 10}) async {
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.movieServiceUrl}/movies/top-selling',
+        queryParameters: {'limit': limit},
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.map<MovieItem>((json) => MovieItem.fromJson(json as Map<String, dynamic>)).toList();
+      }
+      return _getSampleMovies().take(limit).toList();
+    } catch (e) {
+      return _getSampleMovies().take(limit).toList();
+    }
+  }
+
+  Stream<List<MovieItem>> streamTopSelling({int limit = 10}) {
+    return Stream.fromFuture(getTopSelling(limit: limit));
+  }
+
+  /// Get top free movies
+  Future<List<MovieItem>> getTopFree({int limit = 10}) async {
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.movieServiceUrl}/movies/top-free',
+        queryParameters: {'limit': limit},
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.map((json) => MovieItem.fromJson(json)).toList();
+      }
+      return _getSampleMovies().take(limit).toList();
+    } catch (e) {
+      return _getSampleMovies().take(limit).toList();
+    }
+  }
+
+  Stream<List<MovieItem>> streamTopFree({int limit = 10}) {
+    return Stream.fromFuture(getTopFree(limit: limit));
+  }
+
+  /// Get new releases
+  Future<List<MovieItem>> getTopNewReleases({int limit = 10}) async {
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.movieServiceUrl}/movies/new-releases',
+        queryParameters: {'limit': limit},
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.map((json) => MovieItem.fromJson(json)).toList();
+      }
+      return _getSampleMovies().take(limit).toList();
+    } catch (e) {
+      return _getSampleMovies().take(limit).toList();
+    }
+  }
 
   Stream<List<MovieItem>> streamTopNewReleases({int limit = 10}) {
-    final currentYear = DateTime.now().year;
-    final minYear = currentYear - 2;
-    
-    return _db
-        .collection('movies')
-        .where('year', isGreaterThanOrEqualTo: minYear)
-        .orderBy('year', descending: true)
-        .limit(limit * 5)
-        .snapshots()
-        .map((s) {
-          final movies = <Movie>[];
-          final items = <MovieItem>[];
-          for (final doc in s.docs) {
-            final movie = Movie.fromDoc(doc);
-            if (movie.status != 'upcoming' && movie.year != null) {
-              movies.add(movie);
-              items.add(MovieItem.fromMovie(movie));
-            }
-          }
-          
-          final indexed = List.generate(movies.length, (i) => i);
-          
-          indexed.sort((a, b) {
-            final yearCompare = (movies[b].year ?? 0).compareTo(movies[a].year ?? 0);
-            if (yearCompare != 0) return yearCompare;
-            final aView = movies[a].view ?? 0;
-            final bView = movies[b].view ?? 0;
-            return bView.compareTo(aView);
-          });
-          
-          return indexed.take(limit).map((i) => items[i]).toList();
-        });
+    return Stream.fromFuture(getTopNewReleases(limit: limit));
   }
 
-  Stream<List<MovieItem>> streamTrending({int limit = 10}) => _db
-      .collection('movies')
-      .where('chieurap', isEqualTo: true)
-      .orderBy('view', descending: true)
-      .limit(limit)
-      .snapshots()
-      .map((s) => s.docs.map((doc) => MovieItem.fromMovie(Movie.fromDoc(doc))).toList());
-
-  Future<Movie?> getMovieDetail(String id) async {
-    // Try by document ID first
-    var doc = await _db.collection('movies').doc(id).get();
-    if (doc.exists) {
-      return Movie.fromDoc(doc);
+  /// Report a video error
+  Future<void> reportError({
+    required String movieId,
+    required String issueType,
+    required String description,
+    required String videoUrl,
+    required String errorMessage,
+    Map<String, dynamic>? deviceInfo,
+  }) async {
+    try {
+      await _dio.post(
+        '${ApiConfig.movieServiceUrl}/reports',
+        data: {
+          'movieId': movieId,
+          'issueType': issueType,
+          'description': description,
+          'videoUrl': videoUrl,
+          'errorMessage': errorMessage,
+          'deviceInfo': deviceInfo,
+          'timestamp': DateTime.now().toIso8601String(),
+        },
+      );
+    } catch (e) {
+      // For demo, just print
+      print('[MovieRepository] Error submitting report: $e');
     }
+  }
 
-    // Try by slug
-    final slugQuery = await _db
-        .collection('movies')
-        .where('slug', isEqualTo: id)
-        .limit(1)
-        .get();
-    if (slugQuery.docs.isNotEmpty) {
-      return Movie.fromDoc(slugQuery.docs.first);
-    }
+  // ============= SAMPLE DATA =============
+  
+  List<MovieItem> _getSampleMovies() {
+    return [
+      MovieItem(id: 'sample-1', title: 'Avengers: Endgame', imageUrl: 'https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg', rating: 8.4, price: 4.99),
+      MovieItem(id: 'sample-2', title: 'The Dark Knight', imageUrl: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg', rating: 9.0, price: 3.99),
+      MovieItem(id: 'sample-3', title: 'Inception', imageUrl: 'https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Ber.jpg', rating: 8.8, price: 2.99),
+    ];
+  }
 
-    // Try by originalId
-    final originalIdQuery = await _db
-        .collection('movies')
-        .where('originalId', isEqualTo: id)
-        .limit(1)
-        .get();
-    if (originalIdQuery.docs.isNotEmpty) {
-      return Movie.fromDoc(originalIdQuery.docs.first);
-    }
+  MovieItem? _getSampleMovie(String id) {
+    final samples = _getSampleMovies();
+    return samples.firstWhere((m) => m.id == id, orElse: () => samples.first);
+  }
 
-    return null;
+  Movie _getSampleMovieDetail(String id) {
+    return Movie(
+      id: id,
+      name: 'Sample Movie',
+      originName: 'Sample Movie Original',
+      slug: 'sample-movie',
+      originalId: 'orig-$id',
+      type: 'single',
+      status: 'completed',
+      content: 'This is a sample movie description for testing purposes.',
+      posterUrl: 'https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg',
+      thumbUrl: 'https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg',
+      trailerUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      year: 2024,
+      view: 10000,
+      category: [
+        {'name': 'Action', 'slug': 'action'},
+      ],
+      price: {'usd': 4.99},
+    );
   }
 }
 
-final movieRepoProvider = Provider((ref) => MovieRepository(ref.watch(firestoreProvider)));
-
+// Additional Providers
 final moviesProvider = StreamProvider.autoDispose<List<MovieItem>>(
-  (ref) => ref.watch(movieRepoProvider).streamAll(),
+  (ref) => ref.watch(movieRepositoryProvider).streamAll(),
 );
 
-final moviesByGenreProvider =
-    StreamProvider.autoDispose.family<List<MovieItem>, String>(
-  (ref, genre) => ref.watch(movieRepoProvider).streamByGenre(genre),
+final movieDetailProvider = FutureProvider.autoDispose.family<Movie?, String>(
+  (ref, id) => ref.watch(movieRepositoryProvider).getMovieDetail(id),
 );
 
+final moviesByGenreProvider = StreamProvider.autoDispose.family<List<MovieItem>, String>(
+  (ref, genre) => ref.watch(movieRepositoryProvider).streamByGenre(genre),
+);

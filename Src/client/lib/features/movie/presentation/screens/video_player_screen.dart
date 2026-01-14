@@ -79,7 +79,8 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
 
   Future<void> _initializePlayer() async {
     // Access check before resolving streams
-    final access = await MovieWatchService().hasAccess(widget.movie.id);
+    final watchService = ref.read(movieWatchServiceProvider);
+    final access = await watchService.hasAccess(widget.movie.id);
     if (!access) {
       if (mounted) {
         ToastNotification.showError(
@@ -253,8 +254,9 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
         // Record view + history once
         if (!_viewRecorded) {
           _viewRecorded = true;
-          unawaited(MovieWatchService().incrementView(widget.movie.id));
-          unawaited(MovieWatchService().addWatchHistory(widget.movie.id));
+          final watchService = ref.read(movieWatchServiceProvider);
+          unawaited(watchService.incrementView(widget.movie.id));
+          unawaited(watchService.addWatchHistory(widget.movie.id));
         }
         _startPeriodicSave();
         _togglePlayPause();

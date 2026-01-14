@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/utils/data/format_utils.dart';
 import '../../../../core/app_export.dart';
 import '../../../../core/models/movie_item.dart';
 import '../../../../core/utils/data/price_utils.dart';
-import '../../../../core/utils/data/format_utils.dart';
 import '../../../../core/utils/data/text_utils.dart';
 import '../../../../core/widgets/image_utils.dart';
+import '../screens/ratings_detail_screen.dart';
 
-class MovieHeroSection extends StatelessWidget {
+class MovieHeroSection extends ConsumerWidget {
   const MovieHeroSection({
     super.key,
     required this.movie,
@@ -35,32 +35,31 @@ class MovieHeroSection extends StatelessWidget {
   final VoidCallback? onViewMorePressed;
   final bool isPurchased;
   final int? ratingCount;
-  final String? durationText; // e.g., "2h 10m"
-  final String? qualityText;  // e.g., "1080p"
-  final String? viewsText;    // e.g., "50M+ views"
+  final String? durationText;
+  final String? qualityText;
+  final String? viewsText;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final textColor = AppColors.getText(context);
     final secondaryText = AppColors.getTextSecondary(context);
+
+    final ratingSummaryAsync = ref.watch(ratingSummaryProvider(movie.id));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeroInfo(context, theme, textColor, secondaryText),
         const Gap(24),
-        StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-          stream: FirebaseFirestore.instance
-              .collection('ratings')
-              .doc(movie.id)
-              .snapshots(),
-          builder: (context, snap) {
-            final data = snap.data?.data();
-            final avg = (data?['averageRating'] as num?)?.toDouble() ?? (movie.rating ?? 0.0);
-            final total = (data?['totalReviews'] as num?)?.toInt() ?? (ratingCount ?? 0);
+        ratingSummaryAsync.when(
+          data: (summary) {
+            final avg = (summary['averageRating'] as num?)?.toDouble() ?? (movie.rating ?? 0.0);
+            final total = (summary['totalReviews'] as num?)?.toInt() ?? (ratingCount ?? 0);
             return _buildMetrics(context, theme, textColor, secondaryText, avg, total);
           },
+          loading: () => _buildMetricsPlaceholder(context, theme, textColor, secondaryText),
+          error: (e, _) => _buildMetrics(context, theme, textColor, secondaryText, movie.rating ?? 0.0, ratingCount ?? 0),
         ),
         const Gap(16),
         _buildBuyButton(context, theme),
@@ -68,6 +67,10 @@ class MovieHeroSection extends StatelessWidget {
         _buildAboutSection(context, theme, textColor, secondaryText),
       ],
     );
+  }
+
+  Widget _buildMetricsPlaceholder(BuildContext context, ThemeData theme, Color textColor, Color secondaryText) {
+    return _buildMetrics(context, theme, textColor, secondaryText, movie.rating ?? 0.0, ratingCount ?? 0);
   }
 
   Widget _buildHeroInfo(
@@ -131,13 +134,9 @@ class MovieHeroSection extends StatelessWidget {
                 }).toList(),
               ),
               const Gap(16),
-              
             ],
           ),
         ),
-
-        
-
       ],
     );
   }
@@ -204,8 +203,6 @@ class MovieHeroSection extends StatelessWidget {
       ],
     );
   }
-
-  
 
   Widget _buildBuyButton(BuildContext context, ThemeData theme) {
     final isFree = PriceUtils.isFree(movie);
@@ -282,4 +279,3 @@ class MovieHeroSection extends StatelessWidget {
     );
   }
 }
-

@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/movie_item.dart';
-import '../../../../core/repositories/movie_repository.dart';
+import 'package:movie_fe/core/repositories/movie_repository.dart';
 import '../../domain/enums/discover_section_type.dart';
 
 final discoverSectionProvider = StreamProvider.autoDispose.family<List<MovieItem>, DiscoverSectionType>(
   (ref, sectionType) {
-    final repo = ref.watch(movieRepoProvider);
+    final repo = ref.watch(movieRepositoryProvider);
 
     Stream<List<MovieItem>> stream;
     switch (sectionType) {

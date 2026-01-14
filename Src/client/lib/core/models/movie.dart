@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Movie {
   final String id;
   final String name;
@@ -81,16 +79,14 @@ class Movie {
     this.updatedAt,
   });
 
+  factory Movie.fromJson(Map<String, dynamic> json) {
+    return Movie.fromMap(json);
+  }
+
   factory Movie.fromMap(Map<String, dynamic> map, {String? id}) {
-    // Parse Map safely (handle Timestamp and other types)
+    // Parse Map safely
     Map<String, dynamic>? _safeParseMap(dynamic value) {
       if (value == null) return null;
-      if (value is Timestamp) {
-        return {
-          '_seconds': value.seconds,
-          '_nanoseconds': value.nanoseconds,
-        };
-      }
       if (value is Map) {
         try {
           return Map<String, dynamic>.from(value);
@@ -101,11 +97,10 @@ class Movie {
       return null;
     }
 
-    // Parse DateTime từ String hoặc Timestamp
+    // Parse DateTime từ String hoặc Map format
     DateTime? parseDateTime(dynamic value) {
       if (value == null) return null;
       if (value is DateTime) return value;
-      if (value is Timestamp) return value.toDate();
       if (value is String) {
         try {
           return DateTime.parse(value);
@@ -113,7 +108,6 @@ class Movie {
           return null;
         }
       }
-      // Handle Firestore timestamp map format
       if (value is Map) {
         final seconds = value['_seconds'] ?? value['seconds'];
         if (seconds != null) {
@@ -187,11 +181,6 @@ class Movie {
     );
   }
 
-  factory Movie.fromDoc(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return Movie.fromMap(data, id: doc.id);
-  }
-
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -233,7 +222,9 @@ class Movie {
     };
   }
 
-  // Helper getters để lấy dữ liệu dễ dàng
+  Map<String, dynamic> toJson() => toMap();
+
+  // Helper getters
   String get imageUrl => posterUrl ?? thumbUrl ?? '';
   
   double? get rating {
@@ -300,7 +291,6 @@ class Movie {
     if (content!.length > 200) {
       return '${content!.substring(0, 200)}...';
     }
-    // Remove HTML tags if any
     return content!.replaceAll(RegExp(r'<[^>]*>'), '').trim();
   }
 
@@ -329,4 +319,3 @@ class Movie {
 
   String? get franchiseName => name;
 }
-
