@@ -1,0 +1,26 @@
+meta {
+  name: 1.8 Logout
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/auth/logout
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "refreshToken": "{{refreshToken}}"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

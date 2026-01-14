@@ -1,0 +1,19 @@
+meta {
+  name: 2.8 Remove Role from User
+  type: http
+  seq: 8
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/users/{{userId}}/roles/1
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{adminToken}}
+}
+
+settings {
+  encodeUrl: true
+}

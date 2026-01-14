@@ -1,0 +1,19 @@
+meta {
+  name: 4.1 Get All Permissions
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/admin/permissions
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{adminToken}}
+}
+
+settings {
+  encodeUrl: true
+}

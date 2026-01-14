@@ -1,0 +1,19 @@
+meta {
+  name: 7.2 Access with Invalid Token (401)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/movies
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer invalid.token.here
+}
+
+settings {
+  encodeUrl: true
+}

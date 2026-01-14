@@ -1,0 +1,19 @@
+meta {
+  name: 6.2 Get Customers
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/customers
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+settings {
+  encodeUrl: true
+}

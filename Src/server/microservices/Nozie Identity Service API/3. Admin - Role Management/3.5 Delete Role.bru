@@ -1,0 +1,19 @@
+meta {
+  name: 3.5 Delete Role
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/roles/4
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{adminToken}}
+}
+
+settings {
+  encodeUrl: true
+}

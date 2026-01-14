@@ -1,0 +1,19 @@
+meta {
+  name: 1.6 Get Active Sessions
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/auth/sessions
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,19 @@
+meta {
+  name: 2.5 Get User Sessions
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/admin/users/{{userId}}/sessions
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{adminToken}}
+}
+
+settings {
+  encodeUrl: true
+}

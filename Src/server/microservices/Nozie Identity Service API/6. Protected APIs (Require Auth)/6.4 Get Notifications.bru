@@ -1,0 +1,19 @@
+meta {
+  name: 6.4 Get Notifications
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/notifications
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+settings {
+  encodeUrl: true
+}

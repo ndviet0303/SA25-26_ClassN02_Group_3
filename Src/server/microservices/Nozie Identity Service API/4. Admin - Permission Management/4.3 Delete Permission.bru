@@ -1,0 +1,19 @@
+meta {
+  name: 4.3 Delete Permission
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/permissions/10
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{adminToken}}
+}
+
+settings {
+  encodeUrl: true
+}

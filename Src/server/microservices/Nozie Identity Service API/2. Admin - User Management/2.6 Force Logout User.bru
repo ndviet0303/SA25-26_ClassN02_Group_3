@@ -1,0 +1,19 @@
+meta {
+  name: 2.6 Force Logout User
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/users/{{userId}}/sessions
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{adminToken}}
+}
+
+settings {
+  encodeUrl: true
+}

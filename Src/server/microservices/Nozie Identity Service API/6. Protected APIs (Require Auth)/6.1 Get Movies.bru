@@ -1,0 +1,19 @@
+meta {
+  name: 6.1 Get Movies
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/movies
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+settings {
+  encodeUrl: true
+}

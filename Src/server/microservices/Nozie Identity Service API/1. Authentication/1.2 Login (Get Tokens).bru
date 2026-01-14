@@ -1,0 +1,36 @@
+meta {
+  name: 1.2 Login (Get Tokens)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/auth/login
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "username": "testuser",
+    "password": "password123"
+  }
+}
+
+script:post-response {
+  var jsonData = res.getBody();
+  if (jsonData.success && jsonData.data) {
+      bru.setVar('accessToken', jsonData.data.accessToken);
+      bru.setVar('refreshToken', jsonData.data.refreshToken);
+      bru.setVar('userId', jsonData.data.userId);
+      console.log('Tokens saved successfully');
+  }
+}
+
+settings {
+  encodeUrl: true
+}

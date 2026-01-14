@@ -1,0 +1,15 @@
+meta {
+  name: 7.1 Access Without Token (401)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/movies
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,33 @@
+meta {
+  name: 1.5 Refresh Token
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/auth/refresh
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "refreshToken": "{{refreshToken}}"
+  }
+}
+
+script:post-response {
+  var jsonData = res.getBody();
+  if (jsonData.success && jsonData.data) {
+      bru.setVar('accessToken', jsonData.data.accessToken);
+      bru.setVar('refreshToken', jsonData.data.refreshToken);
+  }
+}
+
+settings {
+  encodeUrl: true
+}

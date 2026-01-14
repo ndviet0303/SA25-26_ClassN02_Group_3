@@ -1,0 +1,26 @@
+meta {
+  name: 3.4 Set Role Permissions
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/admin/roles/1/permissions
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{adminToken}}
+}
+
+body:json {
+  {
+    "permissionIds": [1, 2, 3]
+  }
+}
+
+settings {
+  encodeUrl: true
+}

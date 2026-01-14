@@ -1,0 +1,29 @@
+meta {
+  name: 4.2 Create Permission
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/admin/permissions
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{adminToken}}
+}
+
+body:json {
+  {
+    "name": "report:generate",
+    "description": "Generate reports",
+    "resource": "report",
+    "action": "generate"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

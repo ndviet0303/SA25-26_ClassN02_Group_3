@@ -1,0 +1,27 @@
+meta {
+  name: 3.2 Create Role
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/admin/roles
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{adminToken}}
+}
+
+body:json {
+  {
+    "name": "EDITOR",
+    "description": "Content editor role"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

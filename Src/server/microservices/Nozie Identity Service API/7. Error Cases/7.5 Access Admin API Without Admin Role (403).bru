@@ -1,0 +1,19 @@
+meta {
+  name: 7.5 Access Admin API Without Admin Role (403)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/admin/users
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+settings {
+  encodeUrl: true
+}

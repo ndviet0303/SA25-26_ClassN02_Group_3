@@ -1,0 +1,26 @@
+meta {
+  name: 2.7 Add Role to User
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/admin/users/{{userId}}/roles
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{adminToken}}
+}
+
+body:json {
+  {
+    "roleId": 1
+  }
+}
+
+settings {
+  encodeUrl: true
+}

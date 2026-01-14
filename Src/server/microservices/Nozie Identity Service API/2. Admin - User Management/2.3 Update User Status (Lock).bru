@@ -1,0 +1,26 @@
+meta {
+  name: 2.3 Update User Status (Lock)
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/admin/users/{{userId}}/status
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{adminToken}}
+}
+
+body:json {
+  {
+    "status": "LOCKED"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

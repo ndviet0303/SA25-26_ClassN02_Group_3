@@ -1,0 +1,26 @@
+meta {
+  name: 3.3 Update Role
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/admin/roles/1
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{adminToken}}
+}
+
+body:json {
+  {
+    "description": "Updated description"
+  }
+}
+
+settings {
+  encodeUrl: true
+}
