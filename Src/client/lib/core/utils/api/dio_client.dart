@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 class DioClient {
   DioClient._();
 
-  // 👇 Set cứng base URL ở đây
-  static const String _kBaseUrl = 'https://api.yourhost.com'; // TODO: đổi domain
+  // Base URL for API Gateway (microservices)
+  static const String _kBaseUrl = 'http://localhost:8080';
 
   static late final Dio _dio;
   static bool _inited = false;
