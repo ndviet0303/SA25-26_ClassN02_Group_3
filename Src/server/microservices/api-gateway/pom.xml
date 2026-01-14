@@ -64,6 +64,13 @@
             <version>0.12.3</version>
             <scope>runtime</scope>
         </dependency>
+
+        <!-- Redis for Rate Limiting and Token Blacklist -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+        </dependency>
     </dependencies>
+
 </project>
 

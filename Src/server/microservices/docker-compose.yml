@@ -68,8 +68,12 @@ services:
     depends_on:
       discovery-server:
         condition: service_started
+      redis:
+        condition: service_started
     environment:
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
 
   # Business Services
   movie-service:

@@ -35,6 +35,9 @@ public class UserSession {
     @Column(name = "location")
     private String location;
 
+    @Column(name = "user_agent")
+    private String userAgent;
+
     @Column(name = "is_active")
     private boolean isActive = true;
 
@@ -139,6 +142,14 @@ public class UserSession {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public void setUserAgent(String userAgent) {
+        this.userAgent = userAgent;
     }
 
     public boolean isActive() {

@@ -1,19 +1,29 @@
 {
     "info": {
-        "name": "Nozie Microservices API - Full Test Suite",
-        "description": "Complete API test collection with JWT Authentication",
+        "name": "Nozie Identity Service API",
+        "description": "Complete API collection for Nozie Identity Service with Authentication, Authorization, RBAC, and Admin features",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "variable": [
         {
             "key": "baseUrl",
-            "value": "http://localhost:8080",
-            "type": "string"
+            "value": "http://localhost:8080"
         },
         {
             "key": "accessToken",
-            "value": "",
-            "type": "string"
+            "value": ""
+        },
+        {
+            "key": "refreshToken",
+            "value": ""
+        },
+        {
+            "key": "userId",
+            "value": ""
+        },
+        {
+            "key": "adminToken",
+            "value": ""
         }
     ],
     "item": [
@@ -22,23 +32,9 @@
             "item": [
                 {
                     "name": "1.1 Register User",
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "exec": [
-                                    "var jsonData = pm.response.json();",
-                                    "if (jsonData.success) {",
-                                    "    pm.environment.set('userId', jsonData.data.id);",
-                                    "    console.log('User registered with ID:', jsonData.data.id);",
-                                    "}"
-                                ],
-                                "type": "text/javascript"
-                            }
-                        }
-                    ],
                     "request": {
                         "method": "POST",
+                        "url": "{{baseUrl}}/api/auth/register",
                         "header": [
                             {
                                 "key": "Content-Type",
@@ -47,30 +43,31 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"username\": \"testuser\",\n    \"password\": \"password123\"\n}"
-                        },
-                        "url": "{{baseUrl}}/api/auth/register"
+                            "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"testuser@nozie.com\",\n  \"password\": \"password123\"\n}"
+                        }
                     }
                 },
                 {
-                    "name": "1.2 Login (Get Token)",
+                    "name": "1.2 Login (Get Tokens)",
                     "event": [
                         {
                             "listen": "test",
                             "script": {
                                 "exec": [
                                     "var jsonData = pm.response.json();",
-                                    "if (jsonData.success && jsonData.data.accessToken) {",
+                                    "if (jsonData.success && jsonData.data) {",
                                     "    pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
-                                    "    console.log('Token saved successfully');",
+                                    "    pm.collectionVariables.set('refreshToken', jsonData.data.refreshToken);",
+                                    "    pm.collectionVariables.set('userId', jsonData.data.userId);",
+                                    "    console.log('Tokens saved successfully');",
                                     "}"
-                                ],
-                                "type": "text/javascript"
+                                ]
                             }
                         }
                     ],
                     "request": {
                         "method": "POST",
+                        "url": "{{baseUrl}}/api/auth/login",
                         "header": [
                             {
                                 "key": "Content-Type",
@@ -79,175 +76,239 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"username\": \"testuser\",\n    \"password\": \"password123\"\n}"
-                        },
-                        "url": "{{baseUrl}}/api/auth/login"
+                            "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"password123\"\n}"
+                        }
                     }
                 },
                 {
                     "name": "1.3 Get Current User (Me)",
                     "request": {
                         "method": "GET",
+                        "url": "{{baseUrl}}/api/auth/me",
                         "header": [
                             {
                                 "key": "Authorization",
                                 "value": "Bearer {{accessToken}}"
                             }
-                        ],
-                        "url": "{{baseUrl}}/api/auth/me"
+                        ]
                     }
                 },
                 {
                     "name": "1.4 Validate Token",
                     "request": {
                         "method": "GET",
+                        "url": "{{baseUrl}}/api/auth/validate",
                         "header": [
                             {
                                 "key": "Authorization",
                                 "value": "Bearer {{accessToken}}"
                             }
-                        ],
-                        "url": "{{baseUrl}}/api/auth/validate"
+                        ]
                     }
-                }
-            ]
-        },
-        {
-            "name": "2. Customer Service (Protected)",
-            "item": [
+                },
                 {
-                    "name": "2.1 Create Customer",
+                    "name": "1.5 Refresh Token",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "if (jsonData.success && jsonData.data) {",
+                                    "    pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                                    "    pm.collectionVariables.set('refreshToken', jsonData.data.refreshToken);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
                     "request": {
                         "method": "POST",
+                        "url": "{{baseUrl}}/api/auth/refresh",
                         "header": [
                             {
                                 "key": "Content-Type",
                                 "value": "application/json"
-                            },
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{accessToken}}"
                             }
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"firebaseUid\": \"test_uid_001\",\n    \"email\": \"customer@example.com\",\n    \"fullName\": \"Nguyen Van A\",\n    \"phoneNumber\": \"0987654321\",\n    \"avatarUrl\": \"https://example.com/avatar.png\",\n    \"dateOfBirth\": \"1995-01-01\",\n    \"gender\": \"Male\"\n}"
-                        },
-                        "url": "{{baseUrl}}/api/customers"
-                    }
-                },
-                {
-                    "name": "2.2 Get All Customers",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{accessToken}}"
-                            }
-                        ],
-                        "url": "{{baseUrl}}/api/customers"
-                    }
-                },
-                {
-                    "name": "2.3 Get Customer By ID",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{accessToken}}"
-                            }
-                        ],
-                        "url": "{{baseUrl}}/api/customers/1"
-                    }
-                },
-                {
-                    "name": "2.4 Get Customer By Email",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{accessToken}}"
-                            }
-                        ],
-                        "url": "{{baseUrl}}/api/customers/email/customer@example.com"
-                    }
-                },
-                {
-                    "name": "2.5 Update Customer",
-                    "request": {
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{accessToken}}"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"email\": \"customer_updated@example.com\",\n    \"fullName\": \"Nguyen Van A - Updated\",\n    \"phoneNumber\": \"0123456789\",\n    \"avatarUrl\": \"https://example.com/new_avatar.png\",\n    \"dateOfBirth\": \"1995-05-05\",\n    \"gender\": \"Male\"\n}"
-                        },
-                        "url": "{{baseUrl}}/api/customers/1"
-                    }
-                },
-                {
-                    "name": "2.6 Update Subscription",
-                    "request": {
-                        "method": "PATCH",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{accessToken}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/api/customers/1/subscription?isSubscribed=true",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "customers",
-                                "1",
-                                "subscription"
-                            ],
-                            "query": [
-                                {
-                                    "key": "isSubscribed",
-                                    "value": "true"
-                                }
-                            ]
+                            "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
                         }
                     }
                 },
                 {
-                    "name": "2.7 Delete Customer",
+                    "name": "1.6 Get Active Sessions",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/auth/sessions",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "1.7 Change Password",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/api/auth/change-password",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"currentPassword\": \"password123\",\n  \"newPassword\": \"newpassword456\",\n  \"logoutAllSessions\": false\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "1.8 Logout",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/api/auth/logout",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "1.9 Logout All Sessions",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/api/auth/logout-all",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "2. Admin - User Management",
+            "item": [
+                {
+                    "name": "2.1 Get All Users",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/admin/users",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "2.2 Get User by ID",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/admin/users/{{userId}}",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "2.3 Update User Status (Lock)",
+                    "request": {
+                        "method": "PUT",
+                        "url": "{{baseUrl}}/api/admin/users/{{userId}}/status",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"LOCKED\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "2.4 Update User Status (Unlock)",
+                    "request": {
+                        "method": "PUT",
+                        "url": "{{baseUrl}}/api/admin/users/{{userId}}/status",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"ACTIVE\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "2.5 Get User Sessions",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/admin/users/{{userId}}/sessions",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "2.6 Force Logout User",
                     "request": {
                         "method": "DELETE",
+                        "url": "{{baseUrl}}/api/admin/users/{{userId}}/sessions",
                         "header": [
                             {
                                 "key": "Authorization",
-                                "value": "Bearer {{accessToken}}"
+                                "value": "Bearer {{adminToken}}"
                             }
-                        ],
-                        "url": "{{baseUrl}}/api/customers/1"
+                        ]
                     }
-                }
-            ]
-        },
-        {
-            "name": "3. Movie Service (Protected)",
-            "item": [
+                },
                 {
-                    "name": "3.1 Create Movie",
+                    "name": "2.7 Add Role to User",
                     "request": {
                         "method": "POST",
+                        "url": "{{baseUrl}}/api/admin/users/{{userId}}/roles",
                         "header": [
                             {
                                 "key": "Content-Type",
@@ -255,77 +316,51 @@
                             },
                             {
                                 "key": "Authorization",
-                                "value": "Bearer {{accessToken}}"
+                                "value": "Bearer {{adminToken}}"
                             }
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"name\": \"Interstellar\",\n    \"slug\": \"interstellar\",\n    \"description\": \"A team of explorers travel through a wormhole in space\",\n    \"type\": \"Sci-Fi\",\n    \"price\": 50000,\n    \"isFree\": false\n}"
-                        },
-                        "url": "{{baseUrl}}/api/movies"
+                            "raw": "{\n  \"roleId\": 1\n}"
+                        }
                     }
                 },
                 {
-                    "name": "3.2 Get All Movies",
+                    "name": "2.8 Remove Role from User",
                     "request": {
-                        "method": "GET",
+                        "method": "DELETE",
+                        "url": "{{baseUrl}}/api/admin/users/{{userId}}/roles/1",
                         "header": [
                             {
                                 "key": "Authorization",
-                                "value": "Bearer {{accessToken}}"
+                                "value": "Bearer {{adminToken}}"
                             }
-                        ],
-                        "url": "{{baseUrl}}/api/movies"
-                    }
-                },
-                {
-                    "name": "3.3 Get Trending Movies",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{accessToken}}"
-                            }
-                        ],
-                        "url": "{{baseUrl}}/api/movies/trending"
-                    }
-                },
-                {
-                    "name": "3.4 Get Free Movies",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{accessToken}}"
-                            }
-                        ],
-                        "url": "{{baseUrl}}/api/movies/free"
-                    }
-                },
-                {
-                    "name": "3.5 Search Movies",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{accessToken}}"
-                            }
-                        ],
-                        "url": "{{baseUrl}}/api/movies/search?q=interstellar"
+                        ]
                     }
                 }
             ]
         },
         {
-            "name": "4. Payment Service (Protected + RabbitMQ)",
+            "name": "3. Admin - Role Management",
             "item": [
                 {
-                    "name": "4.1 Create Payment (Triggers RabbitMQ)",
+                    "name": "3.1 Get All Roles",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/admin/roles",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "3.2 Create Role",
                     "request": {
                         "method": "POST",
+                        "url": "{{baseUrl}}/api/admin/roles",
                         "header": [
                             {
                                 "key": "Content-Type",
@@ -333,103 +368,240 @@
                             },
                             {
                                 "key": "Authorization",
-                                "value": "Bearer {{accessToken}}"
+                                "value": "Bearer {{adminToken}}"
                             }
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"customerId\": 1,\n    \"movieId\": \"movie_id_here\",\n    \"amount\": 50000,\n    \"paymentMethod\": \"STRIPE\"\n}"
-                        },
-                        "url": "{{baseUrl}}/api/payments/create"
+                            "raw": "{\n  \"name\": \"EDITOR\",\n  \"description\": \"Content editor role\"\n}"
+                        }
                     }
                 },
                 {
-                    "name": "4.2 Get Transactions By Customer",
+                    "name": "3.3 Update Role",
                     "request": {
-                        "method": "GET",
+                        "method": "PUT",
+                        "url": "{{baseUrl}}/api/admin/roles/1",
                         "header": [
                             {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
                                 "key": "Authorization",
-                                "value": "Bearer {{accessToken}}"
+                                "value": "Bearer {{adminToken}}"
                             }
                         ],
-                        "url": "{{baseUrl}}/api/payments/transactions/1"
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"description\": \"Updated description\"\n}"
+                        }
                     }
                 },
                 {
-                    "name": "4.3 Check Purchase Status",
+                    "name": "3.4 Set Role Permissions",
                     "request": {
-                        "method": "GET",
+                        "method": "PUT",
+                        "url": "{{baseUrl}}/api/admin/roles/1/permissions",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"permissionIds\": [1, 2, 3]\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "3.5 Delete Role",
+                    "request": {
+                        "method": "DELETE",
+                        "url": "{{baseUrl}}/api/admin/roles/4",
                         "header": [
                             {
                                 "key": "Authorization",
-                                "value": "Bearer {{accessToken}}"
+                                "value": "Bearer {{adminToken}}"
                             }
-                        ],
-                        "url": "{{baseUrl}}/api/payments/check-purchase?customerId=1&movieId=movie_id"
+                        ]
                     }
                 }
             ]
         },
         {
-            "name": "5. Notification Service (Protected)",
+            "name": "4. Admin - Permission Management",
             "item": [
                 {
-                    "name": "5.1 Get Notifications",
+                    "name": "4.1 Get All Permissions",
                     "request": {
                         "method": "GET",
+                        "url": "{{baseUrl}}/api/admin/permissions",
                         "header": [
                             {
                                 "key": "Authorization",
-                                "value": "Bearer {{accessToken}}"
+                                "value": "Bearer {{adminToken}}"
                             }
-                        ],
-                        "url": "{{baseUrl}}/api/notifications/1"
+                        ]
                     }
                 },
                 {
-                    "name": "5.2 Get Unread Count",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{accessToken}}"
-                            }
-                        ],
-                        "url": "{{baseUrl}}/api/notifications/1/count"
-                    }
-                }
-            ]
-        },
-        {
-            "name": "6. Error Cases",
-            "item": [
-                {
-                    "name": "6.1 Access Without Token (Should 401)",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": "{{baseUrl}}/api/customers"
-                    }
-                },
-                {
-                    "name": "6.2 Access With Invalid Token (Should 401)",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer invalid_token_here"
-                            }
-                        ],
-                        "url": "{{baseUrl}}/api/customers"
-                    }
-                },
-                {
-                    "name": "6.3 Login With Wrong Password (Should 400)",
+                    "name": "4.2 Create Permission",
                     "request": {
                         "method": "POST",
+                        "url": "{{baseUrl}}/api/admin/permissions",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"report:generate\",\n  \"description\": \"Generate reports\",\n  \"resource\": \"report\",\n  \"action\": \"generate\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "4.3 Delete Permission",
+                    "request": {
+                        "method": "DELETE",
+                        "url": "{{baseUrl}}/api/admin/permissions/10",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "5. Admin - Audit Logs",
+            "item": [
+                {
+                    "name": "5.1 Get All Audit Logs",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/admin/audit-logs",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "5.2 Get Audit Logs by User",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/admin/audit-logs/user/{{userId}}",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "6. Protected APIs (Require Auth)",
+            "item": [
+                {
+                    "name": "6.1 Get Movies",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/movies",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "6.2 Get Customers",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/customers",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "6.3 Get Payments",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/payments",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "6.4 Get Notifications",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/notifications",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "7. Error Cases",
+            "item": [
+                {
+                    "name": "7.1 Access Without Token (401)",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/movies"
+                    }
+                },
+                {
+                    "name": "7.2 Access with Invalid Token (401)",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/movies",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer invalid.token.here"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "7.3 Login with Wrong Password",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/api/auth/login",
                         "header": [
                             {
                                 "key": "Content-Type",
@@ -438,15 +610,15 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"username\": \"testuser\",\n    \"password\": \"wrong_password\"\n}"
-                        },
-                        "url": "{{baseUrl}}/api/auth/login"
+                            "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"wrongpassword\"\n}"
+                        }
                     }
                 },
                 {
-                    "name": "6.4 Register Duplicate Username (Should 400)",
+                    "name": "7.4 Register Duplicate Username",
                     "request": {
                         "method": "POST",
+                        "url": "{{baseUrl}}/api/auth/register",
                         "header": [
                             {
                                 "key": "Content-Type",
@@ -455,9 +627,73 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"username\": \"testuser\",\n    \"password\": \"password123\"\n}"
-                        },
-                        "url": "{{baseUrl}}/api/auth/register"
+                            "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"another@nozie.com\",\n  \"password\": \"password123\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "7.5 Access Admin API Without Admin Role (403)",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/admin/users",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "8. Setup Admin User",
+            "item": [
+                {
+                    "name": "8.1 Register Admin",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/api/auth/register",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"username\": \"admin\",\n  \"email\": \"admin@nozie.com\",\n  \"password\": \"admin123\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "8.2 Login Admin",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "if (jsonData.success && jsonData.data) {",
+                                    "    pm.collectionVariables.set('adminToken', jsonData.data.accessToken);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/api/auth/login",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+                        }
                     }
                 }
             ]

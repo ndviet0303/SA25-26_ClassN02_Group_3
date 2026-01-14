@@ -8,6 +8,11 @@ public class RegisterRequest {
     @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
     private String username;
 
+    @Email(message = "Invalid email format")
+    private String email;
+
+    private String phoneNumber;
+
     @NotBlank(message = "Password is required")
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
@@ -15,8 +20,9 @@ public class RegisterRequest {
     public RegisterRequest() {
     }
 
-    public RegisterRequest(String username, String password) {
+    public RegisterRequest(String username, String email, String password) {
         this.username = username;
+        this.email = email;
         this.password = password;
     }
 
@@ -26,6 +32,22 @@ public class RegisterRequest {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public String getPassword() {

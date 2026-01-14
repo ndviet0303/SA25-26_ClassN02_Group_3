@@ -1,12 +1,15 @@
 package com.nozie.identityservice.controller;
 
 import com.nozie.common.dto.ApiResponse;
-import com.nozie.identityservice.dto.AuthResponse;
-import com.nozie.identityservice.dto.LoginRequest;
-import com.nozie.identityservice.dto.RegisterRequest;
+import com.nozie.identityservice.dto.*;
 import com.nozie.identityservice.entity.User;
+import com.nozie.identityservice.entity.UserSession;
+import com.nozie.identityservice.entity.Role;
+import com.nozie.identityservice.entity.Permission;
 import com.nozie.identityservice.service.AuthService;
-import com.nozie.identityservice.service.JwtService;
+import com.nozie.identityservice.service.TokenService;
+import com.nozie.identityservice.repository.UserSessionRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +17,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -24,90 +30,234 @@ public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final AuthService authService;
-    private final JwtService jwtService;
+    private final TokenService tokenService;
+    private final UserSessionRepository userSessionRepository;
 
-    public AuthController(AuthService authService, JwtService jwtService) {
+    public AuthController(AuthService authService, TokenService tokenService,
+            UserSessionRepository userSessionRepository) {
         this.authService = authService;
-        this.jwtService = jwtService;
+        this.tokenService = tokenService;
+        this.userSessionRepository = userSessionRepository;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> register(
+            @Valid @RequestBody RegisterRequest request,
+            HttpServletRequest httpRequest) {
         log.info("POST /api/auth/register - Registering user: {}", request.getUsername());
-        User user = authService.register(request);
+
+        String ipAddress = getClientIP(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+
+        User user = authService.register(request, ipAddress, userAgent);
+
+        Set<String> roles = user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toSet());
+
         Map<String, Object> userData = Map.of(
-            "id", user.getId(),
-            "username", user.getUsername(),
-            "role", user.getRole()
-        );
+                "id", user.getId(),
+                "username", user.getUsername(),
+                "email", user.getEmail() != null ? user.getEmail() : "",
+                "roles", roles);
         return new ResponseEntity<>(ApiResponse.success("User registered successfully", userData), HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest) {
         log.info("POST /api/auth/login - Login attempt: {}", request.getUsername());
-        AuthResponse authResponse = authService.login(request);
+
+        String ipAddress = getClientIP(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+        String deviceInfo = httpRequest.getHeader("X-Device-Info");
+
+        AuthResponse authResponse = authService.login(request, ipAddress, userAgent, deviceInfo);
         return ResponseEntity.ok(ApiResponse.success("Login successful", authResponse));
     }
 
-    @GetMapping("/validate")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> validateToken(
-            @RequestHeader("Authorization") String authHeader) {
-        log.info("GET /api/auth/validate - Validating token");
-        
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error("Invalid token format"));
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @RequestBody RefreshTokenRequest request,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            HttpServletRequest httpRequest) {
+        log.info("POST /api/auth/logout");
+
+        String ipAddress = getClientIP(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+        String accessToken = null;
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            accessToken = authHeader.substring(7);
         }
+
+        authService.logout(request.getRefreshToken(), accessToken, ipAddress, userAgent);
+        return ResponseEntity.ok(ApiResponse.success("Logged out successfully", null));
+    }
+
+    @PostMapping("/logout-all")
+    public ResponseEntity<ApiResponse<Void>> logoutAll(
+            @RequestHeader("Authorization") String authHeader,
+            HttpServletRequest httpRequest) {
+        log.info("POST /api/auth/logout-all");
 
         String token = authHeader.substring(7);
-        
-        if (!jwtService.validateToken(token)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error("Invalid or expired token"));
-        }
+        Long userId = tokenService.getUserIdFromToken(token);
+        String ipAddress = getClientIP(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
 
-        Long userId = jwtService.getUserIdFromToken(token);
-        String username = jwtService.getUsernameFromToken(token);
-        String role = jwtService.getRoleFromToken(token);
+        authService.logoutAll(userId, ipAddress, userAgent);
+        return ResponseEntity.ok(ApiResponse.success("All sessions logged out", null));
+    }
 
-        Map<String, Object> tokenInfo = Map.of(
-            "userId", userId,
-            "username", username,
-            "role", role,
-            "valid", true
-        );
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(
+            @Valid @RequestBody RefreshTokenRequest request,
+            HttpServletRequest httpRequest) {
+        log.info("POST /api/auth/refresh");
 
-        return ResponseEntity.ok(ApiResponse.success(tokenInfo));
+        String ipAddress = getClientIP(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+
+        AuthResponse authResponse = authService.refreshToken(request.getRefreshToken(), ipAddress, userAgent);
+        return ResponseEntity.ok(ApiResponse.success("Token refreshed", authResponse));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @RequestHeader("Authorization") String authHeader,
+            @Valid @RequestBody ChangePasswordRequest request,
+            HttpServletRequest httpRequest) {
+        log.info("POST /api/auth/change-password");
+
+        String token = authHeader.substring(7);
+        Long userId = tokenService.getUserIdFromToken(token);
+        String ipAddress = getClientIP(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+
+        authService.changePassword(userId, request, ipAddress, userAgent);
+        return ResponseEntity.ok(ApiResponse.success("Password changed successfully", null));
     }
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getCurrentUser(
             @RequestHeader("Authorization") String authHeader) {
-        log.info("GET /api/auth/me - Getting current user");
-        
+        log.info("GET /api/auth/me");
+
+        String token = authHeader.substring(7);
+        Long userId = tokenService.getUserIdFromToken(token);
+        User user = authService.getUserById(userId);
+
+        Set<String> roles = user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toSet());
+
+        Set<String> permissions = user.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(Permission::getName)
+                .collect(Collectors.toSet());
+
+        Map<String, Object> userData = Map.of(
+                "id", user.getId(),
+                "username", user.getUsername(),
+                "email", user.getEmail() != null ? user.getEmail() : "",
+                "phoneNumber", user.getPhoneNumber() != null ? user.getPhoneNumber() : "",
+                "status", user.getStatus().name(),
+                "roles", roles,
+                "permissions", permissions,
+                "lastLoginAt", user.getLastLoginAt() != null ? user.getLastLoginAt().toString() : "",
+                "createdAt", user.getCreatedAt().toString());
+
+        return ResponseEntity.ok(ApiResponse.success(userData));
+    }
+
+    @GetMapping("/sessions")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getSessions(
+            @RequestHeader("Authorization") String authHeader) {
+        log.info("GET /api/auth/sessions");
+
+        String token = authHeader.substring(7);
+        Long userId = tokenService.getUserIdFromToken(token);
+
+        List<UserSession> sessions = userSessionRepository.findByUserIdAndIsActiveTrue(userId);
+
+        List<Map<String, Object>> sessionData = sessions.stream()
+                .map(session -> Map.<String, Object>of(
+                        "id", session.getId(),
+                        "deviceInfo", session.getDeviceInfo() != null ? session.getDeviceInfo() : "",
+                        "ipAddress", session.getIpAddress() != null ? session.getIpAddress() : "",
+                        "lastAccessAt", session.getLastAccessAt().toString(),
+                        "createdAt", session.getCreatedAt().toString()))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ApiResponse.success(sessionData));
+    }
+
+    @DeleteMapping("/sessions/{sessionId}")
+    public ResponseEntity<ApiResponse<Void>> revokeSession(
+            @PathVariable Long sessionId,
+            @RequestHeader("Authorization") String authHeader,
+            HttpServletRequest httpRequest) {
+        log.info("DELETE /api/auth/sessions/{}", sessionId);
+
+        String token = authHeader.substring(7);
+        Long userId = tokenService.getUserIdFromToken(token);
+        String ipAddress = getClientIP(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+
+        UserSession session = userSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+
+        if (!session.getUserId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Cannot revoke session of another user"));
+        }
+
+        session.deactivate();
+        userSessionRepository.save(session);
+
+        return ResponseEntity.ok(ApiResponse.success("Session revoked", null));
+    }
+
+    @GetMapping("/validate")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> validateToken(
+            @RequestHeader("Authorization") String authHeader) {
+        log.info("GET /api/auth/validate");
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("Invalid token format"));
         }
 
         String token = authHeader.substring(7);
-        
-        if (!jwtService.validateToken(token)) {
+
+        try {
+            var claims = tokenService.validateAccessToken(token);
+
+            Map<String, Object> tokenInfo = Map.of(
+                    "userId", claims.getSubject(),
+                    "username", claims.get("username", String.class),
+                    "roles", claims.get("roles"),
+                    "permissions", claims.get("permissions"),
+                    "valid", true);
+
+            return ResponseEntity.ok(ApiResponse.success(tokenInfo));
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("Invalid or expired token"));
         }
+    }
 
-        Long userId = jwtService.getUserIdFromToken(token);
-        User user = authService.getUserById(userId);
-
-        Map<String, Object> userData = Map.of(
-            "id", user.getId(),
-            "username", user.getUsername(),
-            "role", user.getRole(),
-            "createdAt", user.getCreatedAt().toString()
-        );
-
-        return ResponseEntity.ok(ApiResponse.success(userData));
+    private String getClientIP(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        String xRealIP = request.getHeader("X-Real-IP");
+        if (xRealIP != null && !xRealIP.isEmpty()) {
+            return xRealIP;
+        }
+        return request.getRemoteAddr();
     }
 }
