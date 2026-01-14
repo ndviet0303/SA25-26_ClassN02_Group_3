@@ -1,13 +1,14 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
+    if (kIsWeb) {
+      return _web;
+    }
     switch (defaultTargetPlatform) {
       case TargetPlatform.iOS:
         return _ios;
-      case TargetPlatform.web:
-        return _web;
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for this platform.',
@@ -34,5 +35,3 @@ class DefaultFirebaseOptions {
     storageBucket: 'fir-84e19.firebasestorage.app',
   );
 }
-
-
