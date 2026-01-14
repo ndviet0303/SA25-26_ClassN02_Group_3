@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:movie_fe/features/auth/shared/services/storage_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:movie_fe/core/auth/auth_providers.dart';
@@ -29,9 +31,21 @@ class SignupNotifier extends StateNotifier<UIState<UserReg>> {
     List<String> genres = const [],
     required Map<String, String> profileData,
     required Map<String, dynamic> accountData,
+    File? avatarFile,
   }) async {
     try {
       state = const Loading<UserReg>();
+
+      String? avatarUrl;
+      if (avatarFile != null) {
+        try {
+          final storageService = _ref.read(storageServiceProvider);
+          avatarUrl = await storageService.uploadToImgBB(avatarFile);
+        } catch (e) {
+          debugPrint('[SignupNotifier] Avatar upload failed: $e');
+          // Continue without avatar or throw error? Let's continue for now
+        }
+      }
 
       final userProfile = UserProfile(
         fullName: (profileData['fullName'] ?? '').trim(),
@@ -56,8 +70,7 @@ class SignupNotifier extends StateNotifier<UIState<UserReg>> {
       );
 
       // Register user via microservice API
-      // Note: Avatar upload is not currently supported - backend should handle avatars
-      await _repository.register(userRegistration);
+      await _repository.register(userRegistration, avatarUrl: avatarUrl);
 
       // Sync user profile from auth state
       await _syncUserProfile();

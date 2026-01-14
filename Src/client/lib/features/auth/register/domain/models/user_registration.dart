@@ -26,7 +26,7 @@ class UserReg {
   factory UserReg.fromJson(Map<String, dynamic> json) {
     return UserReg(
       gender: json['gender'],
-      age: json['age'],
+      age: json['age']?.toString(),
       genres: List<String>.from(json['genres'] ?? []),
       profile: UserProfile.fromJson(json['profile'] ?? const <String, dynamic>{}),
       account: UserAccount.fromJson(json['account'] ?? const <String, dynamic>{}),

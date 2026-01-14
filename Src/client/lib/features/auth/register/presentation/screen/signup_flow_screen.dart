@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -98,12 +99,19 @@ class _SignupFlowScreenState extends ConsumerState<SignupFlowScreen> {
   Future<void> _handleSignUp() async {
     final signupNotifier = ref.read(signupNotifierProvider.notifier);
 
+    final avatarPath = profileData['avatarPath'];
+    File? avatarFile;
+    if (avatarPath != null) {
+      avatarFile = File(avatarPath);
+    }
+
     final result = await signupNotifier.registerUser(
       gender: selectedGender,
       age: selectedAge,
       genres: selectedGenres,
       profileData: profileData,
       accountData: signupData,
+      avatarFile: avatarFile,
     );
 
     // if (mounted) Navigator.of(context).pop(); // đóng loading

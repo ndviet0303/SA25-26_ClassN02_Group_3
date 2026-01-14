@@ -125,6 +125,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     String? gender,
     String? age,
     List<String>? genres,
+    String? avatarUrl,
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
 
@@ -140,6 +141,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         gender: gender,
         age: age,
         genres: genres,
+        avatarUrl: avatarUrl,
       );
 
       await _authApi.register(request);

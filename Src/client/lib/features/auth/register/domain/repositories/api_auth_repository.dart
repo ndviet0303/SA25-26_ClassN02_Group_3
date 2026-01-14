@@ -32,6 +32,7 @@ class ApiAuthRepository implements AuthRepository {
         gender: userRegistration.gender,
         age: userRegistration.age,
         genres: userRegistration.genres,
+        avatarUrl: avatarUrl,
       );
 
       debugPrint('[ApiAuthRepository] Registration successful for: ${account.username}');

@@ -116,8 +116,37 @@ class StorageService {
 
       return tempUrl;
     } catch (e) {
-      debugPrint('[StorageService] Error moving avatar: $e');
       return tempUrl;
+    }
+  }
+
+  /// Upload file to ImgBB
+  /// Returns the display URL of the uploaded image
+  Future<String> uploadToImgBB(File imageFile) async {
+    try {
+      final formData = FormData.fromMap({
+        'image': await MultipartFile.fromFile(imageFile.path),
+      });
+
+      final response = await _dio.post(
+        'https://api.imgbb.com/1/upload',
+        queryParameters: {
+          'key': '1dcd329581b685d5ae3b24e9e625efaf',
+        },
+        data: formData,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'];
+        final url = data['url'] ?? data['display_url'];
+        debugPrint('[StorageService] ImgBB upload successful: $url');
+        return url;
+      }
+
+      throw Exception('Failed to upload to ImgBB');
+    } catch (e) {
+      debugPrint('[StorageService] Error uploading to ImgBB: $e');
+      rethrow;
     }
   }
 }

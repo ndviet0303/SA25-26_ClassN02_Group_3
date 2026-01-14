@@ -122,6 +122,7 @@ class RegisterRequest {
     this.gender,
     this.age,
     this.genres,
+    this.avatarUrl,
   });
 
   final String username;
@@ -134,6 +135,7 @@ class RegisterRequest {
   final String? gender;
   final String? age;
   final List<String>? genres;
+  final String? avatarUrl;
 
   Map<String, dynamic> toJson() {
     return {
@@ -147,6 +149,7 @@ class RegisterRequest {
       if (gender != null) 'gender': gender,
       if (age != null) 'age': age,
       if (genres != null) 'genres': genres,
+      if (avatarUrl != null) 'avatarUrl': avatarUrl,
     };
   }
 }
