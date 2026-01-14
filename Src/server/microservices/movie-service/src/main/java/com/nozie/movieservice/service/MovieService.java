@@ -5,8 +5,8 @@ import com.nozie.common.exception.ResourceNotFoundException;
 import com.nozie.movieservice.dto.MovieRequest;
 import com.nozie.movieservice.model.Movie;
 import com.nozie.movieservice.repository.MovieRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,15 +18,11 @@ import java.util.List;
  */
 @Service
 @Transactional
+@Slf4j
+@RequiredArgsConstructor
 public class MovieService {
 
-    private static final Logger log = LoggerFactory.getLogger(MovieService.class);
-
     private final MovieRepository movieRepository;
-
-    public MovieService(MovieRepository movieRepository) {
-        this.movieRepository = movieRepository;
-    }
 
     public Movie createMovie(MovieRequest request) {
         log.info("Creating movie: {}", request.getName());

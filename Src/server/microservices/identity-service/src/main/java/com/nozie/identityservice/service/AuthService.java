@@ -4,8 +4,8 @@ import com.nozie.common.exception.BadRequestException;
 import com.nozie.identityservice.dto.*;
 import com.nozie.identityservice.entity.*;
 import com.nozie.identityservice.repository.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,9 +17,9 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@Slf4j
+@RequiredArgsConstructor
 public class AuthService {
-
-    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     @Value("${jwt.access-token-expiration:900000}")
     private long accessTokenExpiration;
@@ -30,20 +30,6 @@ public class AuthService {
     private final TokenService tokenService;
     private final AuditService auditService;
     private final UserSessionRepository userSessionRepository;
-
-    public AuthService(UserRepository userRepository,
-            RoleRepository roleRepository,
-            PasswordEncoder passwordEncoder,
-            TokenService tokenService,
-            AuditService auditService,
-            UserSessionRepository userSessionRepository) {
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.tokenService = tokenService;
-        this.auditService = auditService;
-        this.userSessionRepository = userSessionRepository;
-    }
 
     public User register(RegisterRequest request, String ipAddress, String userAgent) {
         log.info("Registering user: {}", request.getUsername());

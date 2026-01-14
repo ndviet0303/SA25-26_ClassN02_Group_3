@@ -1,5 +1,6 @@
 package com.nozie.paymentservice.api.dto;
 
+import lombok.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -8,6 +9,10 @@ import java.math.BigDecimal;
 /**
  * Payment Request DTO
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class PaymentRequest {
 
     @NotNull(message = "Customer ID is required")
@@ -21,37 +26,6 @@ public class PaymentRequest {
     private BigDecimal amount;
 
     @NotBlank(message = "Currency is required")
+    @Builder.Default
     private String currency = "usd";
-
-    public Long getCustomerId() {
-        return customerId;
-    }
-
-    public void setCustomerId(Long customerId) {
-        this.customerId = customerId;
-    }
-
-    public String getMovieId() {
-        return movieId;
-    }
-
-    public void setMovieId(String movieId) {
-        this.movieId = movieId;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
 }

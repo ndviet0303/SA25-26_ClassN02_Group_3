@@ -1,5 +1,6 @@
 package com.nozie.paymentservice.domain.model;
 
+import lombok.*;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -9,6 +10,11 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "transactions")
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class Transaction {
 
     @Id
@@ -24,8 +30,10 @@ public class Transaction {
     @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal amount;
 
+    @Builder.Default
     private String currency = "usd";
 
+    @Builder.Default
     private String status = "pending"; // pending, succeeded, failed, canceled
 
     @Column(name = "stripe_payment_intent_id")
@@ -41,6 +49,7 @@ public class Transaction {
     private String errorMessage;
 
     @Column(name = "created_at")
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "paid_at")
@@ -52,22 +61,16 @@ public class Transaction {
     @Column(name = "canceled_at")
     private LocalDateTime canceledAt;
 
-    // Protected constructor for Hibernate
-    protected Transaction() {
-    }
-
-    private Transaction(Long customerId, String movieId, BigDecimal amount, String currency) {
-        this.customerId = customerId;
-        this.movieId = movieId;
-        this.amount = amount;
-        this.currency = currency;
-        this.status = "pending";
-        this.createdAt = LocalDateTime.now();
-    }
-
     // Static factory method for creation
     public static Transaction create(Long customerId, String movieId, BigDecimal amount, String currency) {
-        return new Transaction(customerId, movieId, amount, currency);
+        return Transaction.builder()
+                .customerId(customerId)
+                .movieId(movieId)
+                .amount(amount)
+                .currency(currency)
+                .status("pending")
+                .createdAt(LocalDateTime.now())
+                .build();
     }
 
     // Domain logic - Intent revealing methods
@@ -93,118 +96,5 @@ public class Transaction {
             this.status = "canceled";
             this.canceledAt = LocalDateTime.now();
         }
-    }
-
-    // Getters and Setters (Setters kept for JPA but ideally would be minimized)
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getCustomerId() {
-        return customerId;
-    }
-
-    public void setCustomerId(Long customerId) {
-        this.customerId = customerId;
-    }
-
-    public String getMovieId() {
-        return movieId;
-    }
-
-    public void setMovieId(String movieId) {
-        this.movieId = movieId;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getStripePaymentIntentId() {
-        return stripePaymentIntentId;
-    }
-
-    public void setStripePaymentIntentId(String stripePaymentIntentId) {
-        this.stripePaymentIntentId = stripePaymentIntentId;
-    }
-
-    public String getStripeCustomerId() {
-        return stripeCustomerId;
-    }
-
-    public void setStripeCustomerId(String stripeCustomerId) {
-        this.stripeCustomerId = stripeCustomerId;
-    }
-
-    public String getChargeId() {
-        return chargeId;
-    }
-
-    public void setChargeId(String chargeId) {
-        this.chargeId = chargeId;
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getPaidAt() {
-        return paidAt;
-    }
-
-    public void setPaidAt(LocalDateTime paidAt) {
-        this.paidAt = paidAt;
-    }
-
-    public LocalDateTime getFailedAt() {
-        return failedAt;
-    }
-
-    public void setFailedAt(LocalDateTime failedAt) {
-        this.failedAt = failedAt;
-    }
-
-    public LocalDateTime getCanceledAt() {
-        return canceledAt;
-    }
-
-    public void setCanceledAt(LocalDateTime canceledAt) {
-        this.canceledAt = canceledAt;
     }
 }

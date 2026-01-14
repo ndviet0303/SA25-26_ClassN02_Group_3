@@ -11,8 +11,8 @@ import com.nozie.paymentservice.infrastructure.client.MovieClient;
 import com.nozie.paymentservice.infrastructure.client.dto.CustomerDTO;
 import com.nozie.paymentservice.infrastructure.client.dto.MovieDTO;
 import com.nozie.paymentservice.infrastructure.messaging.PaymentEventProducer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,25 +22,14 @@ import java.util.List;
  * Payment Application Service - Coordinates domain logic and infrastructure.
  */
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class PaymentApplicationService {
-
-    private static final Logger log = LoggerFactory.getLogger(PaymentApplicationService.class);
 
     private final TransactionRepository transactionRepository;
     private final MovieClient movieClient;
     private final CustomerClient customerClient;
     private final PaymentEventProducer eventProducer;
-
-    public PaymentApplicationService(
-            TransactionRepository transactionRepository,
-            MovieClient movieClient,
-            CustomerClient customerClient,
-            PaymentEventProducer eventProducer) {
-        this.transactionRepository = transactionRepository;
-        this.movieClient = movieClient;
-        this.customerClient = customerClient;
-        this.eventProducer = eventProducer;
-    }
 
     @Transactional
     public PaymentResponse createPayment(PaymentRequest request) {
@@ -78,12 +67,13 @@ public class PaymentApplicationService {
         // 4. Infrastructure: Save to database
         transaction = transactionRepository.save(transaction);
 
-        // 5. Mock Stripe response for now
-        PaymentResponse response = new PaymentResponse();
-        response.setTransactionId(transaction.getId());
-        response.setClientSecret("pi_xxx_secret_xxx");
-        response.setEphemeralKey("ek_xxx");
-        response.setCustomerId("cus_xxx");
+        // 5. Build response using Builder
+        PaymentResponse response = PaymentResponse.builder()
+                .transactionId(transaction.getId())
+                .clientSecret("pi_xxx_secret_xxx")
+                .ephemeralKey("ek_xxx")
+                .customerId("cus_xxx")
+                .build();
 
         // 6. Send Async Notification via RabbitMQ
         eventProducer.sendPaymentSucceededEvent(new PaymentSucceededEvent(

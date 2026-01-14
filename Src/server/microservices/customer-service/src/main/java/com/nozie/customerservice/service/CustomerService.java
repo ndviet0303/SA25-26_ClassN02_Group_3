@@ -5,8 +5,8 @@ import com.nozie.common.exception.ResourceNotFoundException;
 import com.nozie.customerservice.dto.CustomerRequest;
 import com.nozie.customerservice.model.Customer;
 import com.nozie.customerservice.repository.CustomerRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,15 +17,11 @@ import java.util.List;
  */
 @Service
 @Transactional
+@Slf4j
+@RequiredArgsConstructor
 public class CustomerService {
 
-    private static final Logger log = LoggerFactory.getLogger(CustomerService.class);
-
     private final CustomerRepository customerRepository;
-
-    public CustomerService(CustomerRepository customerRepository) {
-        this.customerRepository = customerRepository;
-    }
 
     public Customer createCustomer(CustomerRequest request) {
         log.info("Creating customer: {}", request.getEmail());
@@ -72,8 +68,8 @@ public class CustomerService {
     public Customer updateCustomer(Long id, CustomerRequest request) {
         Customer existingCustomer = getCustomerById(id);
 
-        if (!existingCustomer.getEmail().equals(request.getEmail()) && 
-            customerRepository.existsByEmail(request.getEmail())) {
+        if (!existingCustomer.getEmail().equals(request.getEmail()) &&
+                customerRepository.existsByEmail(request.getEmail())) {
             throw new BadRequestException("Customer with email '" + request.getEmail() + "' already exists");
         }
 
