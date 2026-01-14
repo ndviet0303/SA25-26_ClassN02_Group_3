@@ -57,11 +57,11 @@ spring:
                 name: notificationServiceCircuitBreaker
                 fallbackUri: forward:/fallback/notifications
 
-        # Identity Service (Auth)
+        # Identity Service (Auth & Admin)
         - id: identity-service
           uri: lb://identity-service
           predicates:
-            - Path=/api/auth/**
+            - Path=/api/auth/**,/api/admin/**
 
       # CORS Configuration
       globalcors:
