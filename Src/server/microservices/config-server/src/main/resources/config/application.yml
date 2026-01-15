@@ -16,18 +16,28 @@ eureka:
   instance:
     prefer-ip-address: true
 
-# Actuator
+# Monitoring & Tracing
 management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: health, info, prometheus, metrics, tracing
   endpoint:
     health:
       show-details: always
+    prometheus:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0 # Sample all requests in development
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans
 
 # Logging
 logging:
   level:
     com.nozie: DEBUG
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
 

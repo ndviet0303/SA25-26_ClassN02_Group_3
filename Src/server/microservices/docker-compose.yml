@@ -158,6 +158,47 @@ services:
       SPRING_DATASOURCE_PASSWORD: password
       JWT_SECRET: nozie-secret-key-for-jwt-token-generation-must-be-at-least-256-bits-long
 
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: nozie-zipkin
+    ports:
+      - "9411:9411"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: nozie-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - identity-service
+      - movie-service
+      - payment-service
+      - customer-service
+      - notification-service
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: nozie-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+
+  loki:
+    image: grafana/loki:latest
+    container_name: nozie-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./infrastructure/loki/loki-config.yml:/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml
+
 volumes:
   postgres_data:
   mongodb_data:
