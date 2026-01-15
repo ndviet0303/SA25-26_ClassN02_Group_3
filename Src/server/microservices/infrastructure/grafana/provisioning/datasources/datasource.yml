@@ -11,3 +11,14 @@ datasources:
     type: loki
     access: proxy
     url: http://loki:3100
+
+  - name: Elasticsearch
+    type: elasticsearch
+    access: proxy
+    url: http://elasticsearch:9200
+    database: "nozie-logs-*"
+    jsonData:
+      timeField: "@timestamp"
+      esVersion: "7.17.10"
+      logMessageField: "message"
+      logLevelField: "level"
