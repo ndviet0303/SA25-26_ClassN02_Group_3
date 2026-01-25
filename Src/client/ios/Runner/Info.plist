@@ -62,5 +62,11 @@
 		<string>com.google</string>
 		<string>com.googleusercontent.apps.133383338782-bqv8s2q9v8fv23a70bfivffsi5sg52g6</string>
 	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Ứng dụng cần quyền này để kết nối với debugger và các dịch vụ trong mạng nội bộ.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_dartobservatory._tcp</string>
+	</array>
 </dict>
 </plist>

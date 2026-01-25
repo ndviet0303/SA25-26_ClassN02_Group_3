@@ -1,7 +1,7 @@
 /// API Configuration for microservices
 class ApiConfig {
   // Base URLs for different environments
-  static const String _devBaseUrl = 'http://localhost:8080';
+  static const String _devBaseUrl = 'http://192.168.1.113:8080';
   static const String _prodBaseUrl = 'https://api.nozie.app';
   
   // Current environment

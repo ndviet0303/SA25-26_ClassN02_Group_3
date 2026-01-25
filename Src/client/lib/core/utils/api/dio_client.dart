@@ -1,11 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import '../../config/api_config.dart';
 
 class DioClient {
   DioClient._();
 
   // Base URL for API Gateway (microservices)
-  static const String _kBaseUrl = 'http://localhost:8080';
+  static String get _kBaseUrl => ApiConfig.baseUrl;
 
   static late final Dio _dio;
   static bool _inited = false;

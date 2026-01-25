@@ -244,7 +244,7 @@ class MovieRepository {
     return [
       MovieItem(id: 'sample-1', title: 'Avengers: Endgame', imageUrl: 'https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg', rating: 8.4, price: 4.99),
       MovieItem(id: 'sample-2', title: 'The Dark Knight', imageUrl: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg', rating: 9.0, price: 3.99),
-      MovieItem(id: 'sample-3', title: 'Inception', imageUrl: 'https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Ber.jpg', rating: 8.8, price: 2.99),
+      MovieItem(id: 'sample-3', title: 'Inception', imageUrl: 'https://image.tmdb.org/t/p/w500/edv5bs1pSdfS2S6yxeDYfj7JWAD.jpg', rating: 8.8, price: 2.99),
     ];
   }
 

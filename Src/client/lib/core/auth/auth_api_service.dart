@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import '../config/api_config.dart';
 
 import 'auth_models.dart';
 
@@ -11,7 +12,7 @@ class AuthApiService {
     _setup();
   }
 
-  static const _defaultBaseUrl = 'http://localhost:8080';
+  static String get _defaultBaseUrl => ApiConfig.baseUrl;
 
   final Dio _dio;
   final String _baseUrl;

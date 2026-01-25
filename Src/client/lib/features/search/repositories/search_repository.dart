@@ -205,7 +205,7 @@ class SearchRepository {
       MovieItem(
         id: 'sample-3',
         title: 'Inception',
-        imageUrl: 'https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Ber.jpg',
+        imageUrl: 'https://image.tmdb.org/t/p/w500/edv5bs1pSdfS2S6yxeDYfj7JWAD.jpg',
         rating: 8.8,
         price: 2.99,
       ),
