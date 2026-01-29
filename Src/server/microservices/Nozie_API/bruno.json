@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "name": "Nozie Identity Service API",
+  "name": "Nozie",
   "type": "collection",
   "ignore": [
     "node_modules",

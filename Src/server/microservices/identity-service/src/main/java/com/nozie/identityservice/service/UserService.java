@@ -153,6 +153,16 @@ public class UserService {
         return getUserPermissionNames(userId).contains(permissionName);
     }
 
+    @Transactional(readOnly = true)
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
     public User updateProfile(Long userId, com.nozie.identityservice.dto.request.UpdateProfileRequest request,
             String ipAddress,
             String userAgent) {

@@ -1,0 +1,19 @@
+meta {
+  name: 1.6.1 Revoke Specific Session
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{baseUrl}}/api/auth/sessions/:sessionId
+  body: none
+  auth: inherit
+}
+
+params:path {
+  sessionId: 1
+}
+
+settings {
+  encodeUrl: true
+}

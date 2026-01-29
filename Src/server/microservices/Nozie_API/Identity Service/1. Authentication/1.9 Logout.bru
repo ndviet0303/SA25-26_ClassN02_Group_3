@@ -1,11 +1,11 @@
 meta {
-  name: 1.7 Change Password
+  name: 1.9 Logout
   type: http
-  seq: 7
+  seq: 10
 }
 
 post {
-  url: {{baseUrl}}/api/auth/change-password
+  url: {{baseUrl}}/api/auth/logout
   body: json
   auth: inherit
 }
@@ -17,9 +17,7 @@ headers {
 
 body:json {
   {
-    "currentPassword": "password123",
-    "newPassword": "newpassword456",
-    "logoutAllSessions": false
+    "refreshToken": "{{refreshToken}}"
   }
 }
 

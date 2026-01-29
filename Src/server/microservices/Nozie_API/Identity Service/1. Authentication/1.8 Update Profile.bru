@@ -1,0 +1,31 @@
+meta {
+  name: 1.8 Update Profile
+  type: http
+  seq: 9
+}
+
+put {
+  url: {{baseUrl}}/api/auth/profile
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "fullName": "Test User Updated",
+    "phone": "0987654321",
+    "country": "Vietnam",
+    "dateOfBirth": "1990-01-01",
+    "gender": "MALE",
+    "age": "30",
+    "avatarUrl": "https://example.com/avatar.jpg"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

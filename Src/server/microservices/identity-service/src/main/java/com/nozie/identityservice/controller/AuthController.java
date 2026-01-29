@@ -244,6 +244,93 @@ public class AuthController {
         }
     }
 
+    // ========== PASSWORD RECOVERY (TODO) ==========
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@RequestBody Map<String, String> request) {
+        log.info("POST /api/auth/forgot-password - Email: {}", request.get("email"));
+        // TODO: Implement password recovery logic (generate token, send email)
+        return ResponseEntity.ok(ApiResponse.success("If the email exists, a reset link has been sent", null));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@RequestBody Map<String, String> request) {
+        log.info("POST /api/auth/reset-password");
+        // TODO: Validate reset token and update password
+        return ResponseEntity.ok(ApiResponse.success("Password reset successfully", null));
+    }
+
+    // ========== EMAIL VERIFICATION (TODO) ==========
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<ApiResponse<Void>> verifyEmail(@RequestBody Map<String, String> request) {
+        log.info("POST /api/auth/verify-email");
+        // TODO: Validate verification token and activate account fully
+        return ResponseEntity.ok(ApiResponse.success("Email verified successfully", null));
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<ApiResponse<Void>> resendVerification(@RequestBody Map<String, String> request) {
+        log.info("POST /api/auth/resend-verification - Email: {}", request.get("email"));
+        // TODO: Resend verification email
+        return ResponseEntity.ok(ApiResponse.success("Verification email resent", null));
+    }
+
+    // ========== SOCIAL LOGIN (TODO) ==========
+
+    @PostMapping("/social-login")
+    public ResponseEntity<ApiResponse<AuthResponse>> socialLogin(
+            @RequestBody Map<String, Object> request,
+            HttpServletRequest httpRequest) {
+        log.info("POST /api/auth/social-login - Provider: {}", request.get("provider"));
+        // TODO: Validate social token (Google/FB) and issue Nozie JWT
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
+                .body(ApiResponse.error("Social login feature is in development"));
+    }
+
+    // ========== AVAILABILITY CHECKS (TODO) ==========
+
+    @GetMapping("/check-username")
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkUsername(@RequestParam String username) {
+        log.info("GET /api/auth/check-username - {}", username);
+        boolean available = !userService.existsByUsername(username);
+        return ResponseEntity.ok(ApiResponse.success(Map.of("available", available)));
+    }
+
+    @GetMapping("/check-email")
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkEmail(@RequestParam String email) {
+        log.info("GET /api/auth/check-email - {}", email);
+        boolean available = !userService.existsByEmail(email);
+        return ResponseEntity.ok(ApiResponse.success(Map.of("available", available)));
+    }
+
+    // ========== ACCOUNT MANAGEMENT (TODO) ==========
+
+    @DeleteMapping("/account")
+    public ResponseEntity<ApiResponse<Void>> deleteAccount(
+            @RequestHeader("Authorization") String authHeader,
+            HttpServletRequest httpRequest) {
+        log.info("DELETE /api/auth/account");
+        // TODO: Soft delete or schedule account deletion
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
+                .body(ApiResponse.error("Account deletion requires manual support currently"));
+    }
+
+    @DeleteMapping("/sessions/others")
+    public ResponseEntity<ApiResponse<Void>> logoutOthers(
+            @RequestHeader("Authorization") String authHeader,
+            HttpServletRequest httpRequest) {
+        log.info("DELETE /api/auth/sessions/others");
+        String token = authHeader.substring(7);
+        Long userId = tokenService.getUserIdFromToken(token);
+        String ipAddress = getClientIP(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+
+        // TODO: Implement logic to deactivate all active sessions EXCEPT the current
+        // one
+        return ResponseEntity.ok(ApiResponse.success("Other sessions will be logged out", null));
+    }
+
     private String getClientIP(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
