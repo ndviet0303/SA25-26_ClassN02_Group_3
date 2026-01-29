@@ -142,7 +142,9 @@ services:
       SPRING_RABBITMQ_HOST: rabbitmq
 
   identity-service:
-    build: ./identity-service
+    build:
+      context: .
+      dockerfile: identity-service/Dockerfile
     container_name: identity-service
     ports:
       - "8085:8085"

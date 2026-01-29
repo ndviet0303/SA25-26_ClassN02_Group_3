@@ -55,8 +55,9 @@ auth:
   loginScreen:
     title: "Xin chào bạn 👋"
     description: Điền email/tên đăng nhập và mật khẩu để tiếp tục nha ✨
+    emailOrUsername: Email hoặc Tên đăng nhập
     placeholder:
-      email: admin@ziet.dev
+      email: admin@ziet.dev hoặc tên đăng nhập
       password: "●●●●●●●●●●●●"
   
   # OAuth Features

@@ -198,6 +198,34 @@ class AuthApiService {
     }
   }
 
+  /// Update user profile
+  /// PUT /api/auth/profile
+  Future<AuthUser> updateProfile(UpdateProfileRequest request, String accessToken) async {
+    try {
+      final response = await _dio.put<Map<String, dynamic>>(
+        '/api/auth/profile',
+        data: request.toJson(),
+        options: Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
+        ),
+      );
+
+      final data = response.data;
+      if (data == null) {
+        throw Exception('No response data');
+      }
+
+      // Handle wrapped response
+      if (data['success'] == true && data['data'] != null) {
+        return AuthUser.fromJson(data['data'] as Map<String, dynamic>);
+      }
+
+      throw Exception(data['message'] ?? 'Profile update failed');
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
   Exception _handleDioError(DioException e) {
     final response = e.response;
     if (response != null) {

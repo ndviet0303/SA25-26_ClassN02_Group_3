@@ -10,9 +10,12 @@ import '../models/payment_method.dart';
 import '../models/preferences.dart';
 import '../models/security_settings.dart';
 import '../models/user_profile.dart';
+import '../../auth/register/domain/repositories/auth_repository.dart';
+import '../../auth/shared/providers/auth_repository_provider.dart';
+import '../../../core/auth/auth_providers.dart';
 
 class SettingsRepository {
-  SettingsRepository(this._prefs);
+  SettingsRepository(this._prefs, this._authRepository, this._ref);
 
   static const _keyProfile = 'profile:user_profile';
   static const _keyNotification = 'profile:notification';
@@ -22,8 +25,28 @@ class SettingsRepository {
   static const _keyPayments = 'profile:payments';
 
   final SharedPreferences _prefs;
+  final AuthRepository _authRepository;
+  final Ref _ref;
 
   Future<UserProfile> fetchProfile() async {
+    // Try to get from Auth state first
+    final authUser = _ref.read(authStateNotifierProvider).user;
+    if (authUser != null) {
+      final profile = UserProfile(
+        id: authUser.id,
+        fullName: authUser.fullName ?? '',
+        username: authUser.username,
+        email: authUser.email,
+        phone: authUser.phone ?? '',
+        dateOfBirth: authUser.dateOfBirth ?? '',
+        country: authUser.country ?? '',
+        avatarUrl: authUser.avatarUrl ?? '',
+      );
+      // Sync local storage
+      await _prefs.setString(_keyProfile, jsonEncode(profile.toJson()));
+      return profile;
+    }
+
     final jsonString = _prefs.getString(_keyProfile);
     if (jsonString == null) {
       const fallback = UserProfile(
@@ -43,8 +66,18 @@ class SettingsRepository {
   }
 
   Future<UserProfile> updateProfile(UserProfile profile) async {
+    // Call backend
+    await _authRepository.updateProfile(
+      fullName: profile.fullName,
+      phone: profile.phone,
+      country: profile.country,
+      dateOfBirth: profile.dateOfBirth,
+      avatarUrl: profile.avatarUrl,
+    );
+
+    // Save locally
     await _prefs.setString(_keyProfile, jsonEncode(profile.toJson()));
-    _log('Profile updated', profile.toJson());
+    _log('Profile updated locally and on server', profile.toJson());
     return profile;
   }
 
@@ -187,5 +220,6 @@ class SettingsRepository {
 
 final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
-  return SettingsRepository(prefs);
+  final authRepo = ref.watch(authRepositoryProvider);
+  return SettingsRepository(prefs, authRepo, ref);
 });

@@ -1,4 +1,4 @@
-package com.nozie.identityservice.dto;
+package com.nozie.identityservice.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

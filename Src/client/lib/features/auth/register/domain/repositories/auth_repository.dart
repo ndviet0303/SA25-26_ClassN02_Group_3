@@ -14,4 +14,16 @@ abstract class AuthRepository {
 
   /// Sign out the current user
   Future<void> signOut();
+
+  /// Update user profile
+  Future<void> updateProfile({
+    String? fullName,
+    String? phone,
+    String? country,
+    String? dateOfBirth,
+    String? gender,
+    String? age,
+    List<String>? genres,
+    String? avatarUrl,
+  });
 }

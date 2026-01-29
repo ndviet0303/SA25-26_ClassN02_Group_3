@@ -231,6 +231,52 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(user: user);
   }
 
+  /// Update user profile on the server
+  Future<void> updateProfile({
+    String? fullName,
+    String? phone,
+    String? country,
+    String? dateOfBirth,
+    String? gender,
+    String? age,
+    List<String>? genres,
+    String? avatarUrl,
+  }) async {
+    final tokens = state.tokens;
+    if (tokens == null) {
+      throw Exception('Not authenticated');
+    }
+
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      final request = UpdateProfileRequest(
+        fullName: fullName,
+        phone: phone,
+        country: country,
+        dateOfBirth: dateOfBirth,
+        gender: gender,
+        age: age,
+        genres: genres,
+        avatarUrl: avatarUrl,
+      );
+
+      final updatedUser = await _authApi.updateProfile(request, tokens.accessToken);
+
+      state = state.copyWith(
+        user: updatedUser,
+        isLoading: false,
+      );
+      debugPrint('[AuthStateNotifier] Profile updated successfully for: ${updatedUser.username}');
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString().replaceFirst('Exception: ', ''),
+      );
+      rethrow;
+    }
+  }
+
   /// Clear error state
   void clearError() {
     state = state.copyWith(clearError: true);

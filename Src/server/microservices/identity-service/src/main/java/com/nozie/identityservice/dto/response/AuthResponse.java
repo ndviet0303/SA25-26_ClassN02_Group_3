@@ -1,4 +1,4 @@
-package com.nozie.identityservice.dto;
+package com.nozie.identityservice.dto.response;
 
 import lombok.*;
 import java.util.Set;

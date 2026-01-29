@@ -7,6 +7,7 @@ import '../../extension/context_extensions.dart';
 
 class ImagePickerCustom extends StatelessWidget {
   final File? imageFile;
+  final String? imageUrl;
   final ValueChanged<File?> onPicked;
   final ImageSource source;
   final double? maxWidth;
@@ -19,6 +20,7 @@ class ImagePickerCustom extends StatelessWidget {
   const ImagePickerCustom({
     super.key,
     required this.imageFile,
+    this.imageUrl,
     required this.onPicked,
     this.source = ImageSource.gallery,
     this.maxWidth,
@@ -57,34 +59,79 @@ class ImagePickerCustom extends StatelessWidget {
           color: AppColors.greyscale100,
           border: Border.all(color: AppColors.primary500, width: borderWidth),
         ),
-        child: imageFile != null
-            ? ClipOval(
-                child: Image.file(
-                  imageFile!,
-                  width: size,
-                  height: size,
-                  fit: BoxFit.cover,
-                ),
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.camera_alt_outlined,
-                    size: size * 0.36,
-                    color: AppColors.greyscale500,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    context.i18n.auth.register.steps.profile.photo.add,
-                    style: AppTypography.bodySBRegular.copyWith(
-                      color: AppColors.greyscale500,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
+        child: _buildChild(),
       ),
+    );
+  }
+
+  Widget _buildChild() {
+    if (imageFile != null) {
+      return ClipOval(
+        child: Image.file(
+          imageFile!,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+
+    if (imageUrl != null && imageUrl!.isNotEmpty) {
+      return Stack(
+        children: [
+          ClipOval(
+            child: Image.network(
+              imageUrl!,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _buildPlaceholder(),
+            ),
+          ),
+          Positioned(
+            bottom: 4,
+            right: 4,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: AppColors.primary500,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.camera_alt_rounded,
+                size: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return _buildPlaceholder();
+  }
+
+  Widget _buildPlaceholder() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.camera_alt_outlined,
+          size: size * 0.36,
+          color: AppColors.greyscale500,
+        ),
+        const SizedBox(height: 8),
+        Builder(builder: (context) {
+          return Text(
+            context.i18n.auth.register.steps.profile.photo.add,
+            style: AppTypography.bodySBRegular.copyWith(
+              color: AppColors.greyscale500,
+              fontSize: 10,
+            ),
+            textAlign: TextAlign.center,
+          );
+        }),
+      ],
     );
   }
 }

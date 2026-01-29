@@ -38,7 +38,7 @@ class LoginScreen extends ConsumerWidget {
       final email = userCtl.text.trim();
       final password = passCtl.text.trim();
 
-      final emailError = ValidationUtils.validateEmail(email, context);
+      final emailError = ValidationUtils.validateEmail2(email, context);
       if (emailError != null) {
         ToastNotification.showError(
           context,
@@ -112,7 +112,7 @@ class LoginScreen extends ConsumerWidget {
                 const SizedBox(height: 32),
 
                 Text(
-                  t.auth.email,
+                  t.auth.loginScreen.emailOrUsername,
                   style: type.labelLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
 
@@ -120,7 +120,7 @@ class LoginScreen extends ConsumerWidget {
                   hintText: t.auth.loginScreen.placeholder.email,
                   controller: userCtl,
                   focusNode: userNode,
-                  validator: (value) => ValidationUtils.validateEmail(value, context),
+                  validator: (value) => ValidationUtils.validateEmail2(value, context),
                   onSubmitted: (_) =>
                       FocusScope.of(context).requestFocus(passNode),
                 ),

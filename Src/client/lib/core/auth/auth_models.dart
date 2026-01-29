@@ -154,6 +154,42 @@ class RegisterRequest {
   }
 }
 
+/// Update Profile request payload
+class UpdateProfileRequest {
+  const UpdateProfileRequest({
+    this.fullName,
+    this.phone,
+    this.country,
+    this.dateOfBirth,
+    this.gender,
+    this.age,
+    this.genres,
+    this.avatarUrl,
+  });
+
+  final String? fullName;
+  final String? phone;
+  final String? country;
+  final String? dateOfBirth;
+  final String? gender;
+  final String? age;
+  final List<String>? genres;
+  final String? avatarUrl;
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (fullName != null) 'fullName': fullName,
+      if (phone != null) 'phone': phone,
+      if (country != null) 'country': country,
+      if (dateOfBirth != null) 'dateOfBirth': dateOfBirth,
+      if (gender != null) 'gender': gender,
+      if (age != null) 'age': age,
+      if (genres != null) 'genres': genres,
+      if (avatarUrl != null) 'avatarUrl': avatarUrl,
+    };
+  }
+}
+
 /// Refresh token request payload
 class RefreshRequest {
   const RefreshRequest({required this.refreshToken});

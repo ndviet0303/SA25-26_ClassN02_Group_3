@@ -4,7 +4,7 @@
 /// To regenerate, run: `dart run slang`
 ///
 /// Locales: 2
-/// Strings: 1004 (502 per locale)
+/// Strings: 1006 (503 per locale)
 
 // coverage:ignore-file
 // ignore_for_file: type=lint
@@ -471,6 +471,7 @@ class _TranslationsAuthLoginScreenEn {
 	// Translations
 	String get title => 'Hello there 👋';
 	String get description => 'Please enter your username/email and password to sign in.';
+	String get emailOrUsername => 'Email or Username';
 	late final _TranslationsAuthLoginScreenPlaceholderEn placeholder = _TranslationsAuthLoginScreenPlaceholderEn._(_root);
 }
 
@@ -1098,7 +1099,7 @@ class _TranslationsAuthLoginScreenPlaceholderEn {
 	final Translations _root; // ignore: unused_field
 
 	// Translations
-	String get email => 'admin@ziet.dev';
+	String get email => 'admin@ziet.dev or username';
 	String get password => '●●●●●●●●●●●●';
 }
 
@@ -2611,6 +2612,7 @@ class _TranslationsAuthLoginScreenVi extends _TranslationsAuthLoginScreenEn {
 	// Translations
 	@override String get title => 'Xin chào bạn 👋';
 	@override String get description => 'Điền email/tên đăng nhập và mật khẩu để tiếp tục nha ✨';
+	@override String get emailOrUsername => 'Email hoặc Tên đăng nhập';
 	@override late final _TranslationsAuthLoginScreenPlaceholderVi placeholder = _TranslationsAuthLoginScreenPlaceholderVi._(_root);
 }
 
@@ -3238,7 +3240,7 @@ class _TranslationsAuthLoginScreenPlaceholderVi extends _TranslationsAuthLoginSc
 	@override final _TranslationsVi _root; // ignore: unused_field
 
 	// Translations
-	@override String get email => 'admin@ziet.dev';
+	@override String get email => 'admin@ziet.dev hoặc tên đăng nhập';
 	@override String get password => '●●●●●●●●●●●●';
 }
 
@@ -4447,7 +4449,8 @@ extension on Translations {
 			case 'auth.errors.invalidCredentials': return 'Incorrect username or password';
 			case 'auth.loginScreen.title': return 'Hello there 👋';
 			case 'auth.loginScreen.description': return 'Please enter your username/email and password to sign in.';
-			case 'auth.loginScreen.placeholder.email': return 'admin@ziet.dev';
+			case 'auth.loginScreen.emailOrUsername': return 'Email or Username';
+			case 'auth.loginScreen.placeholder.email': return 'admin@ziet.dev or username';
 			case 'auth.loginScreen.placeholder.password': return '●●●●●●●●●●●●';
 			case 'auth.oauth.featureInDevelopment': return 'This feature is under development';
 			case 'auth.forgotPassword.title': return 'Forgot Password 🔑';
@@ -4957,7 +4960,8 @@ extension on _TranslationsVi {
 			case 'auth.errors.invalidCredentials': return 'Sai tên đăng nhập hoặc mật khẩu';
 			case 'auth.loginScreen.title': return 'Xin chào bạn 👋';
 			case 'auth.loginScreen.description': return 'Điền email/tên đăng nhập và mật khẩu để tiếp tục nha ✨';
-			case 'auth.loginScreen.placeholder.email': return 'admin@ziet.dev';
+			case 'auth.loginScreen.emailOrUsername': return 'Email hoặc Tên đăng nhập';
+			case 'auth.loginScreen.placeholder.email': return 'admin@ziet.dev hoặc tên đăng nhập';
 			case 'auth.loginScreen.placeholder.password': return '●●●●●●●●●●●●';
 			case 'auth.oauth.featureInDevelopment': return 'Tính năng đang phát triển';
 			case 'auth.forgotPassword.title': return 'Quên Mật Khẩu 🔑';

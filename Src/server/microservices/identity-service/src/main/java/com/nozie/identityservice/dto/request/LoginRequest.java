@@ -1,4 +1,4 @@
-package com.nozie.identityservice.dto;
+package com.nozie.identityservice.dto.request;
 
 import lombok.*;
 import jakarta.validation.constraints.*;

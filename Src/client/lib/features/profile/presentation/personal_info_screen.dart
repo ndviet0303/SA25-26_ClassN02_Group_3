@@ -8,6 +8,7 @@ import 'package:movie_fe/core/app_export.dart';
 
 import '../models/user_profile.dart';
 import '../notifiers/profile_notifier.dart';
+import '../../auth/shared/services/storage_service.dart';
 
 class PersonalInfoScreen extends ConsumerStatefulWidget {
   const PersonalInfoScreen({super.key});
@@ -98,8 +99,12 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
     final textTheme = Theme.of(context).textTheme;
     final profileState = ref.watch(profileNotifierProvider);
     final isSaving = profileState.isLoading;
-    final currentProfile = profileState.value;
+    final currentProfile = profileState.asData?.value;
     final t = context.i18n;
+
+    if (profileState.hasError && !profileState.isLoading && currentProfile == null) {
+      debugPrint('Profile error: ${profileState.error}');
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -126,6 +131,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                 children: [
                   ImagePickerCustom(
                     imageFile: _avatarFile,
+                    imageUrl: currentProfile?.avatarUrl,
                     onPicked: (file) => setState(() => _avatarFile = file),
                     source: ImageSource.gallery,
                     maxWidth: 512,
@@ -135,7 +141,6 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                     borderWidth: 2,
                   ),
                   const SizedBox(height: 12),
-                 
                 ],
               ),
             ),
@@ -234,11 +239,29 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
             PrimaryButton(
               text: t.profile.personalInfo.saveChanges,
               isLoading: isSaving,
-              onPressed: () {
+              onPressed: () async {
                 if (isSaving) return;
                 if (!(_formKey.currentState?.validate() ?? false)) {
                   return;
                 }
+
+                String? finalAvatarUrl = currentProfile?.avatarUrl;
+                
+                // Upload new avatar if picked
+                if (_avatarFile != null) {
+                  try {
+                    final storageService = ref.read(storageServiceProvider);
+                    finalAvatarUrl = await storageService.uploadToImgBB(_avatarFile!);
+                  } catch (e) {
+                    if (!mounted) return;
+                    ToastNotification.showError(
+                      context,
+                      message: "Failed to upload avatar: $e",
+                    );
+                    return;
+                  }
+                }
+
                 final baseProfile = currentProfile ?? UserProfile.empty;
                 final userId = _userId.isNotEmpty ? _userId : baseProfile.id;
                 final updated = UserProfile(
@@ -249,7 +272,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                   phone: _phone.text.trim(),
                   dateOfBirth: _dob.text.trim(),
                   country: _country ?? '',
-                  avatarUrl: baseProfile.avatarUrl,
+                  avatarUrl: finalAvatarUrl ?? '',
                 );
                 ref.read(profileNotifierProvider.notifier).update(updated).then((_) {
                   if (!mounted) return;

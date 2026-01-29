@@ -24,17 +24,20 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserSessionRepository userSessionRepository;
+    private final UserProfileRepository userProfileRepository;
     private final AuditService auditService;
 
     public UserService(UserRepository userRepository,
             RoleRepository roleRepository,
             RefreshTokenRepository refreshTokenRepository,
             UserSessionRepository userSessionRepository,
+            UserProfileRepository userProfileRepository,
             AuditService auditService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.userSessionRepository = userSessionRepository;
+        this.userProfileRepository = userProfileRepository;
         this.auditService = auditService;
     }
 
@@ -148,5 +151,43 @@ public class UserService {
     @Transactional(readOnly = true)
     public boolean hasPermission(Long userId, String permissionName) {
         return getUserPermissionNames(userId).contains(permissionName);
+    }
+
+    public User updateProfile(Long userId, com.nozie.identityservice.dto.request.UpdateProfileRequest request,
+            String ipAddress,
+            String userAgent) {
+        log.info("Updating profile for user: {}", userId);
+        User user = getUserById(userId);
+
+        UserProfile profile = user.getProfile();
+        if (profile == null) {
+            profile = UserProfile.builder().user(user).userId(userId).build();
+        }
+
+        if (request.getFullName() != null)
+            profile.setFullName(request.getFullName());
+        if (request.getDateOfBirth() != null)
+            profile.setDateOfBirth(request.getDateOfBirth());
+        if (request.getCountry() != null)
+            profile.setCountry(request.getCountry());
+        if (request.getGender() != null)
+            profile.setGender(request.getGender());
+        if (request.getAge() != null)
+            profile.setAge(request.getAge());
+        if (request.getAvatarUrl() != null)
+            profile.setAvatarUrl(request.getAvatarUrl());
+        if (request.getGenres() != null)
+            profile.setGenres(new java.util.HashSet<>(request.getGenres()));
+
+        if (request.getPhone() != null) {
+            user.setPhoneNumber(request.getPhone());
+        }
+
+        userProfileRepository.save(profile);
+        User savedUser = userRepository.save(user);
+
+        auditService.logSuccess(userId, AuditLog.Action.PROFILE_UPDATE, ipAddress, userAgent);
+
+        return savedUser;
     }
 }

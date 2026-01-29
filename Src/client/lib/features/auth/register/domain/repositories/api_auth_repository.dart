@@ -69,4 +69,33 @@ class ApiAuthRepository implements AuthRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<void> updateProfile({
+    String? fullName,
+    String? phone,
+    String? country,
+    String? dateOfBirth,
+    String? gender,
+    String? age,
+    List<String>? genres,
+    String? avatarUrl,
+  }) async {
+    try {
+      await _authNotifier.updateProfile(
+        fullName: fullName,
+        phone: phone,
+        country: country,
+        dateOfBirth: dateOfBirth,
+        gender: gender,
+        age: age,
+        genres: genres,
+        avatarUrl: avatarUrl,
+      );
+      debugPrint('[ApiAuthRepository] Profile update successful');
+    } catch (e) {
+      debugPrint('[ApiAuthRepository] Profile update failed: $e');
+      rethrow;
+    }
+  }
 }

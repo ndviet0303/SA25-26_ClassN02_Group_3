@@ -1,7 +1,8 @@
 package com.nozie.identityservice.service;
 
 import com.nozie.common.exception.BadRequestException;
-import com.nozie.identityservice.dto.*;
+import com.nozie.identityservice.dto.request.*;
+import com.nozie.identityservice.dto.response.*;
 import com.nozie.identityservice.entity.*;
 import com.nozie.identityservice.repository.*;
 import lombok.RequiredArgsConstructor;

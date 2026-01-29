@@ -1,14 +1,14 @@
 package com.nozie.identityservice.controller;
 
 import com.nozie.common.dto.ApiResponse;
-import com.nozie.identityservice.dto.*;
+import com.nozie.identityservice.dto.request.*;
+import com.nozie.identityservice.dto.response.*;
 import com.nozie.identityservice.entity.User;
 import com.nozie.identityservice.entity.UserSession;
-import com.nozie.identityservice.entity.Role;
-import com.nozie.identityservice.entity.Permission;
 import com.nozie.identityservice.service.AuthService;
 import com.nozie.identityservice.service.TokenService;
-import com.nozie.identityservice.entity.UserProfile;
+import com.nozie.identityservice.service.UserService;
+import com.nozie.identityservice.mapper.UserMapper;
 import com.nozie.identityservice.repository.UserSessionRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -33,16 +32,21 @@ public class AuthController {
     private final AuthService authService;
     private final TokenService tokenService;
     private final UserSessionRepository userSessionRepository;
+    private final UserService userService;
+    private final UserMapper userMapper;
 
     public AuthController(AuthService authService, TokenService tokenService,
-            UserSessionRepository userSessionRepository) {
+            UserSessionRepository userSessionRepository, UserService userService,
+            UserMapper userMapper) {
         this.authService = authService;
         this.tokenService = tokenService;
         this.userSessionRepository = userSessionRepository;
+        this.userService = userService;
+        this.userMapper = userMapper;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> register(
+    public ResponseEntity<ApiResponse<UserResponse>> register(
             @Valid @RequestBody RegisterRequest request,
             HttpServletRequest httpRequest) {
         log.info("POST /api/auth/register - Registering user: {}", request.getUsername());
@@ -51,31 +55,9 @@ public class AuthController {
         String userAgent = httpRequest.getHeader("User-Agent");
 
         User user = authService.register(request, ipAddress, userAgent);
-
-        Set<String> roles = user.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.toSet());
-
-        Map<String, Object> userData = new java.util.HashMap<>();
-        userData.put("id", user.getId());
-        userData.put("username", user.getUsername());
-        userData.put("email", user.getEmail() != null ? user.getEmail() : "");
-        userData.put("roles", roles);
-
-        UserProfile profile = user.getProfile();
-        if (profile != null) {
-            userData.put("fullName", profile.getFullName());
-            userData.put("avatarUrl", profile.getAvatarUrl());
-            userData.put("phone", user.getPhoneNumber());
-            userData.put("country", profile.getCountry());
-            userData.put("dateOfBirth", profile.getDateOfBirth());
-            userData.put("gender", profile.getGender());
-            userData.put("age", profile.getAge());
-            userData.put("genres", profile.getGenres());
-        } else {
-            userData.put("phone", user.getPhoneNumber());
-        }
-        return new ResponseEntity<>(ApiResponse.success("User registered successfully", userData), HttpStatus.CREATED);
+        return new ResponseEntity<>(
+                ApiResponse.success("User registered successfully", userMapper.toUserResponse(user)),
+                HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
@@ -155,8 +137,25 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Password changed successfully", null));
     }
 
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(
+            @RequestHeader("Authorization") String authHeader,
+            @Valid @RequestBody UpdateProfileRequest request,
+            HttpServletRequest httpRequest) {
+        log.info("PUT /api/auth/profile");
+
+        String token = authHeader.substring(7);
+        Long userId = tokenService.getUserIdFromToken(token);
+        String ipAddress = getClientIP(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+
+        User user = userService.updateProfile(userId, request, ipAddress, userAgent);
+
+        return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", userMapper.toUserResponse(user)));
+    }
+
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getCurrentUser(
+    public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser(
             @RequestHeader("Authorization") String authHeader) {
         log.info("GET /api/auth/me");
 
@@ -164,40 +163,7 @@ public class AuthController {
         Long userId = tokenService.getUserIdFromToken(token);
         User user = authService.getUserById(userId);
 
-        Set<String> roles = user.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.toSet());
-
-        Set<String> permissions = user.getRoles().stream()
-                .flatMap(role -> role.getPermissions().stream())
-                .map(Permission::getName)
-                .collect(Collectors.toSet());
-
-        Map<String, Object> userData = new java.util.HashMap<>();
-        userData.put("id", user.getId());
-        userData.put("username", user.getUsername());
-        userData.put("email", user.getEmail() != null ? user.getEmail() : "");
-        userData.put("status", user.getStatus().name());
-        userData.put("roles", roles);
-        userData.put("permissions", permissions);
-        userData.put("lastLoginAt", user.getLastLoginAt() != null ? user.getLastLoginAt().toString() : "");
-        userData.put("createdAt", user.getCreatedAt().toString());
-
-        UserProfile profile = user.getProfile();
-        if (profile != null) {
-            userData.put("fullName", profile.getFullName());
-            userData.put("avatarUrl", profile.getAvatarUrl());
-            userData.put("phone", user.getPhoneNumber());
-            userData.put("country", profile.getCountry());
-            userData.put("dateOfBirth", profile.getDateOfBirth());
-            userData.put("gender", profile.getGender());
-            userData.put("age", profile.getAge());
-            userData.put("genres", profile.getGenres());
-        } else {
-            userData.put("phone", user.getPhoneNumber());
-        }
-
-        return ResponseEntity.ok(ApiResponse.success(userData));
+        return ResponseEntity.ok(ApiResponse.success(userMapper.toUserResponse(user)));
     }
 
     @GetMapping("/sessions")
