@@ -272,6 +272,7 @@ class MovieRepository {
         {'name': 'Action', 'slug': 'action'},
       ],
       price: {'usd': 4.99},
+      accessType: AccessType.FREE,
     );
   }
 }

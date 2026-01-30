@@ -8,6 +8,7 @@ import '../../../../core/utils/data/price_utils.dart';
 import '../../../../core/utils/data/text_utils.dart';
 import '../../../../core/widgets/image_utils.dart';
 import '../screens/ratings_detail_screen.dart';
+import '../../../../core/models/movie.dart';
 
 class MovieHeroSection extends ConsumerWidget {
   const MovieHeroSection({
@@ -20,6 +21,7 @@ class MovieHeroSection extends ConsumerWidget {
     required this.onBuyPressed,
     required this.onViewMorePressed,
     this.isPurchased = false,
+    this.buttonOverrideText,
     this.ratingCount,
     this.durationText,
     this.qualityText,
@@ -34,6 +36,7 @@ class MovieHeroSection extends ConsumerWidget {
   final VoidCallback? onBuyPressed;
   final VoidCallback? onViewMorePressed;
   final bool isPurchased;
+  final String? buttonOverrideText;
   final int? ratingCount;
   final String? durationText;
   final String? qualityText;
@@ -205,12 +208,12 @@ class MovieHeroSection extends ConsumerWidget {
   }
 
   Widget _buildBuyButton(BuildContext context, ThemeData theme) {
-    final isFree = PriceUtils.isFree(movie);
+    final isFree = movie.accessType == AccessType.FREE;
     final shouldShowWatchNow = isFree || isPurchased;
     
-    final buttonText = shouldShowWatchNow 
+    final buttonText = buttonOverrideText ?? (shouldShowWatchNow 
         ? context.i18n.movie.hero.watchNow 
-        : PriceUtils.formatPriceForButton(movie);
+        : PriceUtils.formatPriceForButton(movie));
     
     return SizedBox(
       width: double.infinity,

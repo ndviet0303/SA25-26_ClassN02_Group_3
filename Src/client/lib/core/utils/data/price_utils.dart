@@ -1,4 +1,5 @@
 import 'package:movie_fe/i18n/translations.g.dart';
+import '../../models/movie.dart';
 import '../../models/movie_item.dart';
 
 class PriceUtils {
@@ -30,6 +31,9 @@ class PriceUtils {
 
   /// Format price string theo locale (VND cho tiếng Việt, USD cho tiếng Anh)
   static String formatPrice(MovieItem movie) {
+    if (movie.accessType == AccessType.FREE) return '';
+    if (movie.accessType == AccessType.PREMIUM) return 'PREMIUM';
+
     final locale = LocaleSettings.currentLocale;
     final isVietnamese = locale == AppLocale.vi;
 
@@ -39,21 +43,16 @@ class PriceUtils {
         if (vnd != null) {
           return '${_formatNumber(vnd.toDouble())} ₫';
         }
-        // Nếu không có VND và locale là tiếng Việt, không hiển thị giá
         return '';
       } else {
         final usd = movie.priceData!['usd'] as num?;
         if (usd != null) {
           return '\$${usd.toStringAsFixed(2)}';
         }
-        // Nếu không có USD và locale là tiếng Anh, không hiển thị giá
         return '';
       }
     } else if (movie.price != null) {
-      // Nếu không có priceData, chỉ hiển thị USD cho tiếng Anh
-      if (isVietnamese) {
-        return '';
-      }
+      if (isVietnamese) return '';
       return '\$${movie.price!.toStringAsFixed(2)}';
     }
 
@@ -65,30 +64,20 @@ class PriceUtils {
     final locale = LocaleSettings.currentLocale;
     final priceText = formatPrice(movie);
     
-    if (priceText.isEmpty) return 'Buy';
+    if (priceText.isEmpty) return 'Watch Now';
+    if (movie.accessType == AccessType.PREMIUM) return 'Get Premium';
     
+    final buyPrefix = locale == AppLocale.vi ? 'Mua' : 'Rent';
+
     if (locale != AppLocale.vi && priceText.startsWith('\$')) {
-      return 'Buy USD $priceText';
+      return '$buyPrefix $priceText';
     }
     
-    return 'Buy $priceText';
+    return '$buyPrefix $priceText';
   }
 
-  /// Kiểm tra xem movie có free không (price = 0 hoặc không có price)
+  /// Kiểm tra xem movie có free không
   static bool isFree(MovieItem movie) {
-    final locale = LocaleSettings.currentLocale;
-    final isVietnamese = locale == AppLocale.vi;
-
-    if (movie.priceData != null) {
-      if (isVietnamese) {
-        final vnd = movie.priceData!['vnd'] as num?;
-        return vnd == null || vnd.toDouble() == 0.0;
-      } else {
-        final usd = movie.priceData!['usd'] as num?;
-        return usd == null || usd.toDouble() == 0.0;
-      }
-    }
-    return movie.price == null || movie.price == 0.0;
+    return movie.accessType == AccessType.FREE;
   }
 }
-

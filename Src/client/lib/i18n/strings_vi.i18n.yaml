@@ -662,7 +662,8 @@ movie:
     title: Đánh giá & Nhận xét
     noReviews: Chưa có đánh giá nào
     rateThisFilm: Đánh giá phim này
-    purchaseRequired: Cần mua để đánh giá
+    purchaseRequired: Đã khóa
+    premiumRequired: Cần gói Premium để đánh giá
     writeAReview: Viết đánh giá
     dialog:
       title: Viết đánh giá
@@ -704,6 +705,8 @@ movie:
     quality: chất lượng
     watched: lượt xem
     watchNow: Xem ngay
+    getPremium: Đăng ký Premium
+    rentMovie: Thuê phim
     aboutThisFilm: Giới thiệu
     viewMore: Xem thêm
   similar:
@@ -730,6 +733,23 @@ movie:
       sending: Đang gửi...
     success: Báo cáo đã được gửi thành công. Cảm ơn bạn đã phản hồi!
     failurePrefix: "Lỗi khi gửi báo cáo:"
+
+# Premium Subscription Module
+premium:
+  title: Nâng cấp Premium
+  description: Thưởng thức hàng ngàn phim Premium, không quảng cáo và chất lượng 4K.
+  features:
+    t1: Truy cập không giới hạn kho phim
+    t2: Trải nghiệm không quảng cáo
+    t3: Chất lượng 4K Ultra HD
+    t4: Tải về và xem ngoại tuyến
+  plans:
+    monthly: Gói hàng tháng
+    yearly: Gói hàng năm
+  subscribe: Đăng ký ngay
+  premiumBadge: PREMIUM
+  alreadyPremium: Bạn đang là hội viên Premium!
+  expired: Gói Premium của bạn đã hết hạn
 # Wishlist Module
 wishlist:
   common:

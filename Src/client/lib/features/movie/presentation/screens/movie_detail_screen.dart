@@ -8,6 +8,7 @@ import '../../../../core/models/movie_item.dart';
 import '../../../../core/models/movie.dart';
 import '../../../../core/widgets/image_utils.dart';
 import '../../../../core/widgets/feedback/toast_notification.dart';
+import '../../../../core/auth/auth_providers.dart';
 import '../../../../routes/app_router.dart';
 import '../../data/repositories/movie_repository.dart';
 import '../../../wishlist/repositories/wishlist_repository.dart';
@@ -196,6 +197,27 @@ class _MovieDetailScreenState extends ConsumerState<MovieDetailScreen> {
     ThemeData theme,
     Movie movie,
   ) {
+    final user = ref.watch(currentAuthUserProvider);
+    final isPremium = user?.isPremium ?? false;
+    
+    bool shouldWatchNow = false;
+    String? buttonOverrideText;
+    
+    if (movie.accessType == AccessType.FREE) {
+      shouldWatchNow = true;
+    } else if (movie.accessType == AccessType.PREMIUM) {
+      shouldWatchNow = isPremium;
+      if (!isPremium) {
+        buttonOverrideText = context.i18n.movie.hero.getPremium;
+      }
+    } else if (movie.accessType == AccessType.RENTAL) {
+      final isPurchased = ref.watch(isPurchasedProvider(movie.id)).value ?? false;
+      shouldWatchNow = isPurchased;
+      if (!isPurchased) {
+        buttonOverrideText = context.i18n.movie.hero.rentMovie;
+      }
+    }
+
     final movieItem = MovieItem(
       id: movie.id,
       title: movie.title,
@@ -203,6 +225,7 @@ class _MovieDetailScreenState extends ConsumerState<MovieDetailScreen> {
       rating: movie.rating,
       price: movie.priceValue,
       priceData: movie.price,
+      accessType: movie.accessType,
     );
 
     return CustomScrollView(
@@ -236,85 +259,78 @@ class _MovieDetailScreenState extends ConsumerState<MovieDetailScreen> {
           padding: ResponsivePadding.content(context),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              Builder(
-                builder: (context) {
-                  final isPurchasedAsync = ref.watch(isPurchasedProvider(movie.id));
-                  final isPurchased = isPurchasedAsync.value ?? false;
-                  
-                  final price = movie.priceValue ?? 0.0;
-                  final isFree = price == 0.0;
-                  final shouldWatchNow = isFree || isPurchased;
-                  
-                  return MovieHeroSection(
-                    movie: movieItem,
-                    author: movie.directorString.isEmpty ? 'Unknown' : movie.directorString,
-                    genres: movie.genres,
-                    metadata: movie.metadata,
-                    description: movie.description,
-                    isPurchased: isPurchased,
-                    ratingCount: movie.ratingCount,
-                    durationText: (movie.time ?? '').isEmpty ? null : movie.time,
-                    qualityText: context.i18n.movie.details.quality1080p,
-                    viewsText: (movie.view == null) ? null : movie.viewsString,
-                    onBuyPressed: () async {
-                      if (shouldWatchNow) {
-                        if (context.mounted) {
-                          final videoUrl = _getVideoUrl(movie);
-                          context.push(
-                            '${AppRouter.videoPlayer}/${movie.id}',
-                            extra: {
-                              'movie': movie,
-                              'videoUrl': videoUrl,
-                            },
-                          );
-                        }
-                        return;
-                      }
-                      
-                      try {
-                        final purchaseRepo = ref.read(purchaseRepositoryProvider);
-                        // Kiểm tra xem đã purchased chưa
-                        final isAlreadyPurchased = await purchaseRepo.isPurchased(movie.id);
-                        
-                        if (isAlreadyPurchased) {
-                          if (context.mounted) {
-                            ToastNotification.showInfo(
-                              context,
-                              message: context.i18n.movie.details.alreadyPurchased,
-                              duration: const Duration(seconds: 3),
-                            );
-                          }
-                          return;
-                        }
-                        
-                        // Navigate to checkout screen
-                        if (context.mounted) {
-                          final result = await context.push(
-                            AppRouter.checkout,
-                            extra: {'movie': movie},
-                          );
-                          
-                          if (result == true && context.mounted) {
-                            // Purchase successful, refresh
-                            ref.invalidate(isPurchasedProvider(movie.id));
-                          }
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ToastNotification.showError(
-                            context,
-                            message: '${context.i18n.common.errorPrefix} ${e.toString()}',
-                            duration: const Duration(seconds: 3),
-                          );
-                        }
-                      }
-                    },
-                    onViewMorePressed: () {
+              MovieHeroSection(
+                movie: movieItem,
+                author: movie.directorString.isEmpty ? 'Unknown' : movie.directorString,
+                genres: movie.genres,
+                metadata: movie.metadata,
+                description: movie.description,
+                isPurchased: shouldWatchNow,
+                buttonOverrideText: buttonOverrideText,
+                ratingCount: movie.ratingCount,
+                durationText: (movie.time ?? '').isEmpty ? null : movie.time,
+                qualityText: context.i18n.movie.details.quality1080p,
+                viewsText: (movie.view == null) ? null : movie.viewsString,
+                onBuyPressed: () async {
+                  if (shouldWatchNow) {
+                    if (context.mounted) {
+                      final videoUrl = _getVideoUrl(movie);
                       context.push(
-                        '${AppRouter.movieInfo}/${movie.id}',
+                        '${AppRouter.videoPlayer}/${movie.id}',
+                        extra: {
+                          'movie': movie,
+                          'videoUrl': videoUrl,
+                        },
+                      );
+                    }
+                    return;
+                  }
+
+                  // Handle Premium redirection
+                  if (movie.accessType == AccessType.PREMIUM && !isPremium) {
+                    // TODO: Navigate to Subscription Screen
+                    ToastNotification.showInfo(
+                      context,
+                      message: context.i18n.premium.title,
+                    );
+                    return;
+                  }
+                  
+                  try {
+                    final purchaseRepo = ref.read(purchaseRepositoryProvider);
+                    // Rental check
+                    final isAlreadyPurchased = await purchaseRepo.isPurchased(movie.id);
+                    
+                    if (isAlreadyPurchased) {
+                       // This should be handled by shouldWatchNow but double check
+                      return;
+                    }
+                    
+                    // Navigate to checkout screen for RENTAL
+                    if (context.mounted) {
+                      final result = await context.push(
+                        AppRouter.checkout,
                         extra: {'movie': movie},
                       );
-                    },
+                      
+                      if (result == true && context.mounted) {
+                        ref.invalidate(isPurchasedProvider(movie.id));
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastNotification.showError(
+                        context,
+                        message: '${context.i18n.common.errorPrefix} ${e.toString()}',
+                        duration: const Duration(seconds: 3),
+                      );
+                    }
+                  }
+                },
+                onViewMorePressed: () {
+                  context.push(
+                    '${AppRouter.movieInfo}/${movie.id}',
+                    extra: {'movie': movie},
                   );
                 },
               ),
@@ -323,7 +339,7 @@ class _MovieDetailScreenState extends ConsumerState<MovieDetailScreen> {
                 movieId: movie.id,
                 rating: movie.rating ?? 0.0,
                 reviewCount: movie.ratingCount ?? 0,
-                canRate: ((movie.priceValue ?? 0.0) == 0.0) || (ref.read(isPurchasedProvider(movie.id)).value ?? false),
+                canRate: shouldWatchNow,
                 onViewAllPressed: () {
                   context.push('${AppRouter.ratings}/${movie.id}', extra: {'title': movie.title});
                 },

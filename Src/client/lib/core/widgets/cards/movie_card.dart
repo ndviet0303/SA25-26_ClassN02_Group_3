@@ -10,6 +10,7 @@ import '../../utils/data/image_constant.dart';
 import '../../utils/data/price_utils.dart';
 import '../../../routes/app_router.dart';
 import '../image_utils.dart';
+import '../../models/movie.dart';
 
 class MovieCard extends StatelessWidget {
   const MovieCard({
@@ -225,11 +226,18 @@ class MovieCard extends StatelessWidget {
 
   Widget _buildPrice(TextStyle? textStyle) {
     final priceText = PriceUtils.formatPrice(movie);
-    
     if (priceText.isEmpty) {
       return const SizedBox.shrink();
     }
     
-    return Text(priceText, style: textStyle);
+    final isPremium = movie.accessType == AccessType.PREMIUM;
+    
+    return Text(
+      priceText, 
+      style: textStyle?.copyWith(
+        color: isPremium ? AppColors.primary500 : textStyle.color,
+        fontWeight: isPremium ? FontWeight.w800 : textStyle.fontWeight,
+      ),
+    );
   }
 }

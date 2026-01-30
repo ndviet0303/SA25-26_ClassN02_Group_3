@@ -89,6 +89,8 @@ class AuthUser extends Equatable {
 
   @override
   List<Object?> get props => [id, username, email, roles, fullName, avatarUrl];
+
+  bool get isPremium => roles.contains('PREMIUM') || roles.contains('VIP');
 }
 
 /// Login request payload

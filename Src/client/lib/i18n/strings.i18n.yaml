@@ -661,7 +661,8 @@ movie:
     title: Ratings & Reviews
     noReviews: No reviews yet
     rateThisFilm: Rate this Film
-    purchaseRequired: Purchase required to rate
+    purchaseRequired: Locked
+    premiumRequired: Premium required to rate
     writeAReview: Write a Review
     dialog:
       title: Write a Review
@@ -703,6 +704,8 @@ movie:
     quality: quality
     watched: watched
     watchNow: Watch now
+    getPremium: Get Premium
+    rentMovie: Rent
     aboutThisFilm: About This Film
     viewMore: View More
   similar:
@@ -729,6 +732,23 @@ movie:
       sending: Sending...
     success: Report submitted successfully. Thank you for your feedback!
     failurePrefix: "Failed to submit report:"
+
+# Premium Subscription Module
+premium:
+  title: Upgrade to Premium
+  description: Enjoy thousands of premium movies, no ads, and 4K quality.
+  features:
+    t1: Unlimited access to all movies
+    t2: Ad-free experience
+    t3: 4K Ultra HD quality
+    t4: Download and watch offline
+  plans:
+    monthly: Monthly Plan
+    yearly: Yearly Plan
+  subscribe: Subscribe Now
+  premiumBadge: PREMIUM
+  alreadyPremium: You are a Premium member!
+  expired: Your subscription has expired
 # Wishlist Module
 wishlist:
   common:

@@ -1,3 +1,10 @@
+
+enum AccessType {
+  FREE,
+  PREMIUM,
+  RENTAL,
+}
+
 class Movie {
   final String id;
   final String name;
@@ -22,6 +29,7 @@ class Movie {
   final bool? chieurap;
   final bool? subDocquyen;
   final bool? isCopyright;
+  final AccessType accessType;
   
   // Nested objects
   final List<Map<String, dynamic>>? country;
@@ -64,6 +72,7 @@ class Movie {
     this.chieurap,
     this.subDocquyen,
     this.isCopyright,
+    required this.accessType,
     this.country,
     this.category,
     this.director,
@@ -141,6 +150,14 @@ class Movie {
       return null;
     }
 
+    AccessType parseAccessType(dynamic value) {
+      if (value == null) return AccessType.FREE;
+      final typeStr = value.toString().toUpperCase();
+      if (typeStr == 'PREMIUM') return AccessType.PREMIUM;
+      if (typeStr == 'RENTAL') return AccessType.RENTAL;
+      return AccessType.FREE;
+    }
+
     return Movie(
       id: id ?? map['id']?.toString() ?? '',
       name: map['name']?.toString() ?? '',
@@ -165,6 +182,7 @@ class Movie {
       chieurap: map['chieurap'] as bool?,
       subDocquyen: map['subDocquyen'] as bool?,
       isCopyright: map['isCopyright'] as bool?,
+      accessType: parseAccessType(map['accessType']),
       country: parseMapList(map['country']),
       category: parseMapList(map['category']),
       director: parseStringList(map['director']),
@@ -206,6 +224,7 @@ class Movie {
       'chieurap': chieurap,
       'subDocquyen': subDocquyen,
       'isCopyright': isCopyright,
+      'accessType': accessType.name,
       'country': country,
       'category': category,
       'director': director,

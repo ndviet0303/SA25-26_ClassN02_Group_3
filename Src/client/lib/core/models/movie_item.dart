@@ -10,6 +10,7 @@ class MovieItem extends Equatable {
   final double? price;
   final Map<String, dynamic>? priceData; // Full price object with USD and VND
   final MovieItemType type;
+  final AccessType accessType;
 
   const MovieItem({
     required this.id,
@@ -19,6 +20,7 @@ class MovieItem extends Equatable {
     this.price,
     this.priceData,
     this.type = MovieItemType.movie,
+    this.accessType = AccessType.FREE,
   });
 
   factory MovieItem.fromMovie(Movie movie) {
@@ -36,16 +38,26 @@ class MovieItem extends Equatable {
       price: movie.priceValue,
       priceData: movie.price,
       type: MovieItemType.movie,
+      accessType: movie.accessType,
     );
   }
 
   factory MovieItem.fromJson(Map<String, dynamic> json) {
+    AccessType parseAccessType(dynamic value) {
+      if (value == null) return AccessType.FREE;
+      final typeStr = value.toString().toUpperCase();
+      if (typeStr == 'PREMIUM') return AccessType.PREMIUM;
+      if (typeStr == 'RENTAL') return AccessType.RENTAL;
+      return AccessType.FREE;
+    }
+
     return MovieItem(
       id: json['id'].toString(),
       title: json['title'] ?? '',
       imageUrl: json['image_url'] ?? '',
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      accessType: parseAccessType(json['accessType']),
       type: MovieItemType.values.firstWhere(
           (e) => e.toString() == 'MovieItemType.${json['type']}',
           orElse: () => MovieItemType.movie),
@@ -59,10 +71,11 @@ class MovieItem extends Equatable {
       'image_url': imageUrl,
       'rating': rating,
       'price': price,
+      'accessType': accessType.name,
       'type': type.toString().split('.').last,
     };
   }
 
   @override
-  List<Object?> get props => [id, title, imageUrl, rating, price, priceData, type];
+  List<Object?> get props => [id, title, imageUrl, rating, price, priceData, type, accessType];
 }

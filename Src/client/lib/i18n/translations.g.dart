@@ -4,7 +4,7 @@
 /// To regenerate, run: `dart run slang`
 ///
 /// Locales: 2
-/// Strings: 1006 (503 per locale)
+/// Strings: 1036 (518 per locale)
 
 // coverage:ignore-file
 // ignore_for_file: type=lint
@@ -165,6 +165,7 @@ class Translations implements BaseTranslations<AppLocale, Translations> {
 	late final _TranslationsGenreEn genre = _TranslationsGenreEn._(_root);
 	late final _TranslationsPurchaseEn purchase = _TranslationsPurchaseEn._(_root);
 	late final _TranslationsMovieEn movie = _TranslationsMovieEn._(_root);
+	late final _TranslationsPremiumEn premium = _TranslationsPremiumEn._(_root);
 	late final _TranslationsWishlistEn wishlist = _TranslationsWishlistEn._(_root);
 }
 
@@ -438,6 +439,23 @@ class _TranslationsMovieEn {
 	late final _TranslationsMovieHeroEn hero = _TranslationsMovieHeroEn._(_root);
 	late final _TranslationsMovieSimilarEn similar = _TranslationsMovieSimilarEn._(_root);
 	late final _TranslationsMovieReportEn report = _TranslationsMovieReportEn._(_root);
+}
+
+// Path: premium
+class _TranslationsPremiumEn {
+	_TranslationsPremiumEn._(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get title => 'Upgrade to Premium';
+	String get description => 'Enjoy thousands of premium movies, no ads, and 4K quality.';
+	late final _TranslationsPremiumFeaturesEn features = _TranslationsPremiumFeaturesEn._(_root);
+	late final _TranslationsPremiumPlansEn plans = _TranslationsPremiumPlansEn._(_root);
+	String get subscribe => 'Subscribe Now';
+	String get premiumBadge => 'PREMIUM';
+	String get alreadyPremium => 'You are a Premium member!';
+	String get expired => 'Your subscription has expired';
 }
 
 // Path: wishlist
@@ -966,7 +984,8 @@ class _TranslationsMovieRatingsEn {
 	String get title => 'Ratings & Reviews';
 	String get noReviews => 'No reviews yet';
 	String get rateThisFilm => 'Rate this Film';
-	String get purchaseRequired => 'Purchase required to rate';
+	String get purchaseRequired => 'Locked';
+	String get premiumRequired => 'Premium required to rate';
 	String get writeAReview => 'Write a Review';
 	late final _TranslationsMovieRatingsDialogEn dialog = _TranslationsMovieRatingsDialogEn._(_root);
 }
@@ -1024,6 +1043,8 @@ class _TranslationsMovieHeroEn {
 	String get quality => 'quality';
 	String get watched => 'watched';
 	String get watchNow => 'Watch now';
+	String get getPremium => 'Get Premium';
+	String get rentMovie => 'Rent';
 	String get aboutThisFilm => 'About This Film';
 	String get viewMore => 'View More';
 }
@@ -1056,6 +1077,30 @@ class _TranslationsMovieReportEn {
 	late final _TranslationsMovieReportActionsEn actions = _TranslationsMovieReportActionsEn._(_root);
 	String get success => 'Report submitted successfully. Thank you for your feedback!';
 	String get failurePrefix => 'Failed to submit report:';
+}
+
+// Path: premium.features
+class _TranslationsPremiumFeaturesEn {
+	_TranslationsPremiumFeaturesEn._(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get t1 => 'Unlimited access to all movies';
+	String get t2 => 'Ad-free experience';
+	String get t3 => '4K Ultra HD quality';
+	String get t4 => 'Download and watch offline';
+}
+
+// Path: premium.plans
+class _TranslationsPremiumPlansEn {
+	_TranslationsPremiumPlansEn._(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get monthly => 'Monthly Plan';
+	String get yearly => 'Yearly Plan';
 }
 
 // Path: wishlist.common
@@ -2306,6 +2351,7 @@ class _TranslationsVi extends Translations {
 	@override late final _TranslationsGenreVi genre = _TranslationsGenreVi._(_root);
 	@override late final _TranslationsPurchaseVi purchase = _TranslationsPurchaseVi._(_root);
 	@override late final _TranslationsMovieVi movie = _TranslationsMovieVi._(_root);
+	@override late final _TranslationsPremiumVi premium = _TranslationsPremiumVi._(_root);
 	@override late final _TranslationsWishlistVi wishlist = _TranslationsWishlistVi._(_root);
 }
 
@@ -2579,6 +2625,23 @@ class _TranslationsMovieVi extends _TranslationsMovieEn {
 	@override late final _TranslationsMovieHeroVi hero = _TranslationsMovieHeroVi._(_root);
 	@override late final _TranslationsMovieSimilarVi similar = _TranslationsMovieSimilarVi._(_root);
 	@override late final _TranslationsMovieReportVi report = _TranslationsMovieReportVi._(_root);
+}
+
+// Path: premium
+class _TranslationsPremiumVi extends _TranslationsPremiumEn {
+	_TranslationsPremiumVi._(_TranslationsVi root) : this._root = root, super._(root);
+
+	@override final _TranslationsVi _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Nâng cấp Premium';
+	@override String get description => 'Thưởng thức hàng ngàn phim Premium, không quảng cáo và chất lượng 4K.';
+	@override late final _TranslationsPremiumFeaturesVi features = _TranslationsPremiumFeaturesVi._(_root);
+	@override late final _TranslationsPremiumPlansVi plans = _TranslationsPremiumPlansVi._(_root);
+	@override String get subscribe => 'Đăng ký ngay';
+	@override String get premiumBadge => 'PREMIUM';
+	@override String get alreadyPremium => 'Bạn đang là hội viên Premium!';
+	@override String get expired => 'Gói Premium của bạn đã hết hạn';
 }
 
 // Path: wishlist
@@ -3107,7 +3170,8 @@ class _TranslationsMovieRatingsVi extends _TranslationsMovieRatingsEn {
 	@override String get title => 'Đánh giá & Nhận xét';
 	@override String get noReviews => 'Chưa có đánh giá nào';
 	@override String get rateThisFilm => 'Đánh giá phim này';
-	@override String get purchaseRequired => 'Cần mua để đánh giá';
+	@override String get purchaseRequired => 'Đã khóa';
+	@override String get premiumRequired => 'Cần gói Premium để đánh giá';
 	@override String get writeAReview => 'Viết đánh giá';
 	@override late final _TranslationsMovieRatingsDialogVi dialog = _TranslationsMovieRatingsDialogVi._(_root);
 }
@@ -3165,6 +3229,8 @@ class _TranslationsMovieHeroVi extends _TranslationsMovieHeroEn {
 	@override String get quality => 'chất lượng';
 	@override String get watched => 'lượt xem';
 	@override String get watchNow => 'Xem ngay';
+	@override String get getPremium => 'Đăng ký Premium';
+	@override String get rentMovie => 'Thuê phim';
 	@override String get aboutThisFilm => 'Giới thiệu';
 	@override String get viewMore => 'Xem thêm';
 }
@@ -3197,6 +3263,30 @@ class _TranslationsMovieReportVi extends _TranslationsMovieReportEn {
 	@override late final _TranslationsMovieReportActionsVi actions = _TranslationsMovieReportActionsVi._(_root);
 	@override String get success => 'Báo cáo đã được gửi thành công. Cảm ơn bạn đã phản hồi!';
 	@override String get failurePrefix => 'Lỗi khi gửi báo cáo:';
+}
+
+// Path: premium.features
+class _TranslationsPremiumFeaturesVi extends _TranslationsPremiumFeaturesEn {
+	_TranslationsPremiumFeaturesVi._(_TranslationsVi root) : this._root = root, super._(root);
+
+	@override final _TranslationsVi _root; // ignore: unused_field
+
+	// Translations
+	@override String get t1 => 'Truy cập không giới hạn kho phim';
+	@override String get t2 => 'Trải nghiệm không quảng cáo';
+	@override String get t3 => 'Chất lượng 4K Ultra HD';
+	@override String get t4 => 'Tải về và xem ngoại tuyến';
+}
+
+// Path: premium.plans
+class _TranslationsPremiumPlansVi extends _TranslationsPremiumPlansEn {
+	_TranslationsPremiumPlansVi._(_TranslationsVi root) : this._root = root, super._(root);
+
+	@override final _TranslationsVi _root; // ignore: unused_field
+
+	// Translations
+	@override String get monthly => 'Gói hàng tháng';
+	@override String get yearly => 'Gói hàng năm';
 }
 
 // Path: wishlist.common
@@ -4842,7 +4932,8 @@ extension on Translations {
 			case 'movie.ratings.title': return 'Ratings & Reviews';
 			case 'movie.ratings.noReviews': return 'No reviews yet';
 			case 'movie.ratings.rateThisFilm': return 'Rate this Film';
-			case 'movie.ratings.purchaseRequired': return 'Purchase required to rate';
+			case 'movie.ratings.purchaseRequired': return 'Locked';
+			case 'movie.ratings.premiumRequired': return 'Premium required to rate';
 			case 'movie.ratings.writeAReview': return 'Write a Review';
 			case 'movie.ratings.dialog.title': return 'Write a Review';
 			case 'movie.ratings.dialog.yourRatingPrefix': return 'Your rating:';
@@ -4880,6 +4971,8 @@ extension on Translations {
 			case 'movie.hero.quality': return 'quality';
 			case 'movie.hero.watched': return 'watched';
 			case 'movie.hero.watchNow': return 'Watch now';
+			case 'movie.hero.getPremium': return 'Get Premium';
+			case 'movie.hero.rentMovie': return 'Rent';
 			case 'movie.hero.aboutThisFilm': return 'About This Film';
 			case 'movie.hero.viewMore': return 'View More';
 			case 'movie.similar.title': return 'Similar Movies';
@@ -4901,6 +4994,18 @@ extension on Translations {
 			case 'movie.report.actions.sending': return 'Sending...';
 			case 'movie.report.success': return 'Report submitted successfully. Thank you for your feedback!';
 			case 'movie.report.failurePrefix': return 'Failed to submit report:';
+			case 'premium.title': return 'Upgrade to Premium';
+			case 'premium.description': return 'Enjoy thousands of premium movies, no ads, and 4K quality.';
+			case 'premium.features.t1': return 'Unlimited access to all movies';
+			case 'premium.features.t2': return 'Ad-free experience';
+			case 'premium.features.t3': return '4K Ultra HD quality';
+			case 'premium.features.t4': return 'Download and watch offline';
+			case 'premium.plans.monthly': return 'Monthly Plan';
+			case 'premium.plans.yearly': return 'Yearly Plan';
+			case 'premium.subscribe': return 'Subscribe Now';
+			case 'premium.premiumBadge': return 'PREMIUM';
+			case 'premium.alreadyPremium': return 'You are a Premium member!';
+			case 'premium.expired': return 'Your subscription has expired';
 			case 'wishlist.common.retry': return 'Retry';
 			case 'wishlist.common.errorPrefix': return 'Error:';
 			case 'wishlist.common.movieNotFound': return 'Movie not found';
@@ -5353,7 +5458,8 @@ extension on _TranslationsVi {
 			case 'movie.ratings.title': return 'Đánh giá & Nhận xét';
 			case 'movie.ratings.noReviews': return 'Chưa có đánh giá nào';
 			case 'movie.ratings.rateThisFilm': return 'Đánh giá phim này';
-			case 'movie.ratings.purchaseRequired': return 'Cần mua để đánh giá';
+			case 'movie.ratings.purchaseRequired': return 'Đã khóa';
+			case 'movie.ratings.premiumRequired': return 'Cần gói Premium để đánh giá';
 			case 'movie.ratings.writeAReview': return 'Viết đánh giá';
 			case 'movie.ratings.dialog.title': return 'Viết đánh giá';
 			case 'movie.ratings.dialog.yourRatingPrefix': return 'Đánh giá của bạn:';
@@ -5391,6 +5497,8 @@ extension on _TranslationsVi {
 			case 'movie.hero.quality': return 'chất lượng';
 			case 'movie.hero.watched': return 'lượt xem';
 			case 'movie.hero.watchNow': return 'Xem ngay';
+			case 'movie.hero.getPremium': return 'Đăng ký Premium';
+			case 'movie.hero.rentMovie': return 'Thuê phim';
 			case 'movie.hero.aboutThisFilm': return 'Giới thiệu';
 			case 'movie.hero.viewMore': return 'Xem thêm';
 			case 'movie.similar.title': return 'Phim tương tự';
@@ -5412,6 +5520,18 @@ extension on _TranslationsVi {
 			case 'movie.report.actions.sending': return 'Đang gửi...';
 			case 'movie.report.success': return 'Báo cáo đã được gửi thành công. Cảm ơn bạn đã phản hồi!';
 			case 'movie.report.failurePrefix': return 'Lỗi khi gửi báo cáo:';
+			case 'premium.title': return 'Nâng cấp Premium';
+			case 'premium.description': return 'Thưởng thức hàng ngàn phim Premium, không quảng cáo và chất lượng 4K.';
+			case 'premium.features.t1': return 'Truy cập không giới hạn kho phim';
+			case 'premium.features.t2': return 'Trải nghiệm không quảng cáo';
+			case 'premium.features.t3': return 'Chất lượng 4K Ultra HD';
+			case 'premium.features.t4': return 'Tải về và xem ngoại tuyến';
+			case 'premium.plans.monthly': return 'Gói hàng tháng';
+			case 'premium.plans.yearly': return 'Gói hàng năm';
+			case 'premium.subscribe': return 'Đăng ký ngay';
+			case 'premium.premiumBadge': return 'PREMIUM';
+			case 'premium.alreadyPremium': return 'Bạn đang là hội viên Premium!';
+			case 'premium.expired': return 'Gói Premium của bạn đã hết hạn';
 			case 'wishlist.common.retry': return 'Thử lại';
 			case 'wishlist.common.errorPrefix': return 'Lỗi:';
 			case 'wishlist.common.movieNotFound': return 'Không tìm thấy phim';
