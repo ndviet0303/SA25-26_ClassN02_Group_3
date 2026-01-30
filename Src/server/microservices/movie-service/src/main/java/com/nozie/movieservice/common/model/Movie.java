@@ -1,16 +1,16 @@
-package com.nozie.movieservice.model;
+package com.nozie.movieservice.common.model;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
- * Movie Document
+ * Movie Document - metadata + episodes. MongoDB dùng camelCase (khớp với tools/import.js).
  */
 @Document(collection = "movies")
 @Getter
@@ -22,11 +22,10 @@ public class Movie {
 
     @Id
     private String id;
+    private String externalId;
 
     @NotBlank(message = "Movie name is required")
     private String name;
-
-    @Field("origin_name")
     private String originName;
 
     @NotBlank(message = "Slug is required")
@@ -34,53 +33,65 @@ public class Movie {
     private String slug;
 
     private String content;
-
-    @Field("poster_url")
     private String posterUrl;
-
-    @Field("thumb_url")
     private String thumbUrl;
-
-    @Field("trailer_url")
     private String trailerUrl;
 
     private String type;
     private String status;
     private String quality;
     private String lang;
-
-    @Field("year")
+    private List<String> langKey;
     private Integer year;
 
     @Builder.Default
     private Long view = 0L;
 
     private String time;
-
-    @Field("episode_current")
     private String episodeCurrent;
-
-    @Field("episode_total")
     private String episodeTotal;
 
     @Builder.Default
     private BigDecimal price = BigDecimal.ZERO;
 
-    @Field("is_free")
     @Builder.Default
-    private Boolean isFree = true;
+    private AccessType accessType = AccessType.FREE;
 
     private Double tmdbRating;
     private Double imdbRating;
 
-    @Field("created_at")
+    private List<CategoryRef> category;
+    private List<CountryRef> country;
+    private List<String> alternativeNames;
+
+    private List<String> actor;
+    private List<String> director;
+    private Boolean subDocquyen;
+    private Boolean chieuRap;
+
+    private List<Episode> episodes;
+
+    @Builder.Default
+    private Source source = Source.OPHIM;
+    private String customHlsUrl;
+    private String customHlsSource;
+
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
-
-    @Field("updated_at")
     private LocalDateTime updatedAt;
 
     public void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    public enum AccessType {
+        FREE,
+        PREMIUM,
+        RENTAL
+    }
+
+    public enum Source {
+        OPHIM,
+        MANUAL
     }
 }

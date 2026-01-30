@@ -1,12 +1,10 @@
-package com.nozie.movieservice.dto;
+package com.nozie.movieservice.common.dto;
 
+import com.nozie.movieservice.common.model.Movie;
 import lombok.*;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
-/**
- * Movie Request DTO
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -40,6 +38,8 @@ public class MovieRequest {
 
     @DecimalMin(value = "0.0")
     private BigDecimal price;
+
+    private Movie.AccessType accessType;
 
     private Double tmdbRating;
     private Double imdbRating;
