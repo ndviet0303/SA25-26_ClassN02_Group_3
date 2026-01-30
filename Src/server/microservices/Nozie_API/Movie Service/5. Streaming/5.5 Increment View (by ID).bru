@@ -1,0 +1,15 @@
+meta {
+  name: 5.5 Increment View (by ID)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/movies/{{movieId}}/view
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

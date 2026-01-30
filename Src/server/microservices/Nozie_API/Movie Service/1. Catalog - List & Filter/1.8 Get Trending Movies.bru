@@ -1,0 +1,15 @@
+meta {
+  name: 1.8 Get Trending Movies
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/movies/trending
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

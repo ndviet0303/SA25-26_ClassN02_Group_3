@@ -1,0 +1,15 @@
+meta {
+  name: 3.2 Get Countries
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/countries
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

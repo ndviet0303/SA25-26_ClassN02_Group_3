@@ -1,0 +1,21 @@
+meta {
+  name: 1.3 Search Movies
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/movies/search
+  body: none
+  auth: inherit
+}
+
+params:query {
+  q: phim
+  page: 1
+  size: 24
+}
+
+settings {
+  encodeUrl: true
+}

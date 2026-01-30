@@ -1,0 +1,52 @@
+meta {
+  name: 4.1 Create Movie
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/movies
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Phim Test API",
+    "originName": "Test Movie API",
+    "slug": "phim-test-api-bruno",
+    "content": "<p>Mô tả phim test</p>",
+    "posterUrl": "https://img.ophim.live/uploads/movies/test-thumb.jpg",
+    "thumbUrl": "https://img.ophim.live/uploads/movies/test-poster.jpg",
+    "trailerUrl": "",
+    "type": "single",
+    "status": "completed",
+    "quality": "HD",
+    "lang": "Vietsub",
+    "year": 2025,
+    "time": "90 phút",
+    "episodeCurrent": "Full",
+    "episodeTotal": "1",
+    "price": 0,
+    "accessType": "FREE",
+    "tmdbRating": 7.5,
+    "imdbRating": 7.2
+  }
+}
+
+script:post-response {
+  var jsonData = res.getBody();
+  if (jsonData && jsonData.data && jsonData.data.id) {
+    bru.setVar('movieId', jsonData.data.id);
+    bru.setVar('movieSlug', jsonData.data.slug || 'phim-test-api-bruno');
+    console.log('Created movie - saved movieId:', jsonData.data.id);
+  }
+}
+
+settings {
+  encodeUrl: true
+}

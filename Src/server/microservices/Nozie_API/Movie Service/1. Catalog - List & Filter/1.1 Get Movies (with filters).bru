@@ -1,0 +1,29 @@
+meta {
+  name: 1.1 Get Movies (with filters)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/movies
+  body: none
+  auth: inherit
+}
+
+params:query {
+  page: 1
+  size: 24
+}
+
+script:post-response {
+  var jsonData = res.getBody();
+  if (jsonData && jsonData.data && jsonData.data.items && jsonData.data.items.length > 0) {
+    bru.setVar('movieId', jsonData.data.items[0].id);
+    bru.setVar('movieSlug', jsonData.data.items[0].slug);
+    console.log('Saved movieId:', jsonData.data.items[0].id, 'movieSlug:', jsonData.data.items[0].slug);
+  }
+}
+
+settings {
+  encodeUrl: true
+}

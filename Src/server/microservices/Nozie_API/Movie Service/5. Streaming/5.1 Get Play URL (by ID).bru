@@ -1,0 +1,20 @@
+meta {
+  name: 5.1 Get Play URL (by ID)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/movies/{{movieId}}/play
+  body: none
+  auth: inherit
+}
+
+params:query {
+  server: 0
+  episode: 0
+}
+
+settings {
+  encodeUrl: true
+}

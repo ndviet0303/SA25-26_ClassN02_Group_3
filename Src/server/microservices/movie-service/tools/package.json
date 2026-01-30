@@ -1,0 +1,17 @@
+{
+  "name": "ophim-import-tool",
+  "version": "1.0.0",
+  "description": "Tool import data từ OPhim API vào MongoDB - dùng 1 lần rồi xóa",
+  "main": "import.js",
+  "type": "module",
+  "scripts": {
+    "import": "node import.js",
+    "import:genres": "node import.js --genres",
+    "import:countries": "node import.js --countries",
+    "import:movies": "node import.js --movies",
+    "import:all": "node import.js --all"
+  },
+  "dependencies": {
+    "mongodb": "^6.3.0"
+  }
+}

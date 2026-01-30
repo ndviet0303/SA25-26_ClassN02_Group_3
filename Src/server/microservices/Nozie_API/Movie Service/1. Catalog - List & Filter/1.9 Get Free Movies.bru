@@ -1,0 +1,15 @@
+meta {
+  name: 1.9 Get Free Movies
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/movies/free
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

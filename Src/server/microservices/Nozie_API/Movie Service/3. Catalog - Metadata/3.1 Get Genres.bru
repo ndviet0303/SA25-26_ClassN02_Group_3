@@ -1,0 +1,15 @@
+meta {
+  name: 3.1 Get Genres
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/genres
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

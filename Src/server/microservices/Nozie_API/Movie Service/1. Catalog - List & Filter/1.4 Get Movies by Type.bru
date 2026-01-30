@@ -1,0 +1,20 @@
+meta {
+  name: 1.4 Get Movies by Type
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/movies/type/series
+  body: none
+  auth: inherit
+}
+
+params:query {
+  page: 1
+  size: 24
+}
+
+settings {
+  encodeUrl: true
+}

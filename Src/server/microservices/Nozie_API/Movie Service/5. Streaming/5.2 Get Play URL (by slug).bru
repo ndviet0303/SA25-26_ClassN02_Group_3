@@ -1,0 +1,20 @@
+meta {
+  name: 5.2 Get Play URL (by slug)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/movies/slug/tam-quan/play
+  body: none
+  auth: inherit
+}
+
+params:query {
+  server: 0
+  episode: 0
+}
+
+settings {
+  encodeUrl: true
+}

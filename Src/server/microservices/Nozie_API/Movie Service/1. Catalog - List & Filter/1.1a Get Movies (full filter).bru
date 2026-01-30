@@ -1,0 +1,25 @@
+meta {
+  name: 1.1a Get Movies (full filter)
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/movies
+  body: none
+  auth: inherit
+}
+
+params:query {
+  page: 1
+  size: 24
+  type: series
+  genre: hanh-dong
+  country: han-quoc
+  year: 2025
+  q: phim
+}
+
+settings {
+  encodeUrl: true
+}

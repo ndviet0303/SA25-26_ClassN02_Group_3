@@ -1,0 +1,15 @@
+meta {
+  name: 2.2 Get Movie by Slug
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/movies/slug/tam-quan
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

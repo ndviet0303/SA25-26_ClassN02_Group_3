@@ -1,0 +1,43 @@
+meta {
+  name: 4.2 Update Movie
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/movies/{{movieId}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Phim Test API (Updated)",
+    "originName": "Test Movie API Updated",
+    "slug": "phim-test-api-bruno",
+    "content": "<p>Mô tả phim test - đã cập nhật</p>",
+    "posterUrl": "https://img.ophim.live/uploads/movies/test-thumb.jpg",
+    "thumbUrl": "https://img.ophim.live/uploads/movies/test-poster.jpg",
+    "trailerUrl": "",
+    "type": "single",
+    "status": "completed",
+    "quality": "HD",
+    "lang": "Vietsub",
+    "year": 2025,
+    "time": "95 phút",
+    "episodeCurrent": "Full",
+    "episodeTotal": "1",
+    "price": 0,
+    "accessType": "FREE",
+    "tmdbRating": 7.8,
+    "imdbRating": 7.3
+  }
+}
+
+settings {
+  encodeUrl: true
+}

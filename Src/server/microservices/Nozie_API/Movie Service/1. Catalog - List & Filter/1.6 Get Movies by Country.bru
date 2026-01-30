@@ -1,0 +1,20 @@
+meta {
+  name: 1.6 Get Movies by Country
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/movies/country/han-quoc
+  body: none
+  auth: inherit
+}
+
+params:query {
+  page: 1
+  size: 24
+}
+
+settings {
+  encodeUrl: true
+}
