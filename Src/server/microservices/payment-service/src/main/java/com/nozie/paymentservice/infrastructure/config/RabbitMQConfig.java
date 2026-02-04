@@ -15,6 +15,10 @@ public class RabbitMQConfig {
     public static final String QUEUE = "payment.notification.queue";
     public static final String ROUTING_KEY = "payment.succeeded";
 
+    // Subscription events
+    public static final String SUBSCRIPTION_QUEUE = "subscription.notification.queue";
+    public static final String SUBSCRIPTION_ROUTING_KEY = "subscription.activated";
+
     @Bean
     public TopicExchange exchange() {
         return new TopicExchange(EXCHANGE);
@@ -26,8 +30,18 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue subscriptionQueue() {
+        return new Queue(SUBSCRIPTION_QUEUE);
+    }
+
+    @Bean
     public Binding binding(Queue queue, TopicExchange exchange) {
         return BindingBuilder.bind(queue).to(exchange).with(ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding subscriptionBinding(Queue subscriptionQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(subscriptionQueue).to(exchange).with(SUBSCRIPTION_ROUTING_KEY);
     }
 
     @Bean

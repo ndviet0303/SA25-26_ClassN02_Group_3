@@ -39,7 +39,7 @@ spring:
         - id: payment-service
           uri: lb://payment-service
           predicates:
-            - Path=/api/payments/**
+            - Path=/api/subscriptions/**
           filters:
             - name: CircuitBreaker
               args:

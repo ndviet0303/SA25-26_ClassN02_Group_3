@@ -1,23 +1,18 @@
-# Payment Service Configuration
-server:
-  port: 8083
+# Payment Service Configuration (Docker/Production overrides)
+# This file is served by Config Server and overrides application.yml defaults
 
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/paymentdb}
-    driver-class-name: org.postgresql.Driver
-    username: ${SPRING_DATASOURCE_USERNAME:sa}
-    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    url: jdbc:postgresql://postgres:5432/paymentdb
+    username: sa
+    password: password
   jpa:
     hibernate:
       ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+  rabbitmq:
+    host: rabbitmq
 
-# Stripe Configuration (override with environment variables)
-stripe:
-  secret-key: ${STRIPE_SECRET_KEY:sk_test_xxx}
-  publishable-key: ${STRIPE_PUBLISHABLE_KEY:pk_test_xxx}
-  webhook-secret: ${STRIPE_WEBHOOK_SECRET:whsec_xxx}
-
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-server:8761/eureka/

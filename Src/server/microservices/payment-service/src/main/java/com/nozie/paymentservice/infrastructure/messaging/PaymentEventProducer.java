@@ -1,6 +1,6 @@
 package com.nozie.paymentservice.infrastructure.messaging;
 
-import com.nozie.common.event.PaymentSucceededEvent;
+import com.nozie.common.event.SubscriptionActivatedEvent;
 import com.nozie.paymentservice.infrastructure.config.RabbitMQConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +18,8 @@ public class PaymentEventProducer {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public void sendPaymentSucceededEvent(PaymentSucceededEvent event) {
-        log.info("Sending payment succeeded event to RabbitMQ: {}", event);
-        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, RabbitMQConfig.ROUTING_KEY, event);
+    public void sendSubscriptionActivatedEvent(SubscriptionActivatedEvent event) {
+        log.info("Sending subscription activated event to RabbitMQ: {}", event);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, RabbitMQConfig.SUBSCRIPTION_ROUTING_KEY, event);
     }
 }

@@ -70,6 +70,8 @@ services:
         condition: service_started
       redis:
         condition: service_started
+      rabbitmq:
+        condition: service_started # Added rabbitmq dependency for potential future needs
     environment:
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       SPRING_DATA_REDIS_HOST: redis
@@ -100,6 +102,8 @@ services:
         condition: service_started
       discovery-server:
         condition: service_started
+      rabbitmq:
+        condition: service_started
     environment:
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/customerdb
@@ -118,6 +122,8 @@ services:
         condition: service_started
     environment:
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_URL: http://discovery-server:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paymentdb
       SPRING_RABBITMQ_HOST: rabbitmq
 
@@ -142,9 +148,7 @@ services:
       SPRING_RABBITMQ_HOST: rabbitmq
 
   identity-service:
-    build:
-      context: .
-      dockerfile: identity-service/Dockerfile
+    build: ./identity-service
     container_name: identity-service
     ports:
       - "8085:8085"
