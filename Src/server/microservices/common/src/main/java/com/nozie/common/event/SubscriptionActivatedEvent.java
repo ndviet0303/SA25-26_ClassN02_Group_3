@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 public class SubscriptionActivatedEvent implements Serializable {
 
     private Long subscriptionId;
-    private Long customerId;
+    private Long userId;
     private String planType; // PREMIUM_MONTHLY, PREMIUM_YEARLY, VIP_MONTHLY, VIP_YEARLY
     private String planName;
     private LocalDateTime startDate;
@@ -22,11 +22,11 @@ public class SubscriptionActivatedEvent implements Serializable {
     public SubscriptionActivatedEvent() {
     }
 
-    public SubscriptionActivatedEvent(Long subscriptionId, Long customerId, String planType,
+    public SubscriptionActivatedEvent(Long subscriptionId, Long userId, String planType,
             String planName, LocalDateTime startDate, LocalDateTime endDate,
             String stripeSubscriptionId, String stripeCustomerId) {
         this.subscriptionId = subscriptionId;
-        this.customerId = customerId;
+        this.userId = userId;
         this.planType = planType;
         this.planName = planName;
         this.startDate = startDate;
@@ -44,12 +44,12 @@ public class SubscriptionActivatedEvent implements Serializable {
         this.subscriptionId = subscriptionId;
     }
 
-    public Long getCustomerId() {
-        return customerId;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setCustomerId(Long customerId) {
-        this.customerId = customerId;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public String getPlanType() {
@@ -104,7 +104,7 @@ public class SubscriptionActivatedEvent implements Serializable {
     public String toString() {
         return "SubscriptionActivatedEvent{" +
                 "subscriptionId=" + subscriptionId +
-                ", customerId=" + customerId +
+                ", userId=" + userId +
                 ", planType='" + planType + '\'' +
                 ", planName='" + planName + '\'' +
                 ", startDate=" + startDate +
