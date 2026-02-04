@@ -1,0 +1,23 @@
+meta {
+  name: 6.1 Rate Movie
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/movies/:id/rate
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 697c2df9c30683a13f1d172e
+}
+
+body:json {
+  {
+    "userId": 1,
+    "score": 8,
+    "comment": "Phim rất hay, diễn viên đóng tốt!"
+  }
+}

@@ -1,0 +1,20 @@
+meta {
+  name: 6.2 Get Movie Reviews
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/movies/:id/reviews
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 697c2df9c30683a13f1d172e
+}
+
+params:query {
+  page: 0
+  size: 20
+}

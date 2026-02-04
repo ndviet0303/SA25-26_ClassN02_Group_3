@@ -1,0 +1,22 @@
+meta {
+  name: 3.2 Record Viewing
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/customers/:id/history
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 1
+}
+
+body:json {
+  {
+    "movieId": "697c2df9c30683a13f1d172e",
+    "progressSeconds": 1200
+  }
+}

@@ -1,0 +1,18 @@
+meta {
+  name: 1.6 Request Refund (UC24)
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/subscriptions/refund
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "subscriptionId": 1,
+    "reason": "Không còn sử dụng dịch vụ"
+  }
+}

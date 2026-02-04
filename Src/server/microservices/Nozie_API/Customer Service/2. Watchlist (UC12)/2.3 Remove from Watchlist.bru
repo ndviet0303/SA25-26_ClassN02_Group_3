@@ -1,0 +1,16 @@
+meta {
+  name: 2.3 Remove from Watchlist
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/customers/:id/watchlist/:movieId
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 1
+  movieId: 697c2df9c30683a13f1d172e
+}

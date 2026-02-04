@@ -1,0 +1,21 @@
+meta {
+  name: 2.2 Add to Watchlist
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/customers/:id/watchlist
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 1
+}
+
+body:json {
+  {
+    "movieId": "697c2df9c30683a13f1d172e"
+  }
+}

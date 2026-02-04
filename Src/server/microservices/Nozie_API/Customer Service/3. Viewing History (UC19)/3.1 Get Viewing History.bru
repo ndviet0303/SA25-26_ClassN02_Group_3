@@ -1,0 +1,19 @@
+meta {
+  name: 3.1 Get Viewing History
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/customers/:id/history
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 1
+}
+
+params:query {
+  limit: 50
+}
