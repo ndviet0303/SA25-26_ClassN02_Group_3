@@ -67,21 +67,56 @@ public class SubscriptionApplicationService {
         // 1. Validate User exists in Customer Service
         CustomerDTO customer = validateUser(request.getUserId());
 
-        // 2. Get Plan
+        // 2. Check if user already has an active subscription
+        Optional<Subscription> activeSubscription = getActiveSubscription(request.getUserId());
+        if (activeSubscription.isPresent()) {
+            Subscription activeSub = activeSubscription.get();
+            String activePlanType = activeSub.getPlan().getPlanType();
+
+            // If same plan, reject
+            if (activePlanType.equalsIgnoreCase(request.getPlanType())) {
+                throw new RuntimeException("Bạn đã đang sử dụng gói " + activeSub.getPlan().getName() +
+                        ". Vui lòng hủy gói hiện tại trước khi đăng ký lại.");
+            }
+
+            // If different plan (upgrade/downgrade), also reject - must cancel first
+            throw new RuntimeException("Bạn đang có gói " + activeSub.getPlan().getName() +
+                    " còn hiệu lực đến " + activeSub.getEndDate() +
+                    ". Vui lòng hủy gói hiện tại trước khi chuyển sang gói khác.");
+        }
+
+        // 3. Check for pending subscriptions (not yet paid)
+        Optional<Subscription> pendingSubscription = subscriptionRepository
+                .findFirstByUserIdAndStatusOrderByCreatedAtDesc(request.getUserId(), Subscription.Status.PENDING);
+        if (pendingSubscription.isPresent()) {
+            log.info("User {} has a pending subscription, returning existing checkout session", request.getUserId());
+            // Return existing checkout session URL if still valid (within 24 hours)
+            Subscription pending = pendingSubscription.get();
+            if (pending.getCreatedAt() != null &&
+                    pending.getCreatedAt().plusHours(24).isAfter(LocalDateTime.now())) {
+                // TODO: Could return existing session URL here, but session might be expired
+                // For now, we'll create a new one and mark old as expired
+            }
+            // Mark old pending as expired
+            pending.setStatus(Subscription.Status.EXPIRED);
+            subscriptionRepository.save(pending);
+        }
+
+        // 4. Get Plan
         SubscriptionPlan plan = getPlanByType(request.getPlanType());
 
         try {
-            // 3. Create or get Stripe Customer
+            // 5. Create or get Stripe Customer
             String stripeCustomerId = stripeService.createOrGetCustomer(customer.getEmail());
 
-            // 4. Create Checkout Session
+            // 6. Create Checkout Session
             Session session = stripeService.createCheckoutSession(
                     stripeCustomerId,
                     plan,
                     request.getSuccessUrl(),
                     request.getCancelUrl());
 
-            // 5. Create Pending Subscription record
+            // 7. Create Pending Subscription record
             Subscription subscription = Subscription.builder()
                     .userId(request.getUserId())
                     .plan(plan)
@@ -91,7 +126,7 @@ public class SubscriptionApplicationService {
                     .build();
             subscription = subscriptionRepository.save(subscription);
 
-            // 6. Return response with checkout URL
+            // 8. Return response with checkout URL
             return SubscriptionResponse.builder()
                     .subscriptionId(subscription.getId())
                     .checkoutUrl(session.getUrl())
@@ -104,6 +139,40 @@ public class SubscriptionApplicationService {
         } catch (StripeException e) {
             log.error("Stripe error creating checkout session: {}", e.getMessage());
             throw new RuntimeException("Failed to create checkout session: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Hủy subscription của user
+     */
+    @Transactional
+    public Subscription cancelSubscription(Long userId) {
+        log.info("Canceling subscription for user {}", userId);
+
+        Optional<Subscription> activeSubscription = getActiveSubscription(userId);
+        if (activeSubscription.isEmpty()) {
+            throw new RuntimeException("Không tìm thấy gói đăng ký đang hoạt động");
+        }
+
+        Subscription subscription = activeSubscription.get();
+
+        try {
+            // Cancel on Stripe first
+            if (subscription.getStripeSubscriptionId() != null) {
+                stripeService.cancelSubscription(subscription.getStripeSubscriptionId());
+            }
+
+            // Update local record
+            subscription.cancel();
+            subscription = subscriptionRepository.save(subscription);
+
+            // TODO: Send event to customer-service to update subscription status to FREE
+            log.info("Subscription {} canceled for user {}", subscription.getId(), userId);
+
+            return subscription;
+        } catch (StripeException e) {
+            log.error("Error canceling subscription on Stripe: {}", e.getMessage());
+            throw new RuntimeException("Không thể hủy gói đăng ký: " + e.getMessage());
         }
     }
 

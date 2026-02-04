@@ -86,6 +86,21 @@ public class SubscriptionController {
     }
 
     /**
+     * POST /api/subscriptions/cancel/{userId} - Hủy subscription đang hoạt động
+     */
+    @PostMapping("/cancel/{userId}")
+    public ResponseEntity<ApiResponse<Subscription>> cancelSubscription(@PathVariable Long userId) {
+        log.info("POST /api/subscriptions/cancel/{} - Canceling subscription", userId);
+        try {
+            Subscription canceled = subscriptionService.cancelSubscription(userId);
+            return ResponseEntity.ok(ApiResponse.success("Đã hủy gói đăng ký thành công", canceled));
+        } catch (RuntimeException e) {
+            log.error("Error canceling subscription: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    /**
      * Stripe Webhook endpoint - Xử lý events từ Stripe
      */
     @PostMapping("/webhook")

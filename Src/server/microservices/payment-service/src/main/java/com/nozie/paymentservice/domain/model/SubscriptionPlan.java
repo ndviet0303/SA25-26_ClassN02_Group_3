@@ -1,5 +1,6 @@
 package com.nozie.paymentservice.domain.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 import jakarta.persistence.*;
 
@@ -13,6 +14,7 @@ import jakarta.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class SubscriptionPlan {
 
     public enum PlanType {

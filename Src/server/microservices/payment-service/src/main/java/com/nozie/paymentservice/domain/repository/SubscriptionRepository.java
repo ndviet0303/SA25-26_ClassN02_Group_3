@@ -24,4 +24,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     // Tìm subscription đang active của user
     Optional<Subscription> findFirstByUserIdAndStatusOrderByEndDateDesc(Long userId,
             Subscription.Status status);
+
+    // Tìm subscription pending gần nhất của user
+    Optional<Subscription> findFirstByUserIdAndStatusOrderByCreatedAtDesc(Long userId,
+            Subscription.Status status);
 }

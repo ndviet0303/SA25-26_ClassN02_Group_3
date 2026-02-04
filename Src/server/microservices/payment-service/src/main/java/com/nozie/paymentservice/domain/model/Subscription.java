@@ -1,5 +1,6 @@
 package com.nozie.paymentservice.domain.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Subscription {
 
     public enum Status {
