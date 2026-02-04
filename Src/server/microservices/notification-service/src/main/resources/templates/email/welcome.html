@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to Nozie</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #0f0f23;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 36px;
+            font-weight: bold;
+            color: #e50914;
+        }
+
+        .content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 16px;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #ffffff;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        p {
+            color: #b0b0b0;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .welcome-text {
+            color: #00d2ff;
+            font-weight: bold;
+        }
+
+        .highlight {
+            color: #e50914;
+            font-weight: bold;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(90deg, #e50914, #ff4d4d);
+            color: white;
+            padding: 14px 32px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo" th:text="${appName}">Nozie</div>
+        </div>
+        <div class="content">
+            <h1><span class="welcome-text">Welcome</span>, <span class="highlight" th:text="${fullName}">User</span>! 🎬
+            </h1>
+            <p>Thank you for joining <span th:text="${appName}">Nozie</span>.</p>
+            <p>You're all set to explore thousands of movies across various genres: Action, Romance, Horror, Animation,
+                and more!</p>
+            <p>Ready to start your entertainment journey?</p>
+            <a href="https://nozie.com/explore" class="cta-button">Explore Now</a>
+        </div>
+        <div class="footer">
+            <p>© 2026 <span th:text="${appName}">Nozie</span>. All rights reserved.</p>
+            <p>You received this email because you registered an account at <span th:text="${appName}">Nozie</span>.</p>
+        </div>
+    </div>
+</body>
+
+</html>

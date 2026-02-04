@@ -23,9 +23,12 @@ public class NotificationController {
     private static final Logger log = LoggerFactory.getLogger(NotificationController.class);
 
     private final NotificationRepository notificationRepository;
+    private final com.nozie.notificationservice.service.EmailService emailService;
 
-    public NotificationController(NotificationRepository notificationRepository) {
+    public NotificationController(NotificationRepository notificationRepository,
+            com.nozie.notificationservice.service.EmailService emailService) {
         this.notificationRepository = notificationRepository;
+        this.emailService = emailService;
     }
 
     @GetMapping("/{customerId}")
@@ -71,5 +74,20 @@ public class NotificationController {
         log.info("DELETE /api/notifications/{} - Deleting notification", id);
         notificationRepository.deleteById(id);
         return ResponseEntity.ok(ApiResponse.success("Notification deleted", null));
+    }
+
+    /**
+     * GET /api/notifications/test-email?email=... - Test send email
+     */
+    @GetMapping("/test-email")
+    public ResponseEntity<ApiResponse<String>> testEmail(@RequestParam String email) {
+        log.info("GET /api/notifications/test-email - Sending to: {}", email);
+        try {
+            emailService.sendWelcomeEmail(email, "Tester Nozie");
+            return ResponseEntity.ok(ApiResponse.success("Email sent! Please check your inbox (or spam).", email));
+        } catch (Exception e) {
+            log.error("Email test failed: {}", e.getMessage());
+            return ResponseEntity.status(500).body(ApiResponse.error("Failed to send email: " + e.getMessage()));
+        }
     }
 }
