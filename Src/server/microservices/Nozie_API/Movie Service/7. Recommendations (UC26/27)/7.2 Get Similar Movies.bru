@@ -1,0 +1,19 @@
+meta {
+  name: 7.2 Get Similar Movies
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/recommendations/similar/{{movieId}}
+  body: none
+  auth: none
+}
+
+params:query {
+  ~limit: 12
+}
+
+docs {
+  Get movies similar to a specific movie.
+}

@@ -1,0 +1,19 @@
+meta {
+  name: 7.3 Get Trending Recommendations
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/recommendations/trending
+  body: none
+  auth: none
+}
+
+params:query {
+  ~limit: 12
+}
+
+docs {
+  Get trending movies as recommendations (fallback when user has no history).
+}

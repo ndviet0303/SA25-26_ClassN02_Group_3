@@ -1,0 +1,19 @@
+meta {
+  name: 1.4 Test Email
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/notifications/test-email
+  body: none
+  auth: none
+}
+
+params:query {
+  email: vnhat.dev@gmail.com
+}
+
+docs {
+  Diagnostic endpoint to test SMTP configuration by sending a welcome email to the provided address.
+}

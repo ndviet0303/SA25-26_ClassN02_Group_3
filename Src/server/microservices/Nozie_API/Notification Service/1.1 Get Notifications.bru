@@ -1,0 +1,15 @@
+meta {
+  name: 1.1 Get Notifications
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/notifications/{{userId}}
+  body: none
+  auth: bearer
+}
+
+docs {
+  Get all in-app notifications for the user.
+}
