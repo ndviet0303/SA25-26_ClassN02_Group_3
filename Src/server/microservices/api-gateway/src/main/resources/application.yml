@@ -13,11 +13,11 @@ spring:
           enabled: true
           lower-case-service-id: true
       routes:
-        # Movie Service
+        # Movie Service (Catalog, Streaming, Metadata)
         - id: movie-service
           uri: lb://movie-service
           predicates:
-            - Path=/api/movies/**
+            - Path=/api/movies/**, /api/genres/**, /api/countries/**, /api/years/**
           filters:
             - name: CircuitBreaker
               args:

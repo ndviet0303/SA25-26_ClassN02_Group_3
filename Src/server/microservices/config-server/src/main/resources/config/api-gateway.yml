@@ -13,7 +13,7 @@ spring:
         - id: movie-service
           uri: lb://movie-service
           predicates:
-            - Path=/api/movies/**
+            - Path=/api/movies/**, /api/genres/**, /api/countries/**, /api/years/**
           filters:
             - StripPrefix=0
 
@@ -27,7 +27,7 @@ spring:
         - id: payment-service
           uri: lb://payment-service
           predicates:
-            - Path=/api/payments/**, /api/subscriptions/**
+            - Path=/api/payments/**, /api/subscriptions/**, /api/subscriptions/webhook
           filters:
             - StripPrefix=0
 
