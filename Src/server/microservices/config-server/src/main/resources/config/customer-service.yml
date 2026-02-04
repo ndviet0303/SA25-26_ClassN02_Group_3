@@ -1,17 +1,18 @@
-# Customer Service Configuration
-server:
-  port: 8082
+# Customer Service Configuration (Docker/Production overrides)
 
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/customerdb}
-    driver-class-name: org.postgresql.Driver
-    username: ${SPRING_DATASOURCE_USERNAME:sa}
-    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    url: jdbc:postgresql://postgres:5432/customerdb
+    username: sa
+    password: password
   jpa:
     hibernate:
       ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+    defer-datasource-initialization: true
+  rabbitmq:
+    host: rabbitmq
 
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-server:8761/eureka/
