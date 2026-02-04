@@ -32,6 +32,7 @@ public class AuthService {
     private final TokenService tokenService;
     private final AuditService auditService;
     private final UserSessionRepository userSessionRepository;
+    private final com.nozie.identityservice.messaging.UserEventProducer userEventProducer;
 
     public User register(RegisterRequest request, String ipAddress, String userAgent) {
         log.info("Registering user: {}", request.getUsername());
@@ -70,6 +71,13 @@ public class AuthService {
                         : new java.util.HashSet<>())
                 .build();
         userProfileRepository.save(profile);
+
+        // Notify other services (e.g., Customer Service)
+        userEventProducer.sendUserRegisteredEvent(new com.nozie.common.event.UserRegisteredEvent(
+                savedUser.getId(),
+                savedUser.getUsername(),
+                savedUser.getEmail(),
+                request.getFullName()));
 
         auditService.logSuccess(savedUser.getId(), AuditLog.Action.REGISTER, ipAddress, userAgent);
 
