@@ -1,6 +1,5 @@
-# 📋 Chia việc chi tiết 8 Lab cho Nozie (Requirements → Deployment & ATAM)
+# 📋 PLAN - Phân chia công việc
 
-*Áp dụng chuỗi 8 bài thực hành Kiến trúc Phần mềm vào dự án **Nozie** (nền tảng đặt vé / streaming phim), với phân công rõ ràng cho **Nhật (Lead) – Việt – Minh – Nhất**.*
 
 ---
 
@@ -16,6 +15,8 @@
 | **W6** | Lab 6 | API Gateway Pattern | **Nhật** | **Nhất** |
 | **W7** | Lab 7 | Kiến trúc Hướng sự kiện (EDA) | **Nhật** | **Việt** |
 | **W8** | Lab 8 | Deployment View & ATAM | **Việt** | **Việt** |
+| **W9** | — | Triển khai Flutter giao diện | **Nhật & Việt** | **Nhật** |
+| **W10** | — | Tích hợp hoàn thiện | **Cả nhóm** | **Nhật & Việt** |
 
 ---
 
@@ -154,14 +155,49 @@
 
 ---
 
+## W9: Triển khai Flutter giao diện
+
+**Mục tiêu:** Xây dựng ứng dụng client Flutter kết nối tới backend Nozie (API Gateway), đảm bảo trải nghiệm người dùng cho các luồng chính: đăng nhập, xem danh mục, xem phim, subscription/thanh toán.
+
+### Công việc chi tiết cho Nozie
+
+| # | Hoạt động | Nội dung cụ thể Nozie | Deliverable |
+|---|-----------|------------------------|-------------|
+| 9.1 | Cấu trúc dự án Flutter | Tạo project Flutter (hoặc mở rộng repo hiện có); tổ chức screens (auth, catalog, movie detail, subscription), services (API client), models. | Cấu trúc thư mục + package. |
+| 9.2 | Màn hình Auth & Profile | Đăng nhập / đăng ký (gọi Identity Service qua Gateway); lưu token, hiển thị thông tin user (Customer). | Code màn hình + tích hợp API. |
+| 9.3 | Màn hình Danh mục & Chi tiết phim | Danh sách phim (search, filter, trending, free); chi tiết phim theo id/slug; kiểm tra quyền xem (subscription). | Code màn hình + gọi Movie Service. |
+| 9.4 | Màn hình Subscription / Thanh toán | Xem gói (plans), chọn gói, chuyển Stripe Checkout (hoặc in-app flow); xác nhận subscription, cập nhật trạng thái. | Code màn hình + tích hợp Payment/Subscription API. |
+| 9.5 | Viết báo cáo / tài liệu W9 | Mô tả kiến trúc Flutter, màn hình đã làm, cách kết nối Gateway, screenshot demo. | Báo cáo hoặc tài liệu W9. |
+
+**Đầu vào cho Minh:** Nhật & Việt gửi link repo Flutter, hướng dẫn chạy, danh sách màn hình và API đã dùng.
+
+---
+
+## W10: Tích hợp hoàn thiện
+
+**Mục tiêu:** Nối toàn bộ luồng end-to-end (Flutter ↔ Gateway ↔ Microservices), kiểm thử tích hợp, xử lý lỗi và hoàn thiện báo cáo / demo cuối.
+
+### Công việc chi tiết cho Nozie
+
+| # | Hoạt động | Nội dung cụ thể Nozie | Deliverable |
+|---|-----------|------------------------|-------------|
+| 10.1 | E2E tích hợp Flutter – Backend | Chạy stack đầy đủ (Gateway, Discovery, Identity, Movie, Customer, Payment, RabbitMQ, DB). Flutter gọi toàn bộ luồng: đăng nhập → xem catalog → xem phim (có kiểm tra subscription) → subscribe/thanh toán → nhận event (nếu có). | Checklist E2E + screenshot/log. |
+| 10.2 | Xử lý lỗi & edge case | Thống nhất mã lỗi, thông báo lỗi trên Flutter; xử lý token hết hạn, mất mạng, API lỗi. | Mô tả + code xử lý lỗi. |
+| 10.3 | Demo & tài liệu cuối | Video demo hoặc slide trình bày luồng chính; cập nhật README, hướng dẫn chạy toàn hệ thống (backend + Flutter). | Video/slide + README. |
+| 10.4 | Viết báo cáo W10 | Tổng kết tích hợp, kết quả E2E, bài học và hạn chế. | Báo cáo W10. |
+
+**Đầu vào cho Nhất:** Cả nhóm gửi link repo, hướng dẫn chạy, checklist E2E và tài liệu demo.
+
+---
+
 ## Tóm tắt phân công theo thành viên
 
 | Thành viên | Công việc thực hiện (Code/Thiết kế) | Công việc báo cáo |
 |------------|-------------------------------------|-------------------|
-| **Nhật (Lead)** | Lab 4 (Phân rã MS + C4), Lab 6 (Gateway), Lab 7 (EDA), Lab 8 (Deployment + ATAM). Giám sát kỹ thuật toàn bộ. | **Lab 8.** Hỗ trợ minh chứng cho Lab 4, 6, 7. |
-| **Việt** | Lab 1 (Actor, UC, ASR, FR/NFR), Lab 2 (Phân lớp + Component), Lab 3 (CRUD layered), Lab 5 (Movie Microservice). | **Lab 5.** Cung cấp tài liệu/input cho Lab 1, 2, 3 (Minh/Nhất). |
-| **Minh** | Hỗ trợ chỉnh diagram/format (Lab 1, 2); thu thập tài liệu từ Nhật (Lab 6). | **Lab 1, Lab 2, Lab 6.** |
-| **Nhất** | Hỗ trợ vẽ C4 (Lab 4); thu thập minh chứng từ Việt (Lab 3), Nhật (Lab 4, 7). | **Lab 3, Lab 4, Lab 7.** |
+| **Nhật (Lead)** | Lab 4 (Phân rã MS + C4), Lab 6 (Gateway), Lab 7 (EDA), Lab 8 (Deployment + ATAM); W9 (Flutter), W10 (tích hợp). Giám sát kỹ thuật toàn bộ. | **Lab 8.** Hỗ trợ minh chứng cho Lab 4, 6, 7. |
+| **Việt** | Lab 1 (Actor, UC, ASR, FR/NFR), Lab 2 (Phân lớp + Component), Lab 3 (CRUD layered), Lab 5 (Movie Microservice); W9 (Flutter), W10 (tích hợp). | **Lab 5.** Cung cấp tài liệu/input cho Lab 1, 2, 3 (Minh/Nhất). |
+| **Minh** | Hỗ trợ chỉnh diagram/format (Lab 1, 2); thu thập tài liệu từ Nhật (Lab 6). | **Lab 1, Lab 2, Lab 6, W9.** |
+| **Nhất** | Hỗ trợ vẽ C4 (Lab 4); thu thập minh chứng từ Việt (Lab 3), Nhật (Lab 4, 7); W10 (tích hợp). | **Lab 3, Lab 4, Lab 7, W10.** |
 
 ---
 
@@ -172,4 +208,4 @@
 - **Tài liệu tham chiếu Nozie:** `Documents/Architecture/`, `Documents/Architecture/UC/uc.md`, `PLAN.md`.
 
 ---
-*Cập nhật theo nội dung 8 Lab: Requirements Elicitation → Layered Design → CRUD → Microservices Decomposition → Movie MS → API Gateway → EDA → Deployment & ATAM.*
+*Requirements Elicitation → Layered Design → CRUD → Microservices Decomposition → Movie MS → API Gateway → EDA → Deployment & ATAM → Flutter UI (W9) → Tích hợp hoàn thiện (W10).*
