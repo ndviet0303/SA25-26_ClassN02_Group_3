@@ -1,0 +1,15 @@
+meta {
+  name: 1.5 Cancel Subscription
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/subscriptions/cancel/:userId
+  body: none
+  auth: inherit
+}
+
+params:path {
+  userId: 15
+}

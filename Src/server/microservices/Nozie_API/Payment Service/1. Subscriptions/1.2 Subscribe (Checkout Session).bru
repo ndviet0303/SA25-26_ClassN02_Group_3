@@ -7,16 +7,12 @@ meta {
 post {
   url: {{baseUrl}}/api/subscriptions/subscribe
   body: json
-  auth: bearer
-}
-
-auth:bearer {
-  token: eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiIyMGVkZmI3Yi1lZDU4LTRmYWMtYTg3My03ZDI5ZGNiZmI2YTciLCJzdWIiOiI4IiwidXNlcm5hbWUiOiJ0ZXN0dXNlciIsImVtYWlsIjoidGVzdHVzZXJAbm96aWUuY29tIiwicm9sZXMiOlsiVVNFUiJdLCJwZXJtaXNzaW9ucyI6W10sInR5cGUiOiJBQ0NFU1MiLCJpYXQiOjE3NzAyMzQyNDQsImV4cCI6MTc3MDIzNTE0NH0.YnYTgXDzaKrPbw-wH2XiMt8J3HLadQNdf9Kg54-QwDUmhO-ibkEB8v2Br18GkiOkQ2TNJBwkiXnVRBX2m3ddAg
+  auth: inherit
 }
 
 body:json {
   {
-    "userId": 8,
+    "userId": 15,
     "planType": "PREMIUM_MONTHLY"
   }
 }
