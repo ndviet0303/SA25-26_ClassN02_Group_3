@@ -31,7 +31,7 @@ public class CustomerService {
         }
 
         Customer customer = new Customer();
-        customer.setFirebaseUid(request.getFirebaseUid());
+        customer.setUserId(request.getUserId());
         customer.setEmail(request.getEmail());
         customer.setFullName(request.getFullName());
         customer.setPhoneNumber(request.getPhoneNumber());
@@ -60,9 +60,9 @@ public class CustomerService {
     }
 
     @Transactional(readOnly = true)
-    public Customer getCustomerByFirebaseUid(String firebaseUid) {
-        return customerRepository.findByFirebaseUid(firebaseUid)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer", "firebaseUid", firebaseUid));
+    public Customer getCustomerByUserId(Long userId) {
+        return customerRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer", "userId", userId));
     }
 
     public Customer updateCustomer(Long id, CustomerRequest request) {

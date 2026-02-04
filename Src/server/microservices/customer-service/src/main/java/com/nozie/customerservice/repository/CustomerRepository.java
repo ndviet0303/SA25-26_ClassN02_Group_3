@@ -14,12 +14,11 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     Optional<Customer> findByEmail(String email);
 
-    Optional<Customer> findByFirebaseUid(String firebaseUid);
+    Optional<Customer> findByUserId(Long userId);
 
     Optional<Customer> findByStripeCustomerId(String stripeCustomerId);
 
     boolean existsByEmail(String email);
 
-    boolean existsByFirebaseUid(String firebaseUid);
+    boolean existsByUserId(Long userId);
 }
-

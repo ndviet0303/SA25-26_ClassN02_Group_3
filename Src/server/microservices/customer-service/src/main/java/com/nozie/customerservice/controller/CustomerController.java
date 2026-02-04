@@ -57,15 +57,16 @@ public class CustomerController {
         return ResponseEntity.ok(ApiResponse.success(customer));
     }
 
-    @GetMapping("/firebase/{firebaseUid}")
-    public ResponseEntity<ApiResponse<Customer>> getCustomerByFirebaseUid(@PathVariable String firebaseUid) {
-        log.info("GET /api/customers/firebase/{} - Fetching customer by Firebase UID", firebaseUid);
-        Customer customer = customerService.getCustomerByFirebaseUid(firebaseUid);
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<ApiResponse<Customer>> getCustomerByUserId(@PathVariable Long userId) {
+        log.info("GET /api/customers/user/{} - Fetching customer by user ID", userId);
+        Customer customer = customerService.getCustomerByUserId(userId);
         return ResponseEntity.ok(ApiResponse.success(customer));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Customer>> updateCustomer(@PathVariable Long id, @Valid @RequestBody CustomerRequest request) {
+    public ResponseEntity<ApiResponse<Customer>> updateCustomer(@PathVariable Long id,
+            @Valid @RequestBody CustomerRequest request) {
         log.info("PUT /api/customers/{} - Updating customer", id);
         Customer customer = customerService.updateCustomer(id, request);
         return ResponseEntity.ok(ApiResponse.success("Customer updated successfully", customer));
@@ -80,7 +81,7 @@ public class CustomerController {
 
     @PatchMapping("/{id}/subscription")
     public ResponseEntity<ApiResponse<Customer>> updateSubscription(
-            @PathVariable Long id, 
+            @PathVariable Long id,
             @RequestParam boolean isSubscribed) {
         log.info("PATCH /api/customers/{}/subscription - Updating subscription", id);
         Customer customer = customerService.updateSubscription(id, isSubscribed);

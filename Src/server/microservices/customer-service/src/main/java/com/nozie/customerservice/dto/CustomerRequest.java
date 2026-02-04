@@ -12,7 +12,7 @@ import jakarta.validation.constraints.*;
 @Builder
 public class CustomerRequest {
 
-    private String firebaseUid;
+    private Long userId;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")

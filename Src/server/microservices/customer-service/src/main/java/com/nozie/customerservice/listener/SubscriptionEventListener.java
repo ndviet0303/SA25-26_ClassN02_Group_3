@@ -31,7 +31,7 @@ public class SubscriptionEventListener {
     public void handleSubscriptionActivated(SubscriptionActivatedEvent event) {
         log.info("Received SubscriptionActivatedEvent: {}", event);
 
-        customerRepository.findById(event.getCustomerId())
+        customerRepository.findByUserId(event.getUserId())
                 .ifPresentOrElse(
                         customer -> {
                             // Determine subscription status based on plan type
@@ -44,10 +44,10 @@ public class SubscriptionEventListener {
                                     event.getStripeCustomerId());
 
                             customerRepository.save(customer);
-                            log.info("Customer {} subscription activated: {} until {}",
-                                    customer.getId(), status, event.getEndDate());
+                            log.info("User {} subscription activated: {} until {}",
+                                    customer.getUserId(), status, event.getEndDate());
                         },
-                        () -> log.warn("Customer not found with ID: {}", event.getCustomerId()));
+                        () -> log.warn("Customer not found with User ID: {}", event.getUserId()));
     }
 
     private Customer.SubscriptionStatus determineSubscriptionStatus(String planType) {

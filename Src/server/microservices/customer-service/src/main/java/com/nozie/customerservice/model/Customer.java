@@ -25,8 +25,8 @@ public class Customer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "firebase_uid", unique = true)
-    private String firebaseUid;
+    @Column(name = "user_id", unique = true, nullable = false)
+    private Long userId;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
