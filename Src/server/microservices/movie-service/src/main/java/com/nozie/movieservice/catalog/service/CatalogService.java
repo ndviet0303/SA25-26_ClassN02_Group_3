@@ -8,9 +8,11 @@ import com.nozie.movieservice.common.dto.PageResponse;
 import com.nozie.movieservice.common.model.Country;
 import com.nozie.movieservice.common.model.Genre;
 import com.nozie.movieservice.common.model.Movie;
+import com.nozie.movieservice.common.model.MovieReview;
 import com.nozie.movieservice.common.repository.CountryRepository;
 import com.nozie.movieservice.common.repository.GenreRepository;
 import com.nozie.movieservice.common.repository.MovieRepository;
+import com.nozie.movieservice.common.repository.MovieReviewRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -33,6 +35,7 @@ public class CatalogService {
     private final MovieRepository movieRepository;
     private final GenreRepository genreRepository;
     private final CountryRepository countryRepository;
+    private final MovieReviewRepository movieReviewRepository;
     private final MovieMapper movieMapper;
 
     public Movie createMovie(MovieRequest request) {
@@ -210,5 +213,24 @@ public class CatalogService {
         }
 
         return movie;
+    }
+
+    /** UC13: Rate & Review – submit or update user rating for a movie */
+    public MovieReview submitRating(String movieId, Long userId, Integer score, String comment) {
+        getMovieById(movieId); // ensure movie exists
+        if (score == null || score < 1 || score > 10) {
+            throw new BadRequestException("Score must be between 1 and 10");
+        }
+        MovieReview review = movieReviewRepository.findByMovieIdAndUserId(movieId, userId)
+                .orElse(MovieReview.builder().movieId(movieId).userId(userId).build());
+        review.setScore(score);
+        review.setComment(comment != null ? comment : review.getComment());
+        return movieReviewRepository.save(review);
+    }
+
+    @Transactional(readOnly = true)
+    public List<MovieReview> getReviews(String movieId, int page, int size) {
+        return movieReviewRepository.findByMovieIdOrderByCreatedAtDesc(
+                movieId, PageRequest.of(page, size));
     }
 }

@@ -3,6 +3,7 @@ package com.nozie.movieservice.catalog.controller;
 import com.nozie.common.dto.ApiResponse;
 import com.nozie.movieservice.common.dto.*;
 import com.nozie.movieservice.common.model.Movie;
+import com.nozie.movieservice.common.model.MovieReview;
 import com.nozie.movieservice.catalog.service.CatalogService;
 import com.nozie.movieservice.catalog.service.MovieMapper;
 import jakarta.validation.Valid;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Catalog API - Danh sách phim, tìm kiếm, filter, CRUD.
@@ -48,10 +50,18 @@ public class CatalogController {
     /** GET /api/movies/search - Tìm kiếm theo từ khóa */
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<PageResponse<MovieListItemResponse>>> searchMovies(
-            @RequestParam(name = "q") String keyword,
+            @RequestParam(name = "q", required = false) String keyword,
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "24") int size) {
-        log.info("GET /api/movies/search?q={}", keyword);
+        log.info("GET /api/movies/search - q='{}', page={}, size={}", keyword, page, size);
+
+        if (keyword == null || keyword.trim().isEmpty()) {
+            log.warn("Search keyword 'q' is missing or empty");
+            // Trả về trang trống thay vì lỗi server
+            return ResponseEntity.ok(ApiResponse.success(
+                    new PageResponse<>(List.of(), page, size, 0L, 0)));
+        }
+
         PageResponse<MovieListItemResponse> result = catalogService.getMoviesWithFilter(
                 null, null, null, null, keyword, page, size);
         return ResponseEntity.ok(ApiResponse.success(result));
@@ -165,5 +175,33 @@ public class CatalogController {
         log.info("DELETE /api/movies/{}", id);
         catalogService.deleteMovie(id);
         return ResponseEntity.ok(ApiResponse.success("Movie deleted successfully", null));
+    }
+
+    /** UC13: POST /api/movies/{id}/rate - Gửi đánh giá & review */
+    @PostMapping("/{id}/rate")
+    public ResponseEntity<ApiResponse<MovieReview>> rateMovie(
+            @PathVariable String id,
+            @RequestBody Map<String, Object> body) {
+        log.info("POST /api/movies/{}/rate", id);
+        Long userId = body.get("userId") != null ? ((Number) body.get("userId")).longValue() : null;
+        Integer score = body.get("score") != null ? ((Number) body.get("score")).intValue() : null;
+        String comment = body.get("comment") != null ? body.get("comment").toString() : null;
+        if (userId == null || score == null) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("userId and score (1-10) are required"));
+        }
+        MovieReview review = catalogService.submitRating(id, userId, score, comment);
+        return new ResponseEntity<>(ApiResponse.success("Rating submitted", review), HttpStatus.CREATED);
+    }
+
+    /** UC13: GET /api/movies/{id}/reviews - Lấy danh sách review */
+    @GetMapping("/{id}/reviews")
+    public ResponseEntity<ApiResponse<List<MovieReview>>> getMovieReviews(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        log.info("GET /api/movies/{}/reviews", id);
+        List<MovieReview> reviews = catalogService.getReviews(id, page, size);
+        return ResponseEntity.ok(ApiResponse.success(reviews));
     }
 }
