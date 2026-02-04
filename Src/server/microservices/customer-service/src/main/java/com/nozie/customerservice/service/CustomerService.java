@@ -4,9 +4,14 @@ import com.nozie.common.exception.BadRequestException;
 import com.nozie.common.exception.ResourceNotFoundException;
 import com.nozie.customerservice.dto.CustomerRequest;
 import com.nozie.customerservice.model.Customer;
+import com.nozie.customerservice.model.ViewingHistory;
+import com.nozie.customerservice.model.WatchlistItem;
 import com.nozie.customerservice.repository.CustomerRepository;
+import com.nozie.customerservice.repository.ViewingHistoryRepository;
+import com.nozie.customerservice.repository.WatchlistItemRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +27,8 @@ import java.util.List;
 public class CustomerService {
 
     private final CustomerRepository customerRepository;
+    private final WatchlistItemRepository watchlistItemRepository;
+    private final ViewingHistoryRepository viewingHistoryRepository;
 
     public Customer createCustomer(CustomerRequest request) {
         log.info("Creating customer: {}", request.getEmail());
@@ -100,5 +107,39 @@ public class CustomerService {
         Customer customer = getCustomerById(id);
         customer.setIsSubscribed(isSubscribed);
         return customerRepository.save(customer);
+    }
+
+    // UC12: Watchlist
+    @Transactional(readOnly = true)
+    public List<WatchlistItem> getWatchlist(Long customerId) {
+        return watchlistItemRepository.findByCustomerIdOrderByCreatedAtDesc(customerId);
+    }
+
+    public WatchlistItem addToWatchlist(Long customerId, String movieId) {
+        if (watchlistItemRepository.existsByCustomerIdAndMovieId(customerId, movieId)) {
+            return watchlistItemRepository.findByCustomerIdAndMovieId(customerId, movieId).orElseThrow();
+        }
+        WatchlistItem item = WatchlistItem.builder().customerId(customerId).movieId(movieId).build();
+        return watchlistItemRepository.save(item);
+    }
+
+    public void removeFromWatchlist(Long customerId, String movieId) {
+        watchlistItemRepository.deleteByCustomerIdAndMovieId(customerId, movieId);
+    }
+
+    // UC19: Viewing History
+    @Transactional(readOnly = true)
+    public List<ViewingHistory> getViewingHistory(Long customerId, int limit) {
+        return viewingHistoryRepository.findByCustomerIdOrderByWatchedAtDesc(
+                customerId, PageRequest.of(0, limit));
+    }
+
+    public ViewingHistory recordViewing(Long customerId, String movieId, Integer progressSeconds) {
+        ViewingHistory h = ViewingHistory.builder()
+                .customerId(customerId)
+                .movieId(movieId)
+                .progressSeconds(progressSeconds != null ? progressSeconds : 0)
+                .build();
+        return viewingHistoryRepository.save(h);
     }
 }

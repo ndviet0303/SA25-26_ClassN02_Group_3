@@ -3,6 +3,8 @@ package com.nozie.customerservice.controller;
 import com.nozie.common.dto.ApiResponse;
 import com.nozie.customerservice.dto.CustomerRequest;
 import com.nozie.customerservice.model.Customer;
+import com.nozie.customerservice.model.ViewingHistory;
+import com.nozie.customerservice.model.WatchlistItem;
 import com.nozie.customerservice.service.CustomerService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -12,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Layer 1: Presentation Layer - Customer Controller
@@ -86,5 +89,59 @@ public class CustomerController {
         log.info("PATCH /api/customers/{}/subscription - Updating subscription", id);
         Customer customer = customerService.updateSubscription(id, isSubscribed);
         return ResponseEntity.ok(ApiResponse.success("Subscription updated successfully", customer));
+    }
+
+    // UC12: Watchlist
+    @GetMapping("/{id}/watchlist")
+    public ResponseEntity<ApiResponse<List<WatchlistItem>>> getWatchlist(@PathVariable Long id) {
+        log.info("GET /api/customers/{}/watchlist", id);
+        List<WatchlistItem> items = customerService.getWatchlist(id);
+        return ResponseEntity.ok(ApiResponse.success(items));
+    }
+
+    @PostMapping("/{id}/watchlist")
+    public ResponseEntity<ApiResponse<WatchlistItem>> addToWatchlist(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body) {
+        String movieId = body.get("movieId");
+        if (movieId == null || movieId.isBlank()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("movieId is required"));
+        }
+        log.info("POST /api/customers/{}/watchlist - movieId={}", id, movieId);
+        WatchlistItem item = customerService.addToWatchlist(id, movieId);
+        return new ResponseEntity<>(ApiResponse.success("Added to watchlist", item), HttpStatus.CREATED);
+    }
+
+    @DeleteMapping("/{id}/watchlist/{movieId}")
+    public ResponseEntity<ApiResponse<Void>> removeFromWatchlist(
+            @PathVariable Long id,
+            @PathVariable String movieId) {
+        log.info("DELETE /api/customers/{}/watchlist/{}", id, movieId);
+        customerService.removeFromWatchlist(id, movieId);
+        return ResponseEntity.ok(ApiResponse.success("Removed from watchlist", null));
+    }
+
+    // UC19: Viewing History
+    @GetMapping("/{id}/history")
+    public ResponseEntity<ApiResponse<List<ViewingHistory>>> getViewingHistory(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "50") int limit) {
+        log.info("GET /api/customers/{}/history - limit={}", id, limit);
+        List<ViewingHistory> history = customerService.getViewingHistory(id, limit);
+        return ResponseEntity.ok(ApiResponse.success(history));
+    }
+
+    @PostMapping("/{id}/history")
+    public ResponseEntity<ApiResponse<ViewingHistory>> recordViewing(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body) {
+        String movieId = body.get("movieId") != null ? body.get("movieId").toString() : null;
+        if (movieId == null || movieId.isBlank()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("movieId is required"));
+        }
+        Integer progress = body.get("progressSeconds") != null ? ((Number) body.get("progressSeconds")).intValue() : null;
+        log.info("POST /api/customers/{}/history - movieId={}", id, movieId);
+        ViewingHistory h = customerService.recordViewing(id, movieId, progress);
+        return new ResponseEntity<>(ApiResponse.success("Viewing recorded", h), HttpStatus.CREATED);
     }
 }
