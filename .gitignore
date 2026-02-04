@@ -43,3 +43,6 @@ logs/
 *.bak
 *.cache
 
+# Payment service local config (secrets via env)
+Src/server/microservices/payment-service/src/main/resources/application.yml
+
