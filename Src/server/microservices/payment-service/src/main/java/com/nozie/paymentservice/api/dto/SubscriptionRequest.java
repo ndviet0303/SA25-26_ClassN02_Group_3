@@ -12,8 +12,8 @@ import jakarta.validation.constraints.NotNull;
 @Builder
 public class SubscriptionRequest {
 
-    @NotNull(message = "Customer ID is required")
-    private Long customerId;
+    @NotNull(message = "User ID is required")
+    private Long userId;
 
     @NotNull(message = "Plan type is required")
     private String planType; // PREMIUM_MONTHLY, PREMIUM_YEARLY, VIP_MONTHLY, VIP_YEARLY

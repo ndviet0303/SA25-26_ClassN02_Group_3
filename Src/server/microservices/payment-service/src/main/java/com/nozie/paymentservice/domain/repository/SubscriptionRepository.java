@@ -13,15 +13,15 @@ import java.util.Optional;
 @Repository
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
 
-    List<Subscription> findByCustomerId(Long customerId);
+    List<Subscription> findByUserId(Long userId);
 
-    Optional<Subscription> findByCustomerIdAndStatus(Long customerId, Subscription.Status status);
+    Optional<Subscription> findByUserIdAndStatus(Long userId, Subscription.Status status);
 
     Optional<Subscription> findByStripeCheckoutSessionId(String sessionId);
 
     Optional<Subscription> findByStripeSubscriptionId(String subscriptionId);
 
-    // Tìm subscription đang active của customer
-    Optional<Subscription> findFirstByCustomerIdAndStatusOrderByEndDateDesc(Long customerId,
+    // Tìm subscription đang active của user
+    Optional<Subscription> findFirstByUserIdAndStatusOrderByEndDateDesc(Long userId,
             Subscription.Status status);
 }

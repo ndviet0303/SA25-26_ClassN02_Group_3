@@ -14,4 +14,7 @@ public interface CustomerClient {
 
     @GetMapping("/api/customers/{id}")
     ApiResponse<CustomerDTO> getCustomerById(@PathVariable("id") Long id);
+
+    @GetMapping("/api/customers/user/{userId}")
+    ApiResponse<CustomerDTO> getCustomerByUserId(@PathVariable("userId") Long userId);
 }

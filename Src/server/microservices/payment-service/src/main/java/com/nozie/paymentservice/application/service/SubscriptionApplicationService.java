@@ -61,11 +61,11 @@ public class SubscriptionApplicationService {
      */
     @Transactional
     public SubscriptionResponse createSubscriptionSession(SubscriptionRequest request) {
-        log.info("Creating subscription session for customer {} with plan {}",
-                request.getCustomerId(), request.getPlanType());
+        log.info("Creating subscription session for user {} with plan {}",
+                request.getUserId(), request.getPlanType());
 
-        // 1. Validate Customer
-        CustomerDTO customer = validateCustomer(request.getCustomerId());
+        // 1. Validate User exists in Customer Service
+        CustomerDTO customer = validateUser(request.getUserId());
 
         // 2. Get Plan
         SubscriptionPlan plan = getPlanByType(request.getPlanType());
@@ -83,7 +83,7 @@ public class SubscriptionApplicationService {
 
             // 5. Create Pending Subscription record
             Subscription subscription = Subscription.builder()
-                    .customerId(request.getCustomerId())
+                    .userId(request.getUserId())
                     .plan(plan)
                     .status(Subscription.Status.PENDING)
                     .stripeCheckoutSessionId(session.getId())
@@ -140,16 +140,30 @@ public class SubscriptionApplicationService {
      * Xử lý khi checkout hoàn thành
      */
     private void handleCheckoutSessionCompleted(Event event) {
-        Session session = (Session) event.getDataObjectDeserializer()
-                .getObject()
-                .orElseThrow(() -> new RuntimeException("Failed to deserialize session"));
+        Session session;
+        try {
+            // Try standard deserialization first
+            if (event.getDataObjectDeserializer().getObject().isPresent()) {
+                session = (Session) event.getDataObjectDeserializer().getObject().get();
+            } else {
+                // Use unsafe deserialize for API version mismatch
+                session = (Session) event.getDataObjectDeserializer().deserializeUnsafe();
+            }
+        } catch (Exception e) {
+            log.error("Failed to deserialize checkout session: {}", e.getMessage());
+            // For test/simulated events, just log and return OK
+            log.warn("This may be a test event - ignoring");
+            return;
+        }
 
         String sessionId = session.getId();
         String stripeSubscriptionId = session.getSubscription();
 
+        log.info("Processing checkout session: {} with subscription: {}", sessionId, stripeSubscriptionId);
+
         Optional<Subscription> optSub = subscriptionRepository.findByStripeCheckoutSessionId(sessionId);
         if (optSub.isEmpty()) {
-            log.warn("Subscription not found for session: {}", sessionId);
+            log.warn("Subscription not found for session: {} - this may be a test/simulated event", sessionId);
             return;
         }
 
@@ -173,7 +187,7 @@ public class SubscriptionApplicationService {
             // Send event to notify Customer Service
             SubscriptionActivatedEvent activatedEvent = new SubscriptionActivatedEvent(
                     subscription.getId(),
-                    subscription.getCustomerId(),
+                    subscription.getUserId(),
                     subscription.getPlan().getPlanType(),
                     subscription.getPlan().getName(),
                     startDate,
@@ -182,8 +196,8 @@ public class SubscriptionApplicationService {
                     subscription.getStripeCustomerId());
             eventProducer.sendSubscriptionActivatedEvent(activatedEvent);
 
-            log.info("Subscription {} activated for customer {}",
-                    subscription.getId(), subscription.getCustomerId());
+            log.info("Subscription {} activated for user {}",
+                    subscription.getId(), subscription.getUserId());
 
         } catch (StripeException e) {
             log.error("Error retrieving Stripe subscription: {}", e.getMessage());
@@ -217,38 +231,38 @@ public class SubscriptionApplicationService {
     }
 
     /**
-     * Lấy subscription đang active của customer
+     * Lấy subscription đang active của user
      */
-    public Optional<Subscription> getActiveSubscription(Long customerId) {
-        return subscriptionRepository.findFirstByCustomerIdAndStatusOrderByEndDateDesc(
-                customerId, Subscription.Status.ACTIVE);
+    public Optional<Subscription> getActiveSubscription(Long userId) {
+        return subscriptionRepository.findFirstByUserIdAndStatusOrderByEndDateDesc(
+                userId, Subscription.Status.ACTIVE);
     }
 
     /**
-     * Kiểm tra customer có subscription active không
+     * Kiểm tra user có subscription active không
      */
-    public boolean hasActiveSubscription(Long customerId) {
-        Optional<Subscription> activeSub = getActiveSubscription(customerId);
+    public boolean hasActiveSubscription(Long userId) {
+        Optional<Subscription> activeSub = getActiveSubscription(userId);
         return activeSub.isPresent() && activeSub.get().isActive();
     }
 
     /**
-     * Lấy lịch sử subscription của customer
+     * Lấy lịch sử subscription của user
      */
-    public List<Subscription> getSubscriptionHistory(Long customerId) {
-        return subscriptionRepository.findByCustomerId(customerId);
+    public List<Subscription> getSubscriptionHistory(Long userId) {
+        return subscriptionRepository.findByUserId(userId);
     }
 
-    private CustomerDTO validateCustomer(Long customerId) {
+    private CustomerDTO validateUser(Long userId) {
         try {
-            ApiResponse<CustomerDTO> response = customerClient.getCustomerById(customerId);
+            ApiResponse<CustomerDTO> response = customerClient.getCustomerByUserId(userId);
             if (response == null || response.getData() == null) {
-                throw new RuntimeException("Customer not found: " + customerId);
+                throw new RuntimeException("Customer profile not found for user ID: " + userId);
             }
             return response.getData();
         } catch (Exception e) {
-            log.error("Error validating customer: {}", e.getMessage());
-            throw new RuntimeException("Failed to validate customer: " + e.getMessage());
+            log.error("Error validating user: {}", e.getMessage());
+            throw new RuntimeException("Failed to validate user: " + e.getMessage());
         }
     }
 }

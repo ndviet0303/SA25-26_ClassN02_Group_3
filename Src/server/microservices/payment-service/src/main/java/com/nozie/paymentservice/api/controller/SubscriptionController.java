@@ -47,41 +47,41 @@ public class SubscriptionController {
     @PostMapping("/subscribe")
     public ResponseEntity<ApiResponse<SubscriptionResponse>> createSubscription(
             @Valid @RequestBody SubscriptionRequest request) {
-        log.info("POST /api/subscriptions/subscribe - Creating subscription for customer: {}, plan: {}",
-                request.getCustomerId(), request.getPlanType());
+        log.info("POST /api/subscriptions/subscribe - Creating subscription for user: {}, plan: {}",
+                request.getUserId(), request.getPlanType());
         SubscriptionResponse response = subscriptionService.createSubscriptionSession(request);
         return new ResponseEntity<>(ApiResponse.success("Checkout session created", response), HttpStatus.CREATED);
     }
 
     /**
-     * GET /api/subscriptions/active/{customerId} - Kiểm tra subscription active
+     * GET /api/subscriptions/active/{userId} - Kiểm tra subscription active
      */
-    @GetMapping("/active/{customerId}")
-    public ResponseEntity<ApiResponse<Boolean>> checkActiveSubscription(@PathVariable Long customerId) {
-        log.info("GET /api/subscriptions/active/{} - Checking active subscription", customerId);
-        boolean hasActive = subscriptionService.hasActiveSubscription(customerId);
+    @GetMapping("/active/{userId}")
+    public ResponseEntity<ApiResponse<Boolean>> checkActiveSubscription(@PathVariable Long userId) {
+        log.info("GET /api/subscriptions/active/{} - Checking active subscription", userId);
+        boolean hasActive = subscriptionService.hasActiveSubscription(userId);
         return ResponseEntity.ok(ApiResponse.success(hasActive));
     }
 
     /**
-     * GET /api/subscriptions/current/{customerId} - Lấy thông tin subscription hiện
+     * GET /api/subscriptions/current/{userId} - Lấy thông tin subscription hiện
      * tại
      */
-    @GetMapping("/current/{customerId}")
-    public ResponseEntity<ApiResponse<Subscription>> getCurrentSubscription(@PathVariable Long customerId) {
-        log.info("GET /api/subscriptions/current/{} - Fetching current subscription", customerId);
-        return subscriptionService.getActiveSubscription(customerId)
+    @GetMapping("/current/{userId}")
+    public ResponseEntity<ApiResponse<Subscription>> getCurrentSubscription(@PathVariable Long userId) {
+        log.info("GET /api/subscriptions/current/{} - Fetching current subscription", userId);
+        return subscriptionService.getActiveSubscription(userId)
                 .map(sub -> ResponseEntity.ok(ApiResponse.success(sub)))
                 .orElse(ResponseEntity.ok(ApiResponse.success("No active subscription", null)));
     }
 
     /**
-     * GET /api/subscriptions/history/{customerId} - Lịch sử subscription
+     * GET /api/subscriptions/history/{userId} - Lịch sử subscription
      */
-    @GetMapping("/history/{customerId}")
-    public ResponseEntity<ApiResponse<List<Subscription>>> getSubscriptionHistory(@PathVariable Long customerId) {
-        log.info("GET /api/subscriptions/history/{} - Fetching subscription history", customerId);
-        List<Subscription> history = subscriptionService.getSubscriptionHistory(customerId);
+    @GetMapping("/history/{userId}")
+    public ResponseEntity<ApiResponse<List<Subscription>>> getSubscriptionHistory(@PathVariable Long userId) {
+        log.info("GET /api/subscriptions/history/{} - Fetching subscription history", userId);
+        List<Subscription> history = subscriptionService.getSubscriptionHistory(userId);
         return ResponseEntity.ok(ApiResponse.success(history));
     }
 
