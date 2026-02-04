@@ -25,6 +25,7 @@ public class RouteValidator {
             "/api/genres",
             "/api/countries",
             "/api/years",
+            "/api/recommendations",
             "/actuator",
             "/fallback",
             "/health");

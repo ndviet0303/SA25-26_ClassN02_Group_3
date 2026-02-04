@@ -13,7 +13,7 @@ spring:
         - id: movie-service
           uri: lb://movie-service
           predicates:
-            - Path=/api/movies/**, /api/genres/**, /api/countries/**, /api/years/**
+            - Path=/api/movies/**, /api/genres/**, /api/countries/**, /api/years/**, /api/recommendations/**
           filters:
             - StripPrefix=0
 
