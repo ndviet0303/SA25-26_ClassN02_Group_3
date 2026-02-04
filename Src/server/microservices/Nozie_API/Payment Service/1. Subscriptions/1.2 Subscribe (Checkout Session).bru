@@ -1,0 +1,18 @@
+meta {
+  name: 1.2 Subscribe (Checkout Session)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/subscriptions/subscribe
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "customerId": 1,
+    "planType": "PREMIUM_MONTHLY"
+  }
+}

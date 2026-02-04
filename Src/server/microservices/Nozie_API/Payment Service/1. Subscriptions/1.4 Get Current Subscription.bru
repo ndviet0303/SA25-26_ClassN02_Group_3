@@ -1,0 +1,11 @@
+meta {
+  name: 1.4 Get Current Subscription
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/subscriptions/current/{{userId}}
+  body: none
+  auth: inherit
+}

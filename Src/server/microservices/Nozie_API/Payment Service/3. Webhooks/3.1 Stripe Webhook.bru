@@ -1,0 +1,23 @@
+meta {
+  name: 3.1 Stripe Webhook
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/subscriptions/webhook
+  body: text
+  auth: none
+}
+
+headers {
+  Stripe-Signature: t=...,v1=...,v0=...
+}
+
+body:text {
+  {
+    "id": "evt_123",
+    "object": "event",
+    "type": "checkout.session.completed"
+  }
+}

@@ -1,0 +1,11 @@
+meta {
+  name: 1.5 Subscription History
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/subscriptions/history/{{userId}}
+  body: none
+  auth: inherit
+}

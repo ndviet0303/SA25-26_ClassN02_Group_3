@@ -3,7 +3,11 @@ meta {
 }
 
 auth {
-  mode: none
+  mode: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
 }
 
 vars:pre-request {
