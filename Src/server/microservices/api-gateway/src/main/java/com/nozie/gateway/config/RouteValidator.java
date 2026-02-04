@@ -12,6 +12,8 @@ public class RouteValidator {
             "/api/auth/login",
             "/api/auth/refresh",
             "/api/auth/validate",
+            "/api/subscriptions/webhook",
+            "/api/payments/webhook",
             "/actuator",
             "/fallback",
             "/health");
