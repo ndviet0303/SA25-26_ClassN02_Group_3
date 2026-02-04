@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Subscription Controller - API cho đăng ký gói Premium
@@ -98,6 +99,17 @@ public class SubscriptionController {
             log.error("Error canceling subscription: {}", e.getMessage());
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
+    }
+
+    /**
+     * UC24: POST /api/subscriptions/refund - Yêu cầu hoàn tiền (stub – tích hợp Stripe Refund sau)
+     */
+    @PostMapping("/refund")
+    public ResponseEntity<ApiResponse<Void>> requestRefund(@RequestBody Map<String, Object> body) {
+        log.info("POST /api/subscriptions/refund - Refund request");
+        // TODO: Validate subscription/payment, call Stripe Refund API
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
+                .body(ApiResponse.error("Refund feature: integrate Stripe Refund API"));
     }
 
     /**
