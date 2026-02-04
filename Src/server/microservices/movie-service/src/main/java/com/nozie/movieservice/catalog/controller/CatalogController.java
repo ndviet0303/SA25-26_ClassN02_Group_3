@@ -45,15 +45,6 @@ public class CatalogController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
-    /** GET /api/movies/latest - Phim mới cập nhật */
-    @GetMapping("/latest")
-    public ResponseEntity<ApiResponse<PageResponse<MovieListItemResponse>>> getLatestMovies(
-            @RequestParam(required = false, defaultValue = "1") int page,
-            @RequestParam(required = false, defaultValue = "24") int size) {
-        log.info("GET /api/movies/latest - page={}, size={}", page, size);
-        return ResponseEntity.ok(ApiResponse.success(catalogService.getLatestMovies(page, size)));
-    }
-
     /** GET /api/movies/search - Tìm kiếm theo từ khóa */
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<PageResponse<MovieListItemResponse>>> searchMovies(
@@ -64,6 +55,33 @@ public class CatalogController {
         PageResponse<MovieListItemResponse> result = catalogService.getMoviesWithFilter(
                 null, null, null, null, keyword, page, size);
         return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    /** GET /api/movies/latest - Phim mới cập nhật */
+    @GetMapping("/latest")
+    public ResponseEntity<ApiResponse<PageResponse<MovieListItemResponse>>> getLatestMovies(
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "24") int size) {
+        log.info("GET /api/movies/latest - page={}, size={}", page, size);
+        return ResponseEntity.ok(ApiResponse.success(catalogService.getLatestMovies(page, size)));
+    }
+
+    /** GET /api/movies/trending - Top phim xem nhiều */
+    @GetMapping("/trending")
+    public ResponseEntity<ApiResponse<List<MovieListItemResponse>>> getTrendingMovies() {
+        log.info("GET /api/movies/trending");
+        List<Movie> movies = catalogService.getTrendingMovies();
+        List<MovieListItemResponse> items = movies.stream().map(movieMapper::toListItem).toList();
+        return ResponseEntity.ok(ApiResponse.success(items));
+    }
+
+    /** GET /api/movies/free - Phim miễn phí */
+    @GetMapping("/free")
+    public ResponseEntity<ApiResponse<List<MovieListItemResponse>>> getFreeMovies() {
+        log.info("GET /api/movies/free");
+        List<Movie> movies = catalogService.getFreeMovies();
+        List<MovieListItemResponse> items = movies.stream().map(movieMapper::toListItem).toList();
+        return ResponseEntity.ok(ApiResponse.success(items));
     }
 
     /** GET /api/movies/type/{type} - Phim theo loại (single/series/hoathinh) */
@@ -108,22 +126,12 @@ public class CatalogController {
         return ResponseEntity.ok(ApiResponse.success(catalogService.getMoviesByYear(year, page, size)));
     }
 
-    /** GET /api/movies/trending - Top phim xem nhiều */
-    @GetMapping("/trending")
-    public ResponseEntity<ApiResponse<List<MovieListItemResponse>>> getTrendingMovies() {
-        log.info("GET /api/movies/trending");
-        List<Movie> movies = catalogService.getTrendingMovies();
-        List<MovieListItemResponse> items = movies.stream().map(movieMapper::toListItem).toList();
-        return ResponseEntity.ok(ApiResponse.success(items));
-    }
-
-    /** GET /api/movies/free - Phim miễn phí */
-    @GetMapping("/free")
-    public ResponseEntity<ApiResponse<List<MovieListItemResponse>>> getFreeMovies() {
-        log.info("GET /api/movies/free");
-        List<Movie> movies = catalogService.getFreeMovies();
-        List<MovieListItemResponse> items = movies.stream().map(movieMapper::toListItem).toList();
-        return ResponseEntity.ok(ApiResponse.success(items));
+    /** GET /api/movies/slug/{slug} - Chi tiết phim theo slug */
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<ApiResponse<MovieResponse>> getMovieBySlug(@PathVariable String slug) {
+        log.info("GET /api/movies/slug/{}", slug);
+        Movie movie = catalogService.getMovieBySlug(slug);
+        return ResponseEntity.ok(ApiResponse.success(movieMapper.toResponse(movie)));
     }
 
     /** GET /api/movies/{id} - Chi tiết phim theo ID */
@@ -131,14 +139,6 @@ public class CatalogController {
     public ResponseEntity<ApiResponse<MovieResponse>> getMovieById(@PathVariable String id) {
         log.info("GET /api/movies/{}", id);
         Movie movie = catalogService.getMovieById(id);
-        return ResponseEntity.ok(ApiResponse.success(movieMapper.toResponse(movie)));
-    }
-
-    /** GET /api/movies/slug/{slug} - Chi tiết phim theo slug */
-    @GetMapping("/slug/{slug}")
-    public ResponseEntity<ApiResponse<MovieResponse>> getMovieBySlug(@PathVariable String slug) {
-        log.info("GET /api/movies/slug/{}", slug);
-        Movie movie = catalogService.getMovieBySlug(slug);
         return ResponseEntity.ok(ApiResponse.success(movieMapper.toResponse(movie)));
     }
 
@@ -153,7 +153,7 @@ public class CatalogController {
     /** PUT /api/movies/{id} - Cập nhật phim */
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Movie>> updateMovie(@PathVariable String id,
-                                                          @Valid @RequestBody MovieRequest request) {
+            @Valid @RequestBody MovieRequest request) {
         log.info("PUT /api/movies/{}", id);
         Movie movie = catalogService.updateMovie(id, request);
         return ResponseEntity.ok(ApiResponse.success("Movie updated successfully", movie));

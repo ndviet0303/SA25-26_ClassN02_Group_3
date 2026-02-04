@@ -16,9 +16,11 @@ public interface MovieRepository extends MongoRepository<Movie, String>, MovieRe
 
     List<Movie> findByAccessType(Movie.AccessType accessType);
 
+    List<Movie> findByNameContainingIgnoreCaseOrOriginNameContainingIgnoreCase(String name, String originName);
+
     List<Movie> findTop10ByOrderByViewDesc();
 
-    List<Movie> findByNameContainingIgnoreCaseOrOriginNameContainingIgnoreCase(String name, String originName);
+    List<Movie> findTop24ByOrderByCreatedAtDesc();
 
     boolean existsBySlug(String slug);
 }

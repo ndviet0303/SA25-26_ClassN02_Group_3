@@ -118,10 +118,10 @@ public class CatalogService {
 
     @Transactional(readOnly = true)
     public PageResponse<MovieListItemResponse> getMoviesWithFilter(String type, String genreSlug,
-                                                                   String countrySlug, Integer year,
-                                                                   String keyword, int page, int size) {
+            String countrySlug, Integer year,
+            String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page - 1), Math.min(50, Math.max(1, size)),
-                Sort.by(Sort.Direction.DESC, "updatedAt").nullsLast());
+                Sort.by(Sort.Order.desc("updatedAt").nullsLast()));
         Page<Movie> p = movieRepository.findWithFilter(type, genreSlug, countrySlug, year, keyword, pageable);
         List<MovieListItemResponse> items = p.getContent().stream()
                 .map(movieMapper::toListItem)
@@ -148,7 +148,8 @@ public class CatalogService {
     @Transactional(readOnly = true)
     public List<Integer> getDistinctYears() {
         List<Integer> years = movieRepository.findDistinctYears();
-        if (years == null) return List.of();
+        if (years == null)
+            return List.of();
         return years.stream().filter(y -> y != null).sorted((a, b) -> Integer.compare(b, a)).toList();
     }
 
