@@ -21,6 +21,8 @@ public class StreamingController {
 
     private static final Logger log = LoggerFactory.getLogger(StreamingController.class);
     private final StreamingService streamingService;
+    private final com.nozie.movieservice.catalog.service.CatalogService catalogService;
+    private final com.nozie.movieservice.streaming.service.AccessControlService accessControlService;
 
     /** POST /api/movies/{id}/view - Tăng lượt xem */
     @PostMapping("/{id}/view")
@@ -38,13 +40,21 @@ public class StreamingController {
         return ResponseEntity.ok(ApiResponse.success("View count incremented", null));
     }
 
-    /** GET /api/movies/{id}/play - URL phát mặc định (ưu tiên custom HLS, sau đó tập đầu) */
+    /** GET /api/movies/{id}/play - URL phát mặc định */
     @GetMapping("/{id}/play")
     public ResponseEntity<ApiResponse<PlayUrlResponse>> getPlayUrl(
             @PathVariable String id,
             @RequestParam(required = false, defaultValue = "0") int server,
-            @RequestParam(required = false, defaultValue = "0") int episode) {
-        log.info("GET /api/movies/{}/play?server={}&episode={}", id, server, episode);
+            @RequestParam(required = false, defaultValue = "0") int episode,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
+        log.info("GET /api/movies/{}/play?server={}&episode={}&user={}", id, server, episode, userId);
+
+        com.nozie.movieservice.common.model.Movie movie = catalogService.getMovieById(id);
+        if (!accessControlService.canWatch(movie, userId)) {
+            return ResponseEntity.status(403)
+                    .body(ApiResponse.error("Premium subscription required to watch this movie"));
+        }
+
         PlayUrlResponse play = streamingService.getPlayUrl(id, server, episode);
         return ResponseEntity.ok(ApiResponse.success(play));
     }
@@ -54,24 +64,52 @@ public class StreamingController {
     public ResponseEntity<ApiResponse<PlayUrlResponse>> getPlayUrlBySlug(
             @PathVariable String slug,
             @RequestParam(required = false, defaultValue = "0") int server,
-            @RequestParam(required = false, defaultValue = "0") int episode) {
-        log.info("GET /api/movies/slug/{}/play?server={}&episode={}", slug, server, episode);
+            @RequestParam(required = false, defaultValue = "0") int episode,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
+        log.info("GET /api/movies/slug/{}/play?server={}&episode={}&user={}", slug, server, episode, userId);
+
+        com.nozie.movieservice.common.model.Movie movie = catalogService.getMovieBySlug(slug);
+        if (!accessControlService.canWatch(movie, userId)) {
+            return ResponseEntity.status(403)
+                    .body(ApiResponse.error("Premium subscription required to watch this movie"));
+        }
+
         PlayUrlResponse play = streamingService.getPlayUrlBySlug(slug, server, episode);
         return ResponseEntity.ok(ApiResponse.success(play));
     }
 
-    /** GET /api/movies/{id}/episodes - Danh sách episodes theo server */
+    /** GET /api/movies/{id}/episodes - Danh sách episodes */
     @GetMapping("/{id}/episodes")
-    public ResponseEntity<ApiResponse<EpisodesResponse>> getEpisodes(@PathVariable String id) {
-        log.info("GET /api/movies/{}/episodes", id);
+    public ResponseEntity<ApiResponse<EpisodesResponse>> getEpisodes(
+            @PathVariable String id,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
+        log.info("GET /api/movies/{}/episodes&user={}", id, userId);
+
+        com.nozie.movieservice.common.model.Movie movie = catalogService.getMovieById(id);
+        // Even for episodes metadata, we might want to check permission if we want to
+        // hide urls completely
+        if (!accessControlService.canWatch(movie, userId)) {
+            return ResponseEntity.status(403)
+                    .body(ApiResponse.error("Premium subscription required to access episodes"));
+        }
+
         EpisodesResponse episodes = streamingService.getEpisodes(id);
         return ResponseEntity.ok(ApiResponse.success(episodes));
     }
 
-    /** GET /api/movies/slug/{slug}/episodes - Danh sách episodes theo slug */
+    /** GET /api/movies/slug/{slug}/episodes - Danh sách episodes */
     @GetMapping("/slug/{slug}/episodes")
-    public ResponseEntity<ApiResponse<EpisodesResponse>> getEpisodesBySlug(@PathVariable String slug) {
-        log.info("GET /api/movies/slug/{}/episodes", slug);
+    public ResponseEntity<ApiResponse<EpisodesResponse>> getEpisodesBySlug(
+            @PathVariable String slug,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
+        log.info("GET /api/movies/slug/{}/episodes&user={}", slug, userId);
+
+        com.nozie.movieservice.common.model.Movie movie = catalogService.getMovieBySlug(slug);
+        if (!accessControlService.canWatch(movie, userId)) {
+            return ResponseEntity.status(403)
+                    .body(ApiResponse.error("Premium subscription required to access episodes"));
+        }
+
         EpisodesResponse episodes = streamingService.getEpisodesBySlug(slug);
         return ResponseEntity.ok(ApiResponse.success(episodes));
     }
