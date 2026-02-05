@@ -44,22 +44,26 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
         log.info("[{}] Processing request: {} {}", correlationId, method, path);
 
-        // Skip authentication for open endpoints
-        if (!RouteValidator.isSecured(path)) {
-            log.debug("[{}] Open endpoint, skipping authentication: {}", correlationId, path);
-            return chain.filter(addCorrelationId(exchange, correlationId));
-        }
-
         // Check for Authorization header
         if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-            log.warn("[{}] Missing Authorization header for secured endpoint: {}", correlationId, path);
-            return onError(exchange, "Missing Authorization header", HttpStatus.UNAUTHORIZED);
+            // If it's a secured endpoint, fail. If open, just add correlation ID and
+            // proceed.
+            if (RouteValidator.isSecured(path)) {
+                log.warn("[{}] Missing Authorization header for secured endpoint: {}", correlationId, path);
+                return onError(exchange, "Missing Authorization header", HttpStatus.UNAUTHORIZED);
+            } else {
+                return chain.filter(addCorrelationId(exchange, correlationId));
+            }
         }
 
         String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.warn("[{}] Invalid Authorization header format", correlationId);
-            return onError(exchange, "Invalid Authorization header format", HttpStatus.UNAUTHORIZED);
+            if (RouteValidator.isSecured(path)) {
+                log.warn("[{}] Invalid Authorization header format", correlationId);
+                return onError(exchange, "Invalid Authorization header format", HttpStatus.UNAUTHORIZED);
+            } else {
+                return chain.filter(addCorrelationId(exchange, correlationId));
+            }
         }
 
         String token = authHeader.substring(7);
