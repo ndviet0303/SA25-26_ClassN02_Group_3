@@ -33,26 +33,25 @@ public class AccessControlService {
         log.info("Checking access for user {} to movie {} (Access: {})",
                 userId, movie.getName(), movie.getAccessType());
 
-        // 1. Nếu phim FREE thì ai cũng xem được
+        // 1. FREE
         if (movie.getAccessType() == null || movie.getAccessType() == Movie.AccessType.FREE) {
             return true;
         }
 
-        // 2. Nếu phim PREMIUM hoặc RENTAL nhưng user không đăng nhập -> Chặn
+        // 2. PREMIUM
         if (userId == null) {
             log.warn("Access denied: User not logged in for protected movie");
             return false;
         }
 
-        // 3. Nếu phim PREMIUM -> Kiểm tra subscription qua customer-service
+        // 3. PREMIUM - Checking subscription status
         if (movie.getAccessType() == Movie.AccessType.PREMIUM) {
             return checkSubscription(userId);
         }
 
-        // 4. Nếu phim RENTAL -> (Dành cho UC sau) Kiểm tra xem user đã mua phim này
-        // chưa
+        // 4. TODO: RENTAL
         if (movie.getAccessType() == Movie.AccessType.RENTAL) {
-            // Tạm thời cho phép nếu có PREMIUM hoặc chặn nếu chưa implement RENTAL check
+            // TODO: Check if user has rented this movie
             return checkSubscription(userId);
         }
 
@@ -60,11 +59,11 @@ public class AccessControlService {
     }
 
     /**
-     * Gọi customer-service để kiểm tra trạng thái Subscription
+     * Check Subscription status
      */
     private boolean checkSubscription(Long userId) {
         try {
-            String url = customerServiceUrl + "/api/customers/" + userId;
+            String url = customerServiceUrl + "/api/customers/user/" + userId;
             log.debug("Checking subscription at: {}", url);
 
             var response = restTemplate.exchange(

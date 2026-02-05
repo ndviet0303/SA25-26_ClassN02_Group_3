@@ -90,6 +90,10 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
                         .flatMap(isBlacklisted -> {
                             if (Boolean.TRUE.equals(isBlacklisted)) {
                                 log.warn("[{}] Token is blacklisted: {}", finalCorrelationId, jti);
+                                // For open endpoints, just proceed without user info
+                                if (!RouteValidator.isSecured(path)) {
+                                    return chain.filter(addCorrelationId(exchange, finalCorrelationId));
+                                }
                                 return onError(exchange, "Token has been revoked", HttpStatus.UNAUTHORIZED);
                             }
                             return continueWithRequest(exchange, chain, request, userId, username, rolesStr,
@@ -107,9 +111,19 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
         } catch (ExpiredJwtException e) {
             log.warn("[{}] Token expired: {}", correlationId, e.getMessage());
+            // For open endpoints, allow the request to continue without user info
+            if (!RouteValidator.isSecured(path)) {
+                log.debug("[{}] Open endpoint, proceeding despite expired token", correlationId);
+                return chain.filter(addCorrelationId(exchange, correlationId));
+            }
             return onError(exchange, "Token has expired", HttpStatus.UNAUTHORIZED);
         } catch (JwtException | IllegalArgumentException e) {
             log.error("[{}] Token validation failed: {}", correlationId, e.getMessage());
+            // For open endpoints, allow the request to continue without user info
+            if (!RouteValidator.isSecured(path)) {
+                log.debug("[{}] Open endpoint, proceeding despite invalid token", correlationId);
+                return chain.filter(addCorrelationId(exchange, correlationId));
+            }
             return onError(exchange, "Invalid token", HttpStatus.UNAUTHORIZED);
         }
     }
