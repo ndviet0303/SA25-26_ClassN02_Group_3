@@ -10,16 +10,21 @@ class ApiConfig {
   // Base URL based on environment
   static String get baseUrl => isDev ? _devBaseUrl : _prodBaseUrl;
   
-  // Service URLs
-  static String get identityServiceUrl => '$baseUrl/identity';
-  static String get movieServiceUrl => '$baseUrl/movies';
-  static String get paymentServiceUrl => '$baseUrl/payments';
-  static String get notificationServiceUrl => '$baseUrl/notifications';
-  static String get wishlistServiceUrl => '$baseUrl/wishlists';
-  static String get purchaseServiceUrl => '$baseUrl/purchases';
-  static String get ratingServiceUrl => '$baseUrl/ratings';
-  static String get searchServiceUrl => '$baseUrl/search';
-  static String get storageServiceUrl => '$baseUrl/storage';
+  // Service URLs - Following API Gateway routing patterns
+  static String get authServiceUrl => '$baseUrl/api/auth';
+  static String get movieServiceUrl => '$baseUrl/api/movies';
+  static String get customerServiceUrl => '$baseUrl/api/customers';
+  static String get subscriptionServiceUrl => '$baseUrl/api/subscriptions';
+  static String get notificationServiceUrl => '$baseUrl/api/notifications';
+  
+  // Legacy URLs (for backward compatibility)
+  static String get identityServiceUrl => authServiceUrl;
+  static String get paymentServiceUrl => subscriptionServiceUrl;
+  static String get wishlistServiceUrl => customerServiceUrl;
+  static String get purchaseServiceUrl => subscriptionServiceUrl;
+  static String get ratingServiceUrl => movieServiceUrl;
+  static String get searchServiceUrl => movieServiceUrl;
+  static String get storageServiceUrl => '$baseUrl/api/storage';
   
   // Timeouts
   static const Duration connectTimeout = Duration(seconds: 30);

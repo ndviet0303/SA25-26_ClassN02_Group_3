@@ -51,11 +51,30 @@ class MovieItem extends Equatable {
       return AccessType.FREE;
     }
 
+    // Parse image URL - prefer posterUrl, fallback to thumbUrl, then image_url
+    String imageUrl = json['posterUrl'] ?? json['thumbUrl'] ?? json['image_url'] ?? '';
+    if (imageUrl.isEmpty) {
+      imageUrl = 'lib/assets/images/common/img_card.png';
+    }
+
+    // Parse title - prefer name, fallback to title
+    String title = json['name'] ?? json['title'] ?? '';
+
+    // Parse rating from tmdbRating, imdbRating, or rating
+    double rating = 0.0;
+    if (json['tmdbRating'] != null) {
+      rating = (json['tmdbRating'] as num).toDouble();
+    } else if (json['imdbRating'] != null) {
+      rating = (json['imdbRating'] as num).toDouble();
+    } else if (json['rating'] != null) {
+      rating = (json['rating'] as num).toDouble();
+    }
+
     return MovieItem(
-      id: json['id'].toString(),
-      title: json['title'] ?? '',
-      imageUrl: json['image_url'] ?? '',
-      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      id: json['id']?.toString() ?? json['slug']?.toString() ?? '',
+      title: title,
+      imageUrl: imageUrl,
+      rating: rating,
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       accessType: parseAccessType(json['accessType']),
       type: MovieItemType.values.firstWhere(

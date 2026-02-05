@@ -29,7 +29,7 @@ class HomeScreen extends ConsumerWidget {
         children: [
           _Section(
             title: '',
-            provider: moviesProvider,
+            provider: trendingMoviesProvider,
             onMore: () {},
           ),
           _Section(

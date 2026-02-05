@@ -35,6 +35,7 @@ import 'package:movie_fe/features/movie/presentation/screens/movie_info_screen.d
 import 'package:movie_fe/features/movie/presentation/screens/ratings_detail_screen.dart';
 import 'package:movie_fe/features/purchase/presentation/widgets/checkout_screen.dart';
 import 'package:movie_fe/core/models/movie.dart';
+import 'package:movie_fe/features/subscription/presentation/subscription_screen.dart';
 import '../core/auth/auth_providers.dart';
 import '../core/auth/auth_state_notifier.dart';
 import '../core/layouts/main_layout.dart';
@@ -78,6 +79,7 @@ class AppRouter {
   static const checkout = '/checkout';
   static const purchaseDetail = '/purchase-detail';
   static const movieType = '/movie-type';
+  static const subscription = '/subscription';
 
   static const _publicPaths = {
     welcome,
@@ -257,6 +259,7 @@ class AppRouter {
       GoRoute(path: preferences, builder: (_, __) => const PreferencesScreen()),
       GoRoute(path: language, builder: (_, __) => const LanguageScreen()),
       GoRoute(path: helpCenter, builder: (_, __) => const HelpCenterScreen()),
+      GoRoute(path: subscription, builder: (_, __) => const SubscriptionScreen()),
       GoRoute(path: search, builder: (_, state) {
         final extra = state.extra;
         SearchSource searchSource = SearchSource.all;

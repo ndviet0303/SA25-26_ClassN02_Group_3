@@ -19,11 +19,21 @@ class MovieRepository {
     try {
       final response = await _dio.get('${ApiConfig.movieServiceUrl}/movies');
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data['data'] ?? response.data;
-        return data.map((json) => MovieItem.fromJson(json)).toList();
+        final data = response.data['data'];
+        // Handle paginated response (data.items) or direct array
+        List<dynamic> items;
+        if (data is Map && data['items'] != null) {
+          items = data['items'] as List<dynamic>;
+        } else if (data is List) {
+          items = data;
+        } else {
+          return _getSampleMovies();
+        }
+        return items.map((json) => MovieItem.fromJson(json as Map<String, dynamic>)).toList();
       }
       return _getSampleMovies();
     } catch (e) {
+      print('[MovieRepository] getAll error: $e');
       return _getSampleMovies();
     }
   }
@@ -37,15 +47,23 @@ class MovieRepository {
   Future<List<MovieItem>> getByGenre(String slugOrName) async {
     try {
       final response = await _dio.get(
-        '${ApiConfig.movieServiceUrl}/movies',
-        queryParameters: {'genre': slugOrName},
+        '${ApiConfig.movieServiceUrl}/movies/genre/$slugOrName',
       );
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data['data'] ?? response.data;
-        return data.map<MovieItem>((json) => MovieItem.fromJson(json as Map<String, dynamic>)).toList();
+        final data = response.data['data'];
+        List<dynamic> items;
+        if (data is Map && data['items'] != null) {
+          items = data['items'] as List<dynamic>;
+        } else if (data is List) {
+          items = data;
+        } else {
+          return _getSampleMovies();
+        }
+        return items.map<MovieItem>((json) => MovieItem.fromJson(json as Map<String, dynamic>)).toList();
       }
       return _getSampleMovies();
     } catch (e) {
+      print('[MovieRepository] getByGenre error: $e');
       return _getSampleMovies();
     }
   }
@@ -54,15 +72,17 @@ class MovieRepository {
     return Stream.fromFuture(getByGenre(slugOrName));
   }
 
-  /// Get movie by ID
+  /// Get movie by ID or slug
   Future<MovieItem?> getById(String id) async {
     try {
       final response = await _dio.get('${ApiConfig.movieServiceUrl}/movies/$id');
       if (response.statusCode == 200) {
-        return MovieItem.fromJson(response.data);
+        final data = response.data['data'] ?? response.data;
+        return MovieItem.fromJson(data as Map<String, dynamic>);
       }
       return _getSampleMovie(id);
     } catch (e) {
+      print('[MovieRepository] getById error: $e');
       return _getSampleMovie(id);
     }
   }
@@ -71,15 +91,18 @@ class MovieRepository {
     return Stream.fromFuture(getById(id));
   }
 
-  /// Get movie detail
+  /// Get movie detail by ID or slug
   Future<Movie?> getMovieDetail(String id) async {
     try {
-      final response = await _dio.get('${ApiConfig.movieServiceUrl}/movies/$id/detail');
+      // API returns movie detail at /movies/{id} or /movies/slug/{slug}
+      final response = await _dio.get('${ApiConfig.movieServiceUrl}/movies/$id');
       if (response.statusCode == 200) {
-        return Movie.fromMap(response.data);
+        final data = response.data['data'] ?? response.data;
+        return Movie.fromMap(data as Map<String, dynamic>);
       }
       return _getSampleMovieDetail(id);
     } catch (e) {
+      print('[MovieRepository] getMovieDetail error: $e');
       return _getSampleMovieDetail(id);
     }
   }
@@ -126,19 +149,20 @@ class MovieRepository {
     return Stream.fromFuture(getByFranchise(franchiseId));
   }
 
-  /// Get top charts
+  /// Get top charts (uses trending endpoint)
   Future<List<MovieItem>> getTopCharts({int limit = 10}) async {
     try {
       final response = await _dio.get(
-        '${ApiConfig.movieServiceUrl}/movies/top-charts',
-        queryParameters: {'limit': limit},
+        '${ApiConfig.movieServiceUrl}/movies/trending',
       );
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data['data'] ?? response.data;
-        return data.map<MovieItem>((json) => MovieItem.fromJson(json as Map<String, dynamic>)).toList();
+        final data = response.data['data'];
+        List<dynamic> items = data is List ? data : [];
+        return items.take(limit).map<MovieItem>((json) => MovieItem.fromJson(json as Map<String, dynamic>)).toList();
       }
       return _getSampleMovies().take(limit).toList();
     } catch (e) {
+      print('[MovieRepository] getTopCharts error: $e');
       return _getSampleMovies().take(limit).toList();
     }
   }
@@ -172,15 +196,16 @@ class MovieRepository {
   Future<List<MovieItem>> getTopFree({int limit = 10}) async {
     try {
       final response = await _dio.get(
-        '${ApiConfig.movieServiceUrl}/movies/top-free',
-        queryParameters: {'limit': limit},
+        '${ApiConfig.movieServiceUrl}/movies/free',
       );
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data['data'] ?? response.data;
-        return data.map((json) => MovieItem.fromJson(json)).toList();
+        final data = response.data['data'];
+        List<dynamic> items = data is List ? data : [];
+        return items.take(limit).map((json) => MovieItem.fromJson(json as Map<String, dynamic>)).toList();
       }
       return _getSampleMovies().take(limit).toList();
     } catch (e) {
+      print('[MovieRepository] getTopFree error: $e');
       return _getSampleMovies().take(limit).toList();
     }
   }
@@ -189,25 +214,82 @@ class MovieRepository {
     return Stream.fromFuture(getTopFree(limit: limit));
   }
 
-  /// Get new releases
+  /// Get new releases (uses latest endpoint)
   Future<List<MovieItem>> getTopNewReleases({int limit = 10}) async {
     try {
       final response = await _dio.get(
-        '${ApiConfig.movieServiceUrl}/movies/new-releases',
-        queryParameters: {'limit': limit},
+        '${ApiConfig.movieServiceUrl}/movies/latest',
+        queryParameters: {'size': limit},
       );
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data['data'] ?? response.data;
-        return data.map((json) => MovieItem.fromJson(json)).toList();
+        final data = response.data['data'];
+        List<dynamic> items;
+        if (data is Map && data['items'] != null) {
+          items = data['items'] as List<dynamic>;
+        } else if (data is List) {
+          items = data;
+        } else {
+          return _getSampleMovies().take(limit).toList();
+        }
+        return items.take(limit).map((json) => MovieItem.fromJson(json as Map<String, dynamic>)).toList();
       }
       return _getSampleMovies().take(limit).toList();
     } catch (e) {
+      print('[MovieRepository] getTopNewReleases error: $e');
       return _getSampleMovies().take(limit).toList();
     }
   }
 
   Stream<List<MovieItem>> streamTopNewReleases({int limit = 10}) {
     return Stream.fromFuture(getTopNewReleases(limit: limit));
+  }
+
+  /// Get recommendations for user
+  Future<List<MovieItem>> getRecommendations({String? userId, int limit = 10}) async {
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.movieServiceUrl}/recommendations',
+        queryParameters: {
+          if (userId != null) 'userId': userId,
+          'limit': limit,
+        },
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.map((json) => MovieItem.fromJson(json)).toList();
+      }
+      // Fallback to trending if no recommendations
+      return getTrending(limit: limit);
+    } catch (e) {
+      // Fallback to trending
+      return getTrending(limit: limit);
+    }
+  }
+
+  Stream<List<MovieItem>> streamRecommendations({String? userId, int limit = 10}) {
+    return Stream.fromFuture(getRecommendations(userId: userId, limit: limit));
+  }
+
+  /// Get trending movies
+  Future<List<MovieItem>> getTrending({int limit = 10}) async {
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.movieServiceUrl}/movies/trending',
+      );
+      if (response.statusCode == 200) {
+        final data = response.data['data'];
+        List<dynamic> items = data is List ? data : [];
+        return items.take(limit).map((json) => MovieItem.fromJson(json as Map<String, dynamic>)).toList();
+      }
+      return getAll().then((all) => all.take(limit).toList());
+    } catch (e) {
+      print('[MovieRepository] getTrending error: $e');
+      return getAll().then((all) => all.take(limit).toList());
+    }
+  }
+
+  Stream<List<MovieItem>> streamTrending({int limit = 10}) {
+    return Stream.fromFuture(getTrending(limit: limit));
   }
 
   /// Report a video error

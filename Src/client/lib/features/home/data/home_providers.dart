@@ -6,25 +6,31 @@ import 'package:movie_fe/features/wishlist/repositories/wishlist_repository.dart
 import 'package:movie_fe/features/purchase/data/repositories/purchase_repository.dart';
 import 'package:movie_fe/features/profile/repository/settings_repository.dart';
 
-// User preferred genres
+// User preferred genres from profile
 final userPreferredGenresProvider = FutureProvider.autoDispose<List<String>>((ref) async {
   try {
     final userId = ref.watch(currentUserIdProvider);
-    if (userId == null) return const <String>['Action', 'Sci-Fi'];
+    if (userId == null) return const <String>['hanh-dong', 'vien-tuong'];
     
-    final settingsRepo = ref.watch(settingsRepositoryProvider);
-    final profile = await settingsRepo.fetchProfile();
-    // Return sample genres for now
-    return const <String>['Action', 'Sci-Fi'];
+    // UserProfile doesn't have genres field yet, use defaults based on common genres
+    // TODO: Add genres field to UserProfile when available from API
+    return const <String>['hanh-dong', 'vien-tuong', 'kinh-di', 'hai-huoc'];
   } catch (e) {
-    return const <String>['Action', 'Sci-Fi'];
+    return const <String>['hanh-dong', 'vien-tuong'];
   }
 });
 
-// Recommended movies
+// Trending movies for auto-slide banner
+final trendingMoviesProvider = StreamProvider.autoDispose<List<MovieItem>>((ref) {
+  final movieRepo = ref.watch(movieRepositoryProvider);
+  return movieRepo.streamTrending(limit: 8);
+});
+
+// Recommended movies based on user preferences
 final recommendedMoviesProvider = StreamProvider.autoDispose<List<MovieItem>>((ref) {
   final movieRepo = ref.watch(movieRepositoryProvider);
-  return movieRepo.streamAll().map((all) => all.take(10).toList());
+  final userId = ref.watch(currentUserIdProvider);
+  return movieRepo.streamRecommendations(userId: userId, limit: 10);
 });
 
 // Purchased movies
@@ -45,8 +51,8 @@ final wishlistMoviesProvider = StreamProvider.autoDispose<List<MovieItem>>((ref)
   return repo.streamWishlist();
 });
 
-// Recently watched movies
+// Recently watched movies (use new releases as fallback)
 final recentMoviesProvider = StreamProvider.autoDispose<List<MovieItem>>((ref) {
   final movieRepo = ref.watch(movieRepositoryProvider);
-  return movieRepo.streamAll().map((all) => all.take(5).toList());
+  return movieRepo.streamTopNewReleases(limit: 8);
 });

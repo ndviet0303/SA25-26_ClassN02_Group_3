@@ -17,6 +17,8 @@ import '../../services/playback_state_providers.dart';
 import '../widgets/video_error_report_modal.dart';
 import '../widgets/movie_info_panel.dart';
 import '../../services/movie_watch_service.dart';
+import '../widgets/premium_required_dialog.dart';
+import '../../../subscription/presentation/subscription_screen.dart';
 
 class VideoPlayerScreen extends ConsumerStatefulWidget {
   const VideoPlayerScreen({
@@ -48,6 +50,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
   bool _showSpeedMenu = false;
   Duration _lastSavedPosition = Duration.zero;
   bool _viewRecorded = false;
+  StreamingData? _streamingData; // Store streaming data from API
 
   @override
   void initState() {
@@ -78,19 +81,32 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
   }
 
   Future<void> _initializePlayer() async {
-    // Access check before resolving streams
+    // Access check using playMovie() - returns streaming data or access denied
     final watchService = ref.read(movieWatchServiceProvider);
-    final access = await watchService.hasAccess(widget.movie.id);
-    if (!access) {
+    final result = await watchService.playMovie(widget.movie.slug ?? widget.movie.id);
+    
+    if (!result.hasAccess) {
       if (mounted) {
-        ToastNotification.showError(
+        // Show Premium Required dialog
+        final shouldNavigate = await showPremiumRequiredDialog(
           context,
-          message: context.i18n.movie.player.noAccess,
+          message: result.errorMessage,
         );
-        Navigator.of(context).pop();
+        
+        if (shouldNavigate) {
+          // Navigate to subscription screen
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+          );
+        } else {
+          Navigator.of(context).pop();
+        }
       }
       return;
     }
+    
+    // Store streaming data
+    _streamingData = result.streamingData;
     // Load saved playback state
     final playbackService = ref.read(playbackStateServiceProvider);
     final savedState = await playbackService.getPlaybackState(widget.movie.id);

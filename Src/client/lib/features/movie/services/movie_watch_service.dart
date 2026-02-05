@@ -10,8 +10,54 @@ final movieWatchServiceProvider = Provider((ref) => MovieWatchService(
   ref: ref,
 ));
 
+/// Streaming data returned from play endpoint
+class StreamingData {
+  final String movieId;
+  final String movieName;
+  final String? serverName;
+  final String? episodeName;
+  final String? episodeSlug;
+  final String? m3u8Url;
+  final String? embedUrl;
+
+  StreamingData({
+    required this.movieId,
+    required this.movieName,
+    this.serverName,
+    this.episodeName,
+    this.episodeSlug,
+    this.m3u8Url,
+    this.embedUrl,
+  });
+
+  factory StreamingData.fromJson(Map<String, dynamic> json) {
+    return StreamingData(
+      movieId: json['movieId'] ?? '',
+      movieName: json['movieName'] ?? '',
+      serverName: json['serverName'],
+      episodeName: json['episodeName'],
+      episodeSlug: json['episodeSlug'],
+      m3u8Url: json['m3u8Url'],
+      embedUrl: json['embedUrl'],
+    );
+  }
+}
+
+/// Access check result
+class AccessCheckResult {
+  final bool hasAccess;
+  final StreamingData? streamingData;
+  final String? errorMessage;
+
+  AccessCheckResult({
+    required this.hasAccess,
+    this.streamingData,
+    this.errorMessage,
+  });
+}
+
 /// Movie Watch Service - REST API based
-/// Handles access control, view counting, and watch history
+/// Handles access control, view counting, and streaming
 class MovieWatchService {
   MovieWatchService({required Dio dio, required Ref ref})
       : _dio = dio,
@@ -27,33 +73,68 @@ class MovieWatchService {
     if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
   };
 
-  /// Check if user has access to watch a movie
-  Future<bool> hasAccess(String movieId) async {
-    final userId = _userId;
-    if (userId == null) return false;
-
+  /// Check access and get streaming data for a movie
+  /// Returns AccessCheckResult with hasAccess and streamingData
+  Future<AccessCheckResult> playMovie(String movieSlug, {String? serverName, String? episodeSlug}) async {
     try {
+      String url = '${ApiConfig.movieServiceUrl}/slug/$movieSlug/play';
+      
+      // Add optional parameters
+      Map<String, dynamic> queryParams = {};
+      if (serverName != null) queryParams['serverName'] = serverName;
+      if (episodeSlug != null) queryParams['episodeSlug'] = episodeSlug;
+
       final response = await _dio.get(
-        '${ApiConfig.movieServiceUrl}/movies/$movieId/access',
-        queryParameters: {'userId': userId},
+        url,
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
         options: Options(headers: _headers),
       );
+
       if (response.statusCode == 200) {
-        return response.data['hasAccess'] == true;
+        final data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          return AccessCheckResult(
+            hasAccess: true,
+            streamingData: StreamingData.fromJson(data['data']),
+          );
+        }
       }
-      // For demo, return true
-      return true;
+      
+      return AccessCheckResult(
+        hasAccess: false,
+        errorMessage: 'Unable to load streaming data',
+      );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 403) {
+        final message = e.response?.data?['message'] ?? 'Premium subscription required';
+        return AccessCheckResult(
+          hasAccess: false,
+          errorMessage: message,
+        );
+      }
+      return AccessCheckResult(
+        hasAccess: false,
+        errorMessage: e.message ?? 'Network error',
+      );
     } catch (e) {
-      // For demo, return true to allow watching
-      return true;
+      return AccessCheckResult(
+        hasAccess: false,
+        errorMessage: e.toString(),
+      );
     }
+  }
+
+  /// Legacy method - check if user has access to watch a movie
+  Future<bool> hasAccess(String movieId) async {
+    final result = await playMovie(movieId);
+    return result.hasAccess;
   }
 
   /// Increment view count for a movie
   Future<void> incrementView(String movieId) async {
     try {
       await _dio.post(
-        '${ApiConfig.movieServiceUrl}/movies/$movieId/view',
+        '${ApiConfig.movieServiceUrl}/$movieId/view',
         options: Options(headers: _headers),
       );
     } catch (e) {
@@ -68,7 +149,7 @@ class MovieWatchService {
 
     try {
       await _dio.post(
-        '${ApiConfig.movieServiceUrl}/users/$userId/watch-history',
+        '${ApiConfig.customerServiceUrl}/user/$userId/watch-history',
         data: {'movieId': movieId},
         options: Options(headers: _headers),
       );
@@ -84,7 +165,7 @@ class MovieWatchService {
 
     try {
       final response = await _dio.get(
-        '${ApiConfig.movieServiceUrl}/users/$userId/watch-history',
+        '${ApiConfig.customerServiceUrl}/user/$userId/watch-history',
         queryParameters: {'limit': limit},
         options: Options(headers: _headers),
       );
