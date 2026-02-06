@@ -1,0 +1,163 @@
+[
+  {
+    "id": "620a21b2e0fc277084dfd0c5",
+    "slug": "hanh-dong",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Hành Động",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620a220de0fc277084dfd16d",
+    "slug": "tinh-cam",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Tình Cảm",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620a221de0fc277084dfd1c1",
+    "slug": "hai-huoc",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Hài Hước",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620a222fe0fc277084dfd23d",
+    "slug": "co-trang",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Cổ Trang",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620a2238e0fc277084dfd291",
+    "slug": "tam-ly",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Tâm Lý",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620a2249e0fc277084dfd2e5",
+    "slug": "hinh-su",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Hình Sự",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620a2253e0fc277084dfd339",
+    "slug": "chien-tranh",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Chiến Tranh",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620a225fe0fc277084dfd38d",
+    "slug": "the-thao",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Thể Thao",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620a2279e0fc277084dfd3e1",
+    "slug": "vo-thuat",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Võ Thuật",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620a2282e0fc277084dfd435",
+    "slug": "vien-tuong",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Viễn Tưởng",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620a2293e0fc277084dfd489",
+    "slug": "phieu-luu",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Phiêu Lưu",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620a229be0fc277084dfd4dd",
+    "slug": "khoa-hoc",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Khoa Học",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620a22ace0fc277084dfd531",
+    "slug": "kinh-di",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Kinh Dị",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620a22bae0fc277084dfd585",
+    "slug": "am-nhac",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Âm Nhạc",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620a22c8e0fc277084dfd5d9",
+    "slug": "than-thoai",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Thần Thoại",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620e0e64d9648f114cde7728",
+    "slug": "tai-lieu",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Tài Liệu",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620e4c0b6ba8271c5eef05a8",
+    "slug": "gia-dinh",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Gia Đình",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620f3d2b91fa4af90ab697fe",
+    "slug": "chinh-kich",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Chính kịch",
+    "source": "OPHIM"
+  },
+  {
+    "id": "620f84d291fa4af90ab6b3f4",
+    "slug": "bi-an",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Bí ẩn",
+    "source": "OPHIM"
+  },
+  {
+    "id": "62121e821f1609c9d934585c",
+    "slug": "hoc-duong",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Học Đường",
+    "source": "OPHIM"
+  },
+  {
+    "id": "6218eb66a2d0f024a9de48d4",
+    "slug": "kinh-dien",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Kinh Điển",
+    "source": "OPHIM"
+  },
+  {
+    "id": "6242b89cc78eb57bbfe29f91",
+    "slug": "phim-18",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Phim 18+",
+    "source": "OPHIM"
+  },
+  {
+    "id": "68f786a9f998955ed60add6c",
+    "slug": "short-drama",
+    "importedAt": "2026-01-30T04:05:05.023Z",
+    "name": "Short Drama",
+    "source": "OPHIM"
+  }
+]
