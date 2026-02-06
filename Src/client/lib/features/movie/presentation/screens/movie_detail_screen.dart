@@ -18,6 +18,7 @@ import '../widgets/movie_rating_section.dart';
 import '../widgets/movie_series_section.dart';
 import '../widgets/movie_similar_section.dart';
 import '../widgets/movie_info_panel.dart';
+import '../../../customer/data/customer_repository.dart';
 
 
 class _WishlistButton extends ConsumerWidget {
@@ -198,7 +199,8 @@ class _MovieDetailScreenState extends ConsumerState<MovieDetailScreen> {
     Movie movie,
   ) {
     final user = ref.watch(currentAuthUserProvider);
-    final isPremium = user?.isPremium ?? false;
+    final userId = int.tryParse(user?.id ?? '') ?? 0;
+    final isSubscribed = ref.watch(isUserSubscribedProvider(userId)).value ?? false;
     
     bool shouldWatchNow = false;
     String? buttonOverrideText;
@@ -206,14 +208,14 @@ class _MovieDetailScreenState extends ConsumerState<MovieDetailScreen> {
     if (movie.accessType == AccessType.FREE) {
       shouldWatchNow = true;
     } else if (movie.accessType == AccessType.PREMIUM) {
-      shouldWatchNow = isPremium;
-      if (!isPremium) {
+      shouldWatchNow = isSubscribed;
+      if (!isSubscribed) {
         buttonOverrideText = context.i18n.movie.hero.getPremium;
       }
     } else if (movie.accessType == AccessType.RENTAL) {
       final isPurchased = ref.watch(isPurchasedProvider(movie.id)).value ?? false;
-      shouldWatchNow = isPurchased;
-      if (!isPurchased) {
+      shouldWatchNow = isPurchased || isSubscribed;
+      if (!shouldWatchNow) {
         buttonOverrideText = context.i18n.movie.hero.rentMovie;
       }
     }
@@ -286,13 +288,8 @@ class _MovieDetailScreenState extends ConsumerState<MovieDetailScreen> {
                     return;
                   }
 
-                  // Handle Premium redirection
-                  if (movie.accessType == AccessType.PREMIUM && !isPremium) {
-                    // TODO: Navigate to Subscription Screen
-                    ToastNotification.showInfo(
-                      context,
-                      message: context.i18n.premium.title,
-                    );
+                  if (movie.accessType == AccessType.PREMIUM && !isSubscribed) {
+                    context.push(AppRouter.subscription);
                     return;
                   }
                   

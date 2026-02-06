@@ -8,6 +8,7 @@ import 'package:dio/dio.dart';
 import 'package:video_player/video_player.dart';
 import 'package:movie_fe/core/widgets/loading.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/app_export.dart';
 import '../../../../core/models/movie.dart';
 import '../../models/playback_state.dart';
@@ -18,6 +19,9 @@ import '../../services/movie_watch_service.dart';
 import '../widgets/premium_required_dialog.dart';
 import '../widgets/no_video_message.dart';
 import '../helpers/video_player_helpers.dart';
+import '../../../../routes/app_router.dart';
+import '../../../customer/data/customer_repository.dart';
+import '../../../../core/auth/auth_providers.dart';
 
 class VideoPlayerScreen extends ConsumerStatefulWidget {
   const VideoPlayerScreen({
@@ -81,14 +85,19 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
   }
 
   Future<void> _initializePlayer() async {
-    // Check if movie is FREE - allow without access check
-    if (widget.movie.accessType == AccessType.FREE) {
-      // Skip access check for free movies
+    // Check if movie is FREE or user is premium via Customer Service
+    final isFree = widget.movie.accessType == AccessType.FREE;
+    final user = ref.read(currentAuthUserProvider);
+    final userId = int.tryParse(user?.id ?? '') ?? 0;
+    final isSubscribed = await ref.read(isUserSubscribedProvider(userId).future);
+    
+    // Skip access check if movie is FREE or user is premium
+    if (isFree || isSubscribed) {
       await _continuePlayerInit();
       return;
     }
     
-    // Access check for premium/rental movies
+    // Access check for rental movies or non-premium users
     final watchService = ref.read(movieWatchServiceProvider);
     final result = await watchService.playMovie(widget.movie.slug ?? widget.movie.id);
     
@@ -101,9 +110,8 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
         );
         
         if (shouldNavigate && mounted) {
-          // Navigate back and then to subscription using GoRouter
           Navigator.of(context).pop();
-          // User can navigate to subscription from settings
+          context.push(AppRouter.subscription);
         } else if (mounted) {
           Navigator.of(context).pop();
         }

@@ -29,11 +29,8 @@ class PriceUtils {
     return number.toStringAsFixed(0);
   }
 
-  /// Format price string theo locale (VND cho tiếng Việt, USD cho tiếng Anh)
   static String formatPrice(MovieItem movie) {
-    // Only show FREE badge for free movies
     if (movie.accessType == AccessType.FREE) return 'FREE';
-    // Don't show PREMIUM badge - just hide it
     if (movie.accessType == AccessType.PREMIUM) return '';
 
     final locale = LocaleSettings.currentLocale;
@@ -61,7 +58,7 @@ class PriceUtils {
     return '';
   }
 
-  /// Format price string cho button (có prefix "Buy")
+
   static String formatPriceForButton(MovieItem movie) {
     final locale = LocaleSettings.currentLocale;
     final priceText = formatPrice(movie);

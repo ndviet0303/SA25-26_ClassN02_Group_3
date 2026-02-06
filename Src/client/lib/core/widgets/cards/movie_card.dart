@@ -211,6 +211,7 @@ class MovieCard extends StatelessWidget {
   }
 
   Widget _buildRating(TextStyle? textStyle, double scale) {
+    final hasRating = movie.rating != null && movie.rating! > 0;
     return Row(
       children: [
         SvgPicture.asset(
@@ -219,7 +220,10 @@ class MovieCard extends StatelessWidget {
           height: 16 * scale,
         ),
         const Gap(6),
-        Text(movie.rating?.toStringAsFixed(1) ?? '0.0', style: textStyle),
+        Text(
+          hasRating ? movie.rating!.toStringAsFixed(1) : '--', 
+          style: textStyle,
+        ),
       ],
     );
   }
