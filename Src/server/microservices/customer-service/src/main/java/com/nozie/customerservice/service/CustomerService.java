@@ -144,6 +144,11 @@ public class CustomerService {
         return watchlistRepository.findByCustomerIdOrderByCreatedAtDesc(customerId);
     }
 
+    public List<WatchlistItem> getWatchlistByUserId(Long userId) {
+        Customer customer = getCustomerByUserId(userId);
+        return getWatchlist(customer.getId());
+    }
+
     public WatchlistItem addToWatchlist(Long customerId, String movieId) {
         return watchlistRepository.findByCustomerIdAndMovieId(customerId, movieId)
                 .orElseGet(() -> watchlistRepository.save(WatchlistItem.builder()

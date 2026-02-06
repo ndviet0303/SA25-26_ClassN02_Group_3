@@ -135,6 +135,13 @@ public class CustomerController {
         return ResponseEntity.ok(ApiResponse.success(items));
     }
 
+    @GetMapping("/user/{userId}/watchlist")
+    public ResponseEntity<ApiResponse<List<WatchlistItem>>> getWatchlistByUserId(@PathVariable Long userId) {
+        log.info("GET /api/customers/user/{}/watchlist", userId);
+        List<WatchlistItem> items = customerService.getWatchlistByUserId(userId);
+        return ResponseEntity.ok(ApiResponse.success(items));
+    }
+
     @PostMapping("/{id}/watchlist")
     public ResponseEntity<ApiResponse<WatchlistItem>> addToWatchlist(
             @PathVariable Long id,

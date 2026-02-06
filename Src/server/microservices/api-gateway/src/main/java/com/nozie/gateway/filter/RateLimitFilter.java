@@ -22,9 +22,9 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     private static final Logger log = LoggerFactory.getLogger(RateLimitFilter.class);
 
     // Rate limit configuration
-    private static final int DEFAULT_REQUESTS_PER_MINUTE = 100;
-    private static final int LOGIN_REQUESTS_PER_MINUTE = 5;
-    private static final int USER_REQUESTS_PER_MINUTE = 200;
+    private static final int DEFAULT_REQUESTS_PER_MINUTE = 500;
+    private static final int LOGIN_REQUESTS_PER_MINUTE = 30;
+    private static final int USER_REQUESTS_PER_MINUTE = 1000;
 
     private final ReactiveRedisTemplate<String, String> redisTemplate;
 

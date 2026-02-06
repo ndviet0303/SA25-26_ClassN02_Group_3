@@ -2,6 +2,7 @@ package com.nozie.customerservice.listener;
 
 import com.nozie.common.event.SubscriptionActivatedEvent;
 import com.nozie.customerservice.model.Customer;
+import com.nozie.customerservice.config.MessagingConfig;
 import com.nozie.customerservice.repository.CustomerRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,7 @@ public class SubscriptionEventListener {
     /**
      * Xử lý event khi subscription được kích hoạt
      */
-    @RabbitListener(queues = "subscription.notification.queue")
+    @RabbitListener(queues = MessagingConfig.SUBSCRIPTION_QUEUE)
     @Transactional
     public void handleSubscriptionActivated(SubscriptionActivatedEvent event) {
         log.info("Received SubscriptionActivatedEvent: {}", event);
@@ -56,7 +57,7 @@ public class SubscriptionEventListener {
 
         if (planType.startsWith("VIP")) {
             return Customer.SubscriptionStatus.VIP;
-        } else if (planType.startsWith("PREMIUM")) {
+        } else if (planType.startsWith("PREMIUM") || planType.startsWith("STUDENT")) {
             return Customer.SubscriptionStatus.PREMIUM;
         }
         return Customer.SubscriptionStatus.FREE;

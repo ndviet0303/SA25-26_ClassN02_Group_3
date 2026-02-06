@@ -154,6 +154,14 @@ public class CatalogController {
         return ResponseEntity.ok(ApiResponse.success(movieMapper.toResponse(movie)));
     }
 
+    @GetMapping("/user/{userId}/watchlist")
+    public ResponseEntity<ApiResponse<List<MovieListItemResponse>>> getWatchlistByUser(@PathVariable Long userId) {
+        log.info("GET /api/movies/user/{}/watchlist", userId);
+        List<Movie> movies = catalogService.getWatchlistMovies(userId);
+        List<MovieListItemResponse> items = movies.stream().map(movieMapper::toListItem).toList();
+        return ResponseEntity.ok(ApiResponse.success(items));
+    }
+
     /** POST /api/movies - Tạo phim */
     @PostMapping
     public ResponseEntity<ApiResponse<Movie>> createMovie(@Valid @RequestBody MovieRequest request) {

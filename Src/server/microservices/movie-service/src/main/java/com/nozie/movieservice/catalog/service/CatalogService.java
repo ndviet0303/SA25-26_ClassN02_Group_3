@@ -37,6 +37,19 @@ public class CatalogService {
     private final CountryRepository countryRepository;
     private final MovieReviewRepository movieReviewRepository;
     private final MovieMapper movieMapper;
+    private final com.nozie.movieservice.common.client.CustomerClient customerClient;
+
+    public List<Movie> getWatchlistMovies(Long userId) {
+        log.info("Fetching watchlist movies for user ID: {}", userId);
+        var response = customerClient.getWatchlistByUserId(userId);
+        if (response != null && response.isSuccess() && response.getData() != null) {
+            List<String> movieIds = response.getData().stream()
+                    .map(com.nozie.movieservice.common.dto.WatchlistItemDto::getMovieId)
+                    .collect(Collectors.toList());
+            return movieRepository.findAllById(movieIds);
+        }
+        return List.of();
+    }
 
     public Movie createMovie(MovieRequest request) {
         log.info("Creating movie: {}", request.getName());

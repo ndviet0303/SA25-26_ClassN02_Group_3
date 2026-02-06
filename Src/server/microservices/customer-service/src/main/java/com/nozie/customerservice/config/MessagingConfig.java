@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Configuration;
 public class MessagingConfig {
 
     public static final String EXCHANGE = "payment.exchange";
-    public static final String SUBSCRIPTION_QUEUE = "subscription.notification.queue";
+    public static final String SUBSCRIPTION_QUEUE = "customer.subscription.queue";
     public static final String SUBSCRIPTION_ROUTING_KEY = "subscription.activated";
 
     // User registration events

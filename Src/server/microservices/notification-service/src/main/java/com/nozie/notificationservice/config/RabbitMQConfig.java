@@ -17,12 +17,12 @@ public class RabbitMQConfig {
 
     // Payment events
     public static final String PAYMENT_EXCHANGE = "payment.exchange";
-    public static final String PAYMENT_QUEUE = "payment.notification.queue";
+    public static final String PAYMENT_QUEUE = "notification.payment.queue";
     public static final String PAYMENT_ROUTING_KEY = "payment.succeeded";
 
     // User events
     public static final String USER_EXCHANGE = "user.exchange";
-    public static final String USER_QUEUE = "user.notification.queue";
+    public static final String USER_QUEUE = "notification.user.queue";
     public static final String USER_ROUTING_KEY = "user.registered";
 
     // Legacy alias
@@ -46,7 +46,7 @@ public class RabbitMQConfig {
     }
 
     // Subscription events (same exchange as payment)
-    public static final String SUBSCRIPTION_QUEUE = "subscription.notification.queue";
+    public static final String SUBSCRIPTION_QUEUE = "notification.subscription.queue";
     public static final String SUBSCRIPTION_ROUTING_KEY = "subscription.activated";
 
     @Bean

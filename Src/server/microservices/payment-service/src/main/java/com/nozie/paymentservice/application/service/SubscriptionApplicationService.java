@@ -6,8 +6,10 @@ import com.nozie.paymentservice.api.dto.SubscriptionRequest;
 import com.nozie.paymentservice.api.dto.SubscriptionResponse;
 import com.nozie.paymentservice.domain.model.Subscription;
 import com.nozie.paymentservice.domain.model.SubscriptionPlan;
+import com.nozie.paymentservice.domain.model.Transaction;
 import com.nozie.paymentservice.domain.repository.SubscriptionPlanRepository;
 import com.nozie.paymentservice.domain.repository.SubscriptionRepository;
+import com.nozie.paymentservice.domain.repository.TransactionRepository;
 import com.nozie.paymentservice.infrastructure.client.CustomerClient;
 import com.nozie.paymentservice.infrastructure.client.dto.CustomerDTO;
 import com.nozie.paymentservice.infrastructure.messaging.PaymentEventProducer;
@@ -40,6 +42,7 @@ public class SubscriptionApplicationService {
     private final CustomerClient customerClient;
     private final StripeService stripeService;
     private final PaymentEventProducer eventProducer;
+    private final TransactionRepository transactionRepository;
 
     /**
      * Lấy danh sách các gói cước đang hoạt động
@@ -252,6 +255,21 @@ public class SubscriptionApplicationService {
             // Activate subscription
             subscription.activate(stripeSubscriptionId, startDate, endDate);
             subscriptionRepository.save(subscription);
+
+            // Create Transaction record
+            Transaction transaction = Transaction.builder()
+                    .userId(subscription.getUserId())
+                    .subscription(subscription)
+                    .stripeTransactionId(session.getPaymentIntent())
+                    .amount(session.getAmountTotal() != null ? session.getAmountTotal() / 100.0 : 0.0) // Stripe amount
+                                                                                                       // is in cents
+                    .currency(session.getCurrency())
+                    .status("PAID")
+                    .paymentMethod("STRIPE")
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            transactionRepository.save(transaction);
+            log.info("Transaction record saved for user {}", subscription.getUserId());
 
             // Send event to notify Customer Service
             SubscriptionActivatedEvent activatedEvent = new SubscriptionActivatedEvent(
