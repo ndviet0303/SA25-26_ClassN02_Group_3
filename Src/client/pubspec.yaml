@@ -56,13 +56,12 @@ dependencies:
   # URL launcher for opening external or in-app web views
   url_launcher: ^6.3.0
 
-  # Stripe Payment
-  flutter_stripe: ^12.1.0
 
   # add equatable
   equatable: ^2.0.7
   gap: ^3.0.1
   intl: ^0.20.2
+  flutter_stripe: ^12.2.0
 
 
 dev_dependencies:

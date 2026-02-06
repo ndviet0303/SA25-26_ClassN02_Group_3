@@ -55,6 +55,16 @@
 				<string>com.googleusercontent.apps.133383338782-bqv8s2q9v8fv23a70bfivffsi5sg52g6</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>nhatviet.nozie</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>nozie</string>
+			</array>
+		</dict>
 	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
