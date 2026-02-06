@@ -11,16 +11,16 @@
 2.3 Key Architectural Decisions  
 2.4 Main Outcomes and Final Demo  
 
-3. Context, Requirements & Architectural Goals  
+3.  Project Requirements & Goals  
 3.1 Problem Background & Business Context  
 3.2 Functional Requirements (FRs)  
 3.3 Non-Functional Requirements (NFRs)  
 3.4 Architecturally Significant Requirements (ASR)  
 3.5 Use Case Model & Actors  
 
-4. Overall Architectural Design  
+4. Architectural Design  
 4.1 Layered Architecture  
-4.2 Monolith to Microservices Decomposition  
+4.2 Microservices Decomposition  
 4.3 C4 Model (System Context, Container/Component)  
 4.4 Event-Driven Architecture  
 4.5 Deployment View & System Infrastructure  
