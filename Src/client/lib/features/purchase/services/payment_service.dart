@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/auth_providers.dart';
 import '../../../core/config/api_config.dart';
 import '../../../core/models/movie.dart';
-import '../../../features/notification/models/notification_item.dart';
-import '../../../features/notification/repositories/notification_repository.dart';
+import 'package:movie_fe/core/models/notification_item.dart';
+import 'package:movie_fe/core/repositories/notification_repository.dart';
 
 final dioProvider = Provider((ref) => Dio());
 

@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'auth_api_service.dart';
+import '../repositories/auth_repository.dart';
 import 'auth_models.dart';
 
 /// Keys for storing auth data in SharedPreferences
@@ -18,15 +18,15 @@ class _StorageKeys {
 class AuthStateNotifier extends StateNotifier<AuthState> {
   AuthStateNotifier({
     required SharedPreferences sharedPreferences,
-    required AuthApiService authApiService,
+    required AuthRepository authRepository,
   })  : _prefs = sharedPreferences,
-        _authApi = authApiService,
+        _authRepo = authRepository,
         super(const AuthState()) {
     _restoreSession();
   }
 
   final SharedPreferences _prefs;
-  final AuthApiService _authApi;
+  final AuthRepository _authRepo;
 
   /// Stream controller to notify listeners of auth state changes
   final _authStateController = StreamController<bool>.broadcast();
@@ -48,7 +48,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
 
     try {
       // Validate current token
-      final isValid = await _authApi.validateToken(accessToken);
+      final isValid = await _authRepo.validateToken(accessToken);
 
       if (isValid) {
         // Token is valid, restore session
@@ -59,7 +59,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         );
 
         // Fetch user info
-        final user = await _authApi.getCurrentUser(accessToken);
+        final user = await _authRepo.getCurrentUser(accessToken);
 
         state = state.copyWith(
           tokens: tokens,
@@ -90,12 +90,12 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
 
     try {
       final request = LoginRequest(username: username, password: password);
-      final tokens = await _authApi.login(request);
+      final tokens = await _authRepo.login(request);
 
       await _saveTokens(tokens);
 
       // Fetch user info
-      final user = await _authApi.getCurrentUser(tokens.accessToken);
+      final user = await _authRepo.getCurrentUser(tokens.accessToken);
 
       state = state.copyWith(
         tokens: tokens,
@@ -144,7 +144,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         avatarUrl: avatarUrl,
       );
 
-      await _authApi.register(request);
+      await _authRepo.register(request);
       state = state.copyWith(isLoading: false);
       debugPrint('[AuthStateNotifier] Registration successful for: $username');
 
@@ -163,7 +163,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   Future<void> logout() async {
     final tokens = state.tokens;
     if (tokens != null) {
-      await _authApi.logout(
+      await _authRepo.logout(
         LogoutRequest(refreshToken: tokens.refreshToken),
         tokens.accessToken,
       );
@@ -179,7 +179,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   Future<void> logoutAll() async {
     final tokens = state.tokens;
     if (tokens != null) {
-      await _authApi.logoutAll(tokens.accessToken);
+      await _authRepo.logoutAll(tokens.accessToken);
     }
 
     await _clearSession();
@@ -201,12 +201,12 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   Future<void> _refreshTokens(String refreshToken) async {
     try {
       final request = RefreshRequest(refreshToken: refreshToken);
-      final newTokens = await _authApi.refreshToken(request);
+      final newTokens = await _authRepo.refreshToken(request);
 
       await _saveTokens(newTokens);
 
       // Fetch user info with new token
-      final user = await _authApi.getCurrentUser(newTokens.accessToken);
+      final user = await _authRepo.getCurrentUser(newTokens.accessToken);
 
       state = state.copyWith(
         tokens: newTokens,
@@ -261,7 +261,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         avatarUrl: avatarUrl,
       );
 
-      final updatedUser = await _authApi.updateProfile(request, tokens.accessToken);
+      final updatedUser = await _authRepo.updateProfile(request, tokens.accessToken);
 
       state = state.copyWith(
         user: updatedUser,
@@ -275,6 +275,60 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       );
       rethrow;
     }
+  }
+
+  // ========== New Methods ==========
+
+  /// Check if username is available
+  Future<bool> checkUsername(String username) async {
+    return _authRepo.checkUsername(username);
+  }
+
+  /// Check if email is available
+  Future<bool> checkEmail(String email) async {
+    return _authRepo.checkEmail(email);
+  }
+
+  /// Delete current user account
+  Future<void> deleteAccount() async {
+    final tokens = state.tokens;
+    if (tokens == null) return;
+    
+    await _authRepo.deleteAccount(tokens.accessToken);
+    await _clearSession();
+    state = const AuthState();
+    _authStateController.add(false);
+  }
+
+  /// Logout all other sessions
+  Future<void> logoutOthers() async {
+    final tokens = state.tokens;
+    if (tokens == null) return;
+    await _authRepo.logoutOthers(tokens.accessToken);
+  }
+
+  /// Forgot password
+  Future<void> forgotPassword(String email) async {
+    await _authRepo.forgotPassword(email);
+  }
+
+  /// Reset password with token
+  Future<void> resetPassword(String token, String newPassword) async {
+    await _authRepo.resetPassword(token, newPassword);
+  }
+
+  /// Get active user sessions
+  Future<List<Map<String, dynamic>>> getSessions() async {
+    final tokens = state.tokens;
+    if (tokens == null) return [];
+    return _authRepo.getSessions(tokens.accessToken);
+  }
+
+  /// Revoke a specific session
+  Future<void> revokeSession(String sessionId) async {
+    final tokens = state.tokens;
+    if (tokens == null) return;
+    await _authRepo.revokeSession(sessionId, tokens.accessToken);
   }
 
   /// Clear error state

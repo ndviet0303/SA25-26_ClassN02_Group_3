@@ -20,8 +20,9 @@ import '../widgets/premium_required_dialog.dart';
 import '../widgets/no_video_message.dart';
 import '../helpers/video_player_helpers.dart';
 import '../../../../routes/app_router.dart';
-import '../../../customer/data/customer_repository.dart';
-import '../../../../core/auth/auth_providers.dart';
+import 'package:movie_fe/core/repositories/customer_repository.dart';
+import 'package:movie_fe/core/auth/auth_providers.dart';
+import 'package:movie_fe/core/repositories/subscription_repository.dart';
 
 class VideoPlayerScreen extends ConsumerStatefulWidget {
   const VideoPlayerScreen({

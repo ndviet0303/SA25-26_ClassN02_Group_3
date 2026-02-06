@@ -1,17 +1,18 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../core/auth/auth_providers.dart';
-import '../../../core/config/api_config.dart';
+import '../auth/auth_providers.dart';
+import '../config/api_config.dart';
 import '../models/subscription_model.dart';
 
-final subscriptionServiceProvider = Provider<SubscriptionService>((ref) {
-  return SubscriptionService(Dio(), ref);
+final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) {
+  return SubscriptionRepository(Dio(), ref);
 });
 
-/// Subscription Service - handles subscription plans and Stripe checkout
-class SubscriptionService {
-  SubscriptionService(this._dio, this._ref);
+/// Subscription Repository - REST API based
+/// API: SubscriptionController endpoints
+class SubscriptionRepository {
+  SubscriptionRepository(this._dio, this._ref);
 
   final Dio _dio;
   final Ref _ref;
@@ -24,6 +25,7 @@ class SubscriptionService {
   };
 
   /// Get all available subscription plans
+  /// API: GET /subscriptions/plans
   Future<List<SubscriptionPlan>> getPlans() async {
     try {
       final response = await _dio.get(
@@ -63,6 +65,7 @@ class SubscriptionService {
   }
 
   /// Subscribe to a plan - opens Stripe Checkout
+  /// API: POST /subscriptions/subscribe
   Future<bool> subscribe(String planId) async {
     if (_userId == null) {
       throw Exception('User not authenticated');
@@ -83,7 +86,6 @@ class SubscriptionService {
         final checkoutUrl = data['data']?['checkoutUrl'] ?? data['checkoutUrl'];
         
         if (checkoutUrl != null) {
-          // Open Stripe Checkout URL
           final uri = Uri.parse(checkoutUrl);
           if (await canLaunchUrl(uri)) {
             await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -98,6 +100,7 @@ class SubscriptionService {
   }
 
   /// Get current subscription status for user
+  /// API: GET /subscriptions/current/{userId}
   Future<UserSubscription?> getCurrentSubscription() async {
     if (_userId == null) return null;
 
@@ -120,12 +123,24 @@ class SubscriptionService {
   }
 
   /// Check if current user has active subscription
+  /// API: GET /subscriptions/active/{userId}
   Future<bool> hasActiveSubscription() async {
-    final sub = await getCurrentSubscription();
-    return sub?.isActive ?? false;
+    if (_userId == null) return false;
+
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.subscriptionServiceUrl}/active/$_userId',
+        options: Options(headers: _headers),
+      );
+      return response.statusCode == 200 && (response.data['data'] == true || response.data == true);
+    } catch (e) {
+      final sub = await getCurrentSubscription();
+      return sub?.isActive ?? false;
+    }
   }
 
   /// Get subscription history
+  /// API: GET /subscriptions/history/{userId}
   Future<List<UserSubscription>> getSubscriptionHistory() async {
     if (_userId == null) return [];
 
@@ -145,19 +160,41 @@ class SubscriptionService {
       return [];
     }
   }
+
+  /// Cancel subscription
+  /// API: POST /subscriptions/cancel/{userId}
+  Future<bool> cancelSubscription() async {
+    if (_userId == null) return false;
+
+    try {
+      final response = await _dio.post(
+        '${ApiConfig.subscriptionServiceUrl}/cancel/$_userId',
+        options: Options(headers: _headers),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
 }
 
-/// Provider to fetch subscription plans
+// Providers
 final subscriptionPlansProvider = FutureProvider<List<SubscriptionPlan>>((ref) {
-  return ref.watch(subscriptionServiceProvider).getPlans();
+  return ref.watch(subscriptionRepositoryProvider).getPlans();
 });
 
-/// Provider to fetch current user subscription
 final currentSubscriptionProvider = FutureProvider<UserSubscription?>((ref) {
-  return ref.watch(subscriptionServiceProvider).getCurrentSubscription();
+  return ref.watch(subscriptionRepositoryProvider).getCurrentSubscription();
 });
 
-/// Provider to check if user has active subscription
 final hasSubscriptionProvider = FutureProvider<bool>((ref) {
-  return ref.watch(subscriptionServiceProvider).hasActiveSubscription();
+  return ref.watch(subscriptionRepositoryProvider).hasActiveSubscription();
+});
+
+final subscriptionHistoryProvider = FutureProvider<List<UserSubscription>>((ref) {
+  return ref.watch(subscriptionRepositoryProvider).getSubscriptionHistory();
+});
+
+final isUserSubscribedProvider = FutureProvider.family<bool, int>((ref, userId) {
+  return ref.watch(subscriptionRepositoryProvider).hasActiveSubscription();
 });

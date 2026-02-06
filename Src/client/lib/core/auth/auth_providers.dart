@@ -1,23 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/shared_prefs_provider.dart';
-import 'auth_api_service.dart';
+import '../repositories/auth_repository.dart';
 import 'auth_models.dart';
 import 'auth_state_notifier.dart';
 
-/// Provider for the Auth API Service
-final authApiServiceProvider = Provider<AuthApiService>((ref) {
-  return AuthApiService();
+/// Provider for the Auth Repository
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  return AuthRepository();
 });
 
 /// Provider for the Auth State Notifier
 final authStateNotifierProvider =
     StateNotifierProvider<AuthStateNotifier, AuthState>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
-  final authApi = ref.watch(authApiServiceProvider);
+  final authRepo = ref.watch(authRepositoryProvider);
   return AuthStateNotifier(
     sharedPreferences: prefs,
-    authApiService: authApi,
+    authRepository: authRepo,
   );
 });
 

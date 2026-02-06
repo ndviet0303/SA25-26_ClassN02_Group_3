@@ -11,14 +11,15 @@ import '../../../../core/widgets/feedback/toast_notification.dart';
 import '../../../../core/auth/auth_providers.dart';
 import '../../../../routes/app_router.dart';
 import '../../data/repositories/movie_repository.dart';
-import '../../../wishlist/repositories/wishlist_repository.dart';
+import 'package:movie_fe/core/repositories/wishlist_repository.dart';
 import '../../../purchase/data/repositories/purchase_repository.dart';
 import '../widgets/movie_hero_section.dart';
 import '../widgets/movie_rating_section.dart';
 import '../widgets/movie_series_section.dart';
 import '../widgets/movie_similar_section.dart';
 import '../widgets/movie_info_panel.dart';
-import '../../../customer/data/customer_repository.dart';
+import 'package:movie_fe/core/repositories/customer_repository.dart';
+import 'package:movie_fe/core/repositories/subscription_repository.dart';
 
 
 class _WishlistButton extends ConsumerWidget {

@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:movie_fe/core/app_export.dart';
 import 'package:movie_fe/core/enums/status_type.dart';
 import 'package:movie_fe/core/utils/data/date_util.dart';
-import 'package:movie_fe/features/notification/models/notification_item.dart';
+import 'package:movie_fe/core/models/notification_item.dart';
 import 'package:movie_fe/features/notification/presentation/widgets/notification_icon.dart';
 import 'package:movie_fe/routes/app_router.dart';
 

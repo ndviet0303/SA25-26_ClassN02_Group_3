@@ -10,9 +10,10 @@ import '../models/payment_method.dart';
 import '../models/preferences.dart';
 import '../models/security_settings.dart';
 import '../models/user_profile.dart';
-import '../../auth/register/domain/repositories/auth_repository.dart';
-import '../../auth/shared/providers/auth_repository_provider.dart';
+import '../../../core/repositories/auth_repository.dart';
+import '../../../core/repositories/customer_repository.dart';
 import '../../../core/auth/auth_providers.dart';
+import '../../../core/auth/auth_models.dart';
 
 class SettingsRepository {
   SettingsRepository(this._prefs, this._authRepository, this._ref);
@@ -66,18 +67,54 @@ class SettingsRepository {
   }
 
   Future<UserProfile> updateProfile(UserProfile profile) async {
-    // Call backend
-    await _authRepository.updateProfile(
-      fullName: profile.fullName,
-      phone: profile.phone,
-      country: profile.country,
-      dateOfBirth: profile.dateOfBirth,
-      avatarUrl: profile.avatarUrl,
-    );
+    final accessToken = _ref.read(accessTokenProvider);
+    if (accessToken == null) throw Exception('Not authenticated');
 
-    // Save locally
+    // 1. Check if email changed
+    final currentAuthUser = _ref.read(authStateNotifierProvider).user;
+    if (currentAuthUser != null && currentAuthUser.email != profile.email) {
+      debugPrint('[SettingsRepository] Email changed, updating via Identity Service');
+      await _authRepository.updateEmail(profile.email, accessToken);
+    }
+
+    // 2. Update other profile fields via Customer Service
+    final customerRepo = _ref.read(customerRepositoryProvider);
+    final customerProfile = await customerRepo.getCustomerByUserId(int.parse(profile.id));
+    
+    if (customerProfile != null) {
+      debugPrint('[SettingsRepository] Updating customer profile via Customer Service');
+      await customerRepo.updateCustomer(
+        customerProfile.id,
+        CustomerUpdateRequest(
+          fullName: profile.fullName,
+          phone: profile.phone,
+          country: profile.country,
+          dateOfBirth: profile.dateOfBirth,
+          avatarUrl: profile.avatarUrl,
+        ),
+      );
+    }
+
+    // 3. Save locally
     await _prefs.setString(_keyProfile, jsonEncode(profile.toJson()));
-    _log('Profile updated locally and on server', profile.toJson());
+
+    // 4. Sync with AuthState
+    if (currentAuthUser != null) {
+      final updatedAuthUser = AuthUser(
+        id: currentAuthUser.id,
+        username: currentAuthUser.username,
+        email: profile.email,
+        fullName: profile.fullName,
+        phone: profile.phone,
+        country: profile.country,
+        dateOfBirth: profile.dateOfBirth,
+        avatarUrl: profile.avatarUrl,
+        roles: currentAuthUser.roles,
+      );
+      _ref.read(authStateNotifierProvider.notifier).updateUser(updatedAuthUser);
+    }
+
+    _log('Profile updated locally and via services', profile.toJson());
     return profile;
   }
 

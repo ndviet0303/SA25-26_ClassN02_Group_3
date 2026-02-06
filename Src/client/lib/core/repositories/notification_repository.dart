@@ -1,20 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
-import '../../../core/auth/auth_providers.dart';
-import '../../../core/config/api_config.dart';
+import '../auth/auth_providers.dart';
+import '../config/api_config.dart';
 import '../models/notification_item.dart';
 
-final dioProvider = Provider((ref) => Dio());
-
 final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
-  return NotificationRepository(
-    ref.watch(dioProvider),
-    ref,
-  );
+  return NotificationRepository(Dio(), ref);
 });
 
 /// Notification Repository - REST API based
-/// TODO: Connect to actual REST API endpoints
+/// API: NotificationController endpoints
 class NotificationRepository {
   NotificationRepository(this._dio, this._ref);
 
@@ -48,14 +43,14 @@ class NotificationRepository {
   ];
 
   /// Fetch all notifications for the user
+  /// API: GET /notifications/{customerId}
   Future<List<NotificationItem>> fetchNotifications({int limit = 100}) async {
     final userId = _userId;
     if (userId == null) return [];
 
     try {
       final response = await _dio.get(
-        '${ApiConfig.notificationServiceUrl}/users/$userId/notifications',
-        queryParameters: {'limit': limit},
+        '${ApiConfig.notificationServiceUrl}/$userId',
         options: Options(headers: _headers),
       );
       if (response.statusCode == 200) {
@@ -68,23 +63,41 @@ class NotificationRepository {
     }
   }
 
-  /// Stream notifications in real-time (converts Future to Stream)
+  /// Fetch unread notifications only
+  /// API: GET /notifications/{customerId}/unread
+  Future<List<NotificationItem>> fetchUnreadNotifications() async {
+    final userId = _userId;
+    if (userId == null) return [];
+
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.notificationServiceUrl}/$userId/unread',
+        options: Options(headers: _headers),
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.map<NotificationItem>((json) => NotificationItem.fromJson(json as Map<String, dynamic>)).toList();
+      }
+      return _sampleNotifications.where((n) => n.readAt == null).toList();
+    } catch (e) {
+      return _sampleNotifications.where((n) => n.readAt == null).toList();
+    }
+  }
+
+  /// Stream notifications
   Stream<List<NotificationItem>> watchNotifications({int limit = 100}) {
     return Stream.fromFuture(fetchNotifications(limit: limit));
   }
 
   /// Mark a notification as read
+  /// API: PATCH /notifications/{id}/read
   Future<void> markAsRead(String notificationId) async {
-    final userId = _userId;
-    if (userId == null) return;
-
     try {
       await _dio.patch(
-        '${ApiConfig.notificationServiceUrl}/users/$userId/notifications/$notificationId/read',
+        '${ApiConfig.notificationServiceUrl}/$notificationId/read',
         options: Options(headers: _headers),
       );
     } catch (e) {
-      // Update local sample for demo
       final index = _sampleNotifications.indexWhere((n) => n.id == notificationId);
       if (index >= 0) {
         _sampleNotifications[index] = _sampleNotifications[index].copyWith(
@@ -96,60 +109,46 @@ class NotificationRepository {
 
   /// Mark all notifications as read
   Future<void> markAllAsRead() async {
-    final userId = _userId;
-    if (userId == null) return;
-
-    try {
-      await _dio.patch(
-        '${ApiConfig.notificationServiceUrl}/users/$userId/notifications/read-all',
-        options: Options(headers: _headers),
-      );
-    } catch (e) {
-      // Update local sample for demo
-      for (int i = 0; i < _sampleNotifications.length; i++) {
-        _sampleNotifications[i] = _sampleNotifications[i].copyWith(
-          readAt: DateTime.now(),
-        );
+    final notifications = await fetchNotifications();
+    for (final notification in notifications) {
+      if (notification.readAt == null) {
+        await markAsRead(notification.id);
       }
     }
   }
 
   /// Delete a notification
+  /// API: DELETE /notifications/{id}
   Future<void> deleteNotification(String notificationId) async {
-    final userId = _userId;
-    if (userId == null) return;
-
     try {
       await _dio.delete(
-        '${ApiConfig.notificationServiceUrl}/users/$userId/notifications/$notificationId',
+        '${ApiConfig.notificationServiceUrl}/$notificationId',
         options: Options(headers: _headers),
       );
     } catch (e) {
-      // Remove from local sample for demo
       _sampleNotifications.removeWhere((n) => n.id == notificationId);
     }
   }
 
-  /// Delete all read notifications
-  Future<void> deleteAllReadNotifications() async {
+  /// Get unread count
+  /// API: GET /notifications/{customerId}/count
+  Future<int> getUnreadCount() async {
     final userId = _userId;
-    if (userId == null) return;
+    if (userId == null) return 0;
 
     try {
-      await _dio.delete(
-        '${ApiConfig.notificationServiceUrl}/users/$userId/notifications/read',
+      final response = await _dio.get(
+        '${ApiConfig.notificationServiceUrl}/$userId/count',
         options: Options(headers: _headers),
       );
+      if (response.statusCode == 200) {
+        final data = response.data['data'] ?? response.data;
+        return data['unreadCount'] ?? 0;
+      }
+      return _sampleNotifications.where((n) => n.readAt == null).length;
     } catch (e) {
-      // Remove read notifications from local sample for demo
-      _sampleNotifications.removeWhere((n) => n.readAt != null);
+      return _sampleNotifications.where((n) => n.readAt == null).length;
     }
-  }
-
-  /// Get unread count
-  Future<int> getUnreadCount() async {
-    final notifications = await fetchNotifications();
-    return notifications.where((n) => n.readAt == null).length;
   }
 
   /// Stream unread count
@@ -158,13 +157,11 @@ class NotificationRepository {
   }
 
   /// Create a notification (for local/admin use)
+  /// API: POST /api/notifications
   Future<void> createNotification(NotificationItem notification) async {
-    final userId = _userId;
-    if (userId == null) return;
-
     try {
       await _dio.post(
-        '${ApiConfig.notificationServiceUrl}/users/$userId/notifications',
+        ApiConfig.notificationServiceUrl,
         data: notification.toJson(),
         options: Options(headers: _headers),
       );
@@ -177,18 +174,14 @@ class NotificationRepository {
 
 // Providers
 final notificationsProvider = StreamProvider<List<NotificationItem>>((ref) {
-  final repo = ref.watch(notificationRepositoryProvider);
-  return repo.watchNotifications();
+  return ref.watch(notificationRepositoryProvider).watchNotifications();
 });
 
 final unreadCountProvider = StreamProvider<int>((ref) {
-  final repo = ref.watch(notificationRepositoryProvider);
-  return repo.watchUnreadCount();
+  return ref.watch(notificationRepositoryProvider).watchUnreadCount();
 });
 
 final hasUnreadNotificationsProvider = Provider<bool>((ref) {
   final unreadCount = ref.watch(unreadCountProvider);
-  final count = unreadCount.value;
-  if (count == null) return false;
-  return count > 0;
+  return (unreadCount.value ?? 0) > 0;
 });

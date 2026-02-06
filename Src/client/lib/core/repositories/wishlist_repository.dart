@@ -1,18 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
-import '../../../core/auth/auth_providers.dart';
-import '../../../core/models/movie_item.dart';
-import '../../../core/config/api_config.dart';
+import '../auth/auth_providers.dart';
+import '../models/movie_item.dart';
+import '../config/api_config.dart';
 
-final wishlistRepositoryProvider = Provider((ref) => WishlistRepository(
-  ref.watch(dioProvider),
-  ref,
-));
-
-final dioProvider = Provider((ref) => Dio());
+final wishlistRepositoryProvider = Provider((ref) => WishlistRepository(Dio(), ref));
 
 /// Wishlist Repository - REST API based
-/// TODO: Connect to actual REST API endpoints
+/// API: CustomerController - Watchlist endpoints
 class WishlistRepository {
   WishlistRepository(this._dio, this._ref);
   
@@ -30,13 +25,14 @@ class WishlistRepository {
   final List<MovieItem> _sampleWishlist = [];
 
   /// Get wishlist items for current user
+  /// API: GET /customers/{id}/watchlist
   Future<List<MovieItem>> getWishlist() async {
     final userId = _userId;
     if (userId == null) return [];
 
     try {
       final response = await _dio.get(
-        '${ApiConfig.wishlistServiceUrl}/users/$userId/wishlist',
+        '${ApiConfig.customerServiceUrl}/$userId/watchlist',
         options: Options(headers: _headers),
       );
       if (response.statusCode == 200) {
@@ -49,12 +45,13 @@ class WishlistRepository {
     }
   }
 
-  /// Stream wishlist items (converts Future to Stream for backward compatibility)
+  /// Stream wishlist items
   Stream<List<MovieItem>> streamWishlist() {
     return Stream.fromFuture(getWishlist());
   }
 
   /// Add movie to wishlist
+  /// API: POST /customers/{id}/watchlist
   Future<void> addToWishlist(String movieId) async {
     final userId = _userId;
     if (userId == null) {
@@ -63,12 +60,11 @@ class WishlistRepository {
 
     try {
       await _dio.post(
-        '${ApiConfig.wishlistServiceUrl}/users/$userId/wishlist',
+        '${ApiConfig.customerServiceUrl}/$userId/watchlist',
         data: {'movieId': movieId},
         options: Options(headers: _headers),
       );
     } catch (e) {
-      // Add to local sample for demo
       _sampleWishlist.add(MovieItem(
         id: movieId,
         title: 'Movie $movieId',
@@ -80,6 +76,7 @@ class WishlistRepository {
   }
 
   /// Remove movie from wishlist
+  /// API: DELETE /customers/{id}/watchlist/{movieId}
   Future<void> removeFromWishlist(String movieId) async {
     final userId = _userId;
     if (userId == null) {
@@ -88,11 +85,10 @@ class WishlistRepository {
 
     try {
       await _dio.delete(
-        '${ApiConfig.wishlistServiceUrl}/users/$userId/wishlist/$movieId',
+        '${ApiConfig.customerServiceUrl}/$userId/watchlist/$movieId',
         options: Options(headers: _headers),
       );
     } catch (e) {
-      // Remove from local sample for demo
       _sampleWishlist.removeWhere((m) => m.id == movieId);
     }
   }
@@ -103,11 +99,8 @@ class WishlistRepository {
     if (userId == null) return false;
 
     try {
-      final response = await _dio.get(
-        '${ApiConfig.wishlistServiceUrl}/users/$userId/wishlist/$movieId',
-        options: Options(headers: _headers),
-      );
-      return response.statusCode == 200;
+      final wishlist = await getWishlist();
+      return wishlist.any((m) => m.id == movieId);
     } catch (e) {
       return _sampleWishlist.any((m) => m.id == movieId);
     }
@@ -131,24 +124,14 @@ class WishlistRepository {
 }
 
 // Providers
-final wishlistProvider = StreamProvider.autoDispose<List<MovieItem>>(
-  (ref) {
-    final repo = ref.watch(wishlistRepositoryProvider);
-    return repo.streamWishlist();
-  },
-);
+final wishlistProvider = StreamProvider.autoDispose<List<MovieItem>>((ref) {
+  return ref.watch(wishlistRepositoryProvider).streamWishlist();
+});
 
-final wishlistCountProvider = FutureProvider.autoDispose<int>(
-  (ref) async {
-    final repo = ref.watch(wishlistRepositoryProvider);
-    return repo.getWishlistCount();
-  },
-);
+final wishlistCountProvider = FutureProvider.autoDispose<int>((ref) {
+  return ref.watch(wishlistRepositoryProvider).getWishlistCount();
+});
 
-// Provider to check if movie is in wishlist (not real-time, but update on change)
-final isInWishlistProvider = FutureProvider.autoDispose.family<bool, String>(
-  (ref, movieId) async {
-    final repo = ref.watch(wishlistRepositoryProvider);
-    return repo.isInWishlist(movieId);
-  },
-);
+final isInWishlistProvider = FutureProvider.autoDispose.family<bool, String>((ref, movieId) {
+  return ref.watch(wishlistRepositoryProvider).isInWishlist(movieId);
+});

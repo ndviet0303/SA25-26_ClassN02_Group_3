@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import '../../../core/app_export.dart';
 import '../../../core/widgets/buttons/primary_button.dart';
-import '../models/subscription_model.dart';
-import '../services/subscription_service.dart';
+import 'package:movie_fe/core/models/subscription_model.dart';
+import 'package:movie_fe/core/repositories/subscription_repository.dart';
 
 class SubscriptionScreen extends ConsumerWidget {
   const SubscriptionScreen({super.key});
@@ -238,7 +238,7 @@ class SubscriptionScreen extends ConsumerWidget {
         builder: (_) => const Center(child: CircularProgressIndicator(color: AppColors.primary500)),
       );
 
-      final service = ref.read(subscriptionServiceProvider);
+      final service = ref.read(subscriptionRepositoryProvider);
       final success = await service.subscribe(plan.id);
 
       if (context.mounted) Navigator.of(context).pop();

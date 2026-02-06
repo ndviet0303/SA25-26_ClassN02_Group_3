@@ -5,8 +5,8 @@ import '../../../../core/models/movie_item.dart';
 import '../../../../core/config/api_config.dart';
 import '../../models/purchase_item.dart';
 import '../../models/transaction_item.dart';
-import '../../../notification/models/notification_item.dart';
-import '../../../notification/repositories/notification_repository.dart';
+import 'package:movie_fe/core/models/notification_item.dart';
+import 'package:movie_fe/core/repositories/notification_repository.dart';
 import '../../../../i18n/translations.g.dart';
 
 final dioProvider = Provider((ref) => Dio());

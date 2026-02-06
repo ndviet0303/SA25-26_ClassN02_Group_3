@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:movie_fe/features/auth/forgot_password/domain/repositories/auth_repository.dart' as domain;
 import 'package:movie_fe/features/auth/forgot_password/providers/forgot_password_repository_provider.dart';
 
 class OtpVmState {

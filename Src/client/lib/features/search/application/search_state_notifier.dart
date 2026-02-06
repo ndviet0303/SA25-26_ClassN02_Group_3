@@ -5,7 +5,7 @@ import '../entities/search_result.dart';
 import '../entities/search_filter.dart';
 import '../repositories/search_repository.dart';
 import '../presentation/screens/search_screen.dart';
-import '../../wishlist/repositories/wishlist_repository.dart';
+import 'package:movie_fe/core/repositories/wishlist_repository.dart';
 import '../../purchase/data/repositories/purchase_repository.dart';
 
 final searchStateProvider = StateNotifierProvider<SearchStateNotifier, SearchState>(

@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:movie_fe/core/app_export.dart';
 import 'package:movie_fe/core/models/movie_item.dart';
 import 'package:movie_fe/core/widgets/image_utils.dart';
-import '../../repositories/wishlist_repository.dart';
+import 'package:movie_fe/core/repositories/wishlist_repository.dart';
 import '../../../../routes/app_router.dart';
 import 'package:movie_fe/core/repositories/movie_repository.dart';
 

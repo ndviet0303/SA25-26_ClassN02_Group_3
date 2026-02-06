@@ -44,17 +44,14 @@ class SubscriptionPlan {
     'features': features,
   };
 
-  /// Display price formatted
   String get formattedPrice => '\$${price.toStringAsFixed(2)}';
 
-  /// Duration display (e.g., "1 month", "1 year")
   String get durationLabel {
     if (durationDays >= 365) return '${durationDays ~/ 365} year';
     if (durationDays >= 30) return '${durationDays ~/ 30} month';
     return '$durationDays days';
   }
 
-  /// Get interval in months
   int get intervalMonths {
     if (durationDays >= 365) return 12;
     if (durationDays >= 30) return durationDays ~/ 30;
@@ -68,7 +65,7 @@ class UserSubscription {
   final String userId;
   final String planId;
   final String planName;
-  final String status; // ACTIVE, EXPIRED, CANCELLED
+  final String status;
   final DateTime startDate;
   final DateTime endDate;
   final String? stripeSubscriptionId;

@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/auth/auth_models.dart';
 
 import '../../../../../core/auth/auth_providers.dart';
 import '../../../../../core/common/ui_state.dart';
-import '../../../../profile/models/user_profile.dart' as profile_models;
 import '../../../../profile/notifiers/profile_notifier.dart';
 import '../../../../profile/repository/settings_repository.dart';
-import '../../../shared/providers/auth_repository_provider.dart';
-import '../../../register/domain/repositories/auth_repository.dart';
+import '../../../../profile/models/user_profile.dart' as profile_models;
+import '../../../../../core/repositories/auth_repository.dart';
 
 final loginNotifierProvider =
     StateNotifierProvider<LoginNotifier, UIState<bool>>((ref) {
@@ -24,7 +24,8 @@ class LoginNotifier extends StateNotifier<UIState<bool>> {
   Future<void> signIn({required String email, required String password}) async {
     try {
       state = const Loading<bool>();
-      await _repository.signIn(email: email, password: password);
+      // Use core login with LoginRequest. Username is email here.
+      await _repository.login(LoginRequest(username: email, password: password));
       await _syncUserProfile();
       state = const Success<bool>(true);
     } catch (error) {

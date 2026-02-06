@@ -4,10 +4,10 @@ import 'package:movie_fe/features/auth/shared/services/storage_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:movie_fe/core/auth/auth_providers.dart';
+import 'package:movie_fe/core/auth/auth_models.dart';
 import 'package:movie_fe/core/common/ui_state.dart';
-import 'package:movie_fe/features/auth/shared/providers/auth_repository_provider.dart';
 import 'package:movie_fe/features/auth/register/domain/models/user_registration.dart';
-import 'package:movie_fe/features/auth/register/domain/repositories/auth_repository.dart';
+import 'package:movie_fe/core/repositories/auth_repository.dart';
 import 'package:movie_fe/features/profile/models/user_profile.dart'
     as profile_models;
 import 'package:movie_fe/features/profile/notifiers/profile_notifier.dart';
@@ -70,7 +70,19 @@ class SignupNotifier extends StateNotifier<UIState<UserReg>> {
       );
 
       // Register user via microservice API
-      await _repository.register(userRegistration, avatarUrl: avatarUrl);
+      await _repository.register(RegisterRequest(
+        username: userAccount.username,
+        email: userAccount.email,
+        password: userAccount.password,
+        fullName: userProfile.fullName,
+        phone: userProfile.phone,
+        dateOfBirth: userProfile.dateOfBirth,
+        country: userProfile.country,
+        gender: gender,
+        age: age,
+        genres: genres,
+        avatarUrl: avatarUrl,
+      ));
 
       // Sync user profile from auth state
       await _syncUserProfile();

@@ -1,25 +1,21 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../config/api_config.dart';
+import '../auth/auth_models.dart';
 
-import 'auth_models.dart';
-
-/// Service for making API calls to the Identity Service
-class AuthApiService {
-  AuthApiService({Dio? dio, String? baseUrl})
-      : _dio = dio ?? Dio(),
-        _baseUrl = baseUrl ?? _defaultBaseUrl {
+/// Authentication Repository - REST API based
+/// API: AuthController and AdminController endpoints
+class AuthRepository {
+  AuthRepository({Dio? dio})
+      : _dio = dio ?? Dio() {
     _setup();
   }
 
-  static String get _defaultBaseUrl => ApiConfig.baseUrl;
-
   final Dio _dio;
-  final String _baseUrl;
 
   void _setup() {
     _dio.options
-      ..baseUrl = _baseUrl
+      ..baseUrl = ApiConfig.baseUrl
       ..connectTimeout = const Duration(seconds: 10)
       ..receiveTimeout = const Duration(seconds: 30)
       ..contentType = 'application/json';
@@ -44,16 +40,12 @@ class AuthApiService {
       );
 
       final data = response.data;
-      if (data == null) {
-        throw Exception('No response data');
-      }
+      if (data == null) throw Exception('No response data');
 
-      // Handle wrapped response {success: true, data: {...}}
       if (data['success'] == true && data['data'] != null) {
         return AuthTokens.fromJson(data['data'] as Map<String, dynamic>);
       }
-
-      // Handle direct token response
+      
       if (data['accessToken'] != null) {
         return AuthTokens.fromJson(data);
       }
@@ -74,9 +66,7 @@ class AuthApiService {
       );
 
       final data = response.data;
-      if (data == null) {
-        throw Exception('No response data');
-      }
+      if (data == null) throw Exception('No response data');
 
       if (data['success'] == false) {
         throw Exception(data['message'] ?? 'Registration failed');
@@ -98,16 +88,12 @@ class AuthApiService {
       );
 
       final data = response.data;
-      if (data == null) {
-        throw Exception('No response data');
-      }
+      if (data == null) throw Exception('No response data');
 
-      // Handle wrapped response
       if (data['success'] == true && data['data'] != null) {
         return AuthUser.fromJson(data['data'] as Map<String, dynamic>);
       }
 
-      // Handle direct user response
       if (data['id'] != null || data['userId'] != null) {
         return AuthUser.fromJson(data);
       }
@@ -146,16 +132,12 @@ class AuthApiService {
       );
 
       final data = response.data;
-      if (data == null) {
-        throw Exception('No response data');
-      }
+      if (data == null) throw Exception('No response data');
 
-      // Handle wrapped response
       if (data['success'] == true && data['data'] != null) {
         return AuthTokens.fromJson(data['data'] as Map<String, dynamic>);
       }
 
-      // Handle direct token response
       if (data['accessToken'] != null) {
         return AuthTokens.fromJson(data);
       }
@@ -178,7 +160,6 @@ class AuthApiService {
         ),
       );
     } on DioException catch (e) {
-      // Ignore logout errors - user should still be logged out locally
       debugPrint('Logout API error: ${e.message}');
     }
   }
@@ -211,16 +192,149 @@ class AuthApiService {
       );
 
       final data = response.data;
-      if (data == null) {
-        throw Exception('No response data');
-      }
+      if (data == null) throw Exception('No response data');
 
-      // Handle wrapped response
       if (data['success'] == true && data['data'] != null) {
         return AuthUser.fromJson(data['data'] as Map<String, dynamic>);
       }
 
       throw Exception(data['message'] ?? 'Profile update failed');
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  /// Update user email
+  /// PUT /api/auth/email
+  Future<void> updateEmail(String email, String accessToken) async {
+    try {
+      await _dio.put(
+        '/api/auth/email',
+        data: {'email': email},
+        options: Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
+        ),
+      );
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  // ========== New Methods ==========
+
+  /// Check username availability
+  /// GET /api/auth/check-username
+  Future<bool> checkUsername(String username) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/api/auth/check-username',
+        queryParameters: {'username': username},
+      );
+      final data = response.data;
+      return data?['data']?['available'] ?? data?['available'] ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Check email availability
+  /// GET /api/auth/check-email
+  Future<bool> checkEmail(String email) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/api/auth/check-email',
+        queryParameters: {'email': email},
+      );
+      final data = response.data;
+      return data?['data']?['available'] ?? data?['available'] ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Delete account
+  /// DELETE /api/auth/account
+  Future<void> deleteAccount(String accessToken) async {
+    try {
+      await _dio.delete(
+        '/api/auth/account',
+        options: Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
+        ),
+      );
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  /// Logout other sessions
+  /// DELETE /api/auth/sessions/others
+  Future<void> logoutOthers(String accessToken) async {
+    try {
+      await _dio.delete(
+        '/api/auth/sessions/others',
+        options: Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
+        ),
+      );
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  /// Forgot password
+  /// POST /api/auth/forgot-password
+  Future<void> forgotPassword(String email) async {
+    try {
+      await _dio.post(
+        '/api/auth/forgot-password',
+        data: {'email': email},
+      );
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  /// Reset password
+  /// POST /api/auth/reset-password
+  Future<void> resetPassword(String token, String newPassword) async {
+    try {
+      await _dio.post(
+        '/api/auth/reset-password',
+        data: {'token': token, 'newPassword': newPassword},
+      );
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  /// Get active sessions
+  /// GET /api/auth/sessions
+  Future<List<Map<String, dynamic>>> getSessions(String accessToken) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/api/auth/sessions',
+        options: Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
+        ),
+      );
+      final List<dynamic> data = response.data?['data'] ?? response.data ?? [];
+      return data.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  /// Revoke a specific session
+  /// DELETE /api/auth/sessions/{id}
+  Future<void> revokeSession(String sessionId, String accessToken) async {
+    try {
+      await _dio.delete(
+        '/api/auth/sessions/$sessionId',
+        options: Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
+        ),
+      );
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
@@ -232,31 +346,16 @@ class AuthApiService {
       final data = response.data;
       if (data is Map<String, dynamic>) {
         final message = data['message'] ?? data['error'];
-        if (message != null) {
-          return Exception(message.toString());
-        }
+        if (message != null) return Exception(message.toString());
       }
     }
 
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
         return Exception('Connection timeout. Please try again.');
       case DioExceptionType.connectionError:
-        return Exception('Unable to connect to server. Check your internet connection.');
-      case DioExceptionType.badResponse:
-        final statusCode = e.response?.statusCode;
-        if (statusCode == 401) {
-          return Exception('Invalid credentials');
-        } else if (statusCode == 403) {
-          return Exception('Access denied');
-        } else if (statusCode == 404) {
-          return Exception('Service not found');
-        } else if (statusCode == 409) {
-          return Exception('User already exists');
-        }
-        return Exception('Server error ($statusCode)');
+        return Exception('Unable to connect to server.');
       default:
         return Exception(e.message ?? 'An unexpected error occurred');
     }

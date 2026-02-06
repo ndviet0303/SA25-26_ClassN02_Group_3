@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/movie_item.dart';
-import '../repositories/wishlist_repository.dart';
+import 'package:movie_fe/core/repositories/wishlist_repository.dart';
 
 final wishlistStateProvider =
     StateNotifierProvider<WishlistStateNotifier, WishlistState>(

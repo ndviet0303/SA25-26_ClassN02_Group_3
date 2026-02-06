@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:movie_fe/core/auth/auth_providers.dart';
 import 'package:movie_fe/core/models/movie_item.dart';
 import 'package:movie_fe/core/repositories/movie_repository.dart';
-import 'package:movie_fe/features/wishlist/repositories/wishlist_repository.dart';
+import 'package:movie_fe/core/repositories/wishlist_repository.dart';
 import 'package:movie_fe/features/purchase/data/repositories/purchase_repository.dart';
 import 'package:movie_fe/features/profile/repository/settings_repository.dart';
 

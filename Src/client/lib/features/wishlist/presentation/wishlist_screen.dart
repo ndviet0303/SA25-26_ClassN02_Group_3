@@ -5,7 +5,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:movie_fe/core/app_export.dart';
 import 'package:movie_fe/core/constants/app_padding.dart';
 import '../application/wishlist_state_notifier.dart';
-import '../repositories/wishlist_repository.dart';
+import 'package:movie_fe/core/repositories/wishlist_repository.dart';
 import 'widgets/wishlist_item.dart';
 
 class WishlistScreen extends ConsumerWidget {
