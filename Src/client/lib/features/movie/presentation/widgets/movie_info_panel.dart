@@ -280,12 +280,12 @@ class MovieInfoPanel extends StatelessWidget {
     final eps = movie.episodes ?? [];
     if (eps.isEmpty) return result;
     final first = eps.first;
-    if (first['server_data'] is List) {
-      final serverData = first['server_data'] as List;
+    if (first['serverData'] is List) {
+      final serverData = first['serverData'] as List;
       for (final item in serverData) {
         final map = (item as Map).map((k, v) => MapEntry(k.toString(), v));
-        final m3u8 = map['link_m3u8']?.toString();
-        final embed = map['link_embed']?.toString();
+        final m3u8 = map['linkM3u8']?.toString();
+        final embed = map['linkEmbed']?.toString();
         final url = (m3u8 != null && m3u8.isNotEmpty) ? m3u8 : (embed ?? '');
         result.add(_EpisodeEntry(name: map['name']?.toString(), url: url.isNotEmpty ? url : null));
       }

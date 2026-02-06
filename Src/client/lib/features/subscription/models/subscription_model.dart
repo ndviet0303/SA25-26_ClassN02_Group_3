@@ -53,6 +53,13 @@ class SubscriptionPlan {
     if (durationDays >= 30) return '${durationDays ~/ 30} month';
     return '$durationDays days';
   }
+
+  /// Get interval in months
+  int get intervalMonths {
+    if (durationDays >= 365) return 12;
+    if (durationDays >= 30) return durationDays ~/ 30;
+    return 1;
+  }
 }
 
 /// User Subscription status model

@@ -9,16 +9,15 @@ import 'package:video_player/video_player.dart';
 import 'package:movie_fe/core/widgets/loading.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/app_export.dart';
-import '../../../../core/widgets/feedback/toast_notification.dart';
 import '../../../../core/models/movie.dart';
 import '../../models/playback_state.dart';
-import '../../services/playback_state_service.dart';
 import '../../services/playback_state_providers.dart';
 import '../widgets/video_error_report_modal.dart';
 import '../widgets/movie_info_panel.dart';
 import '../../services/movie_watch_service.dart';
 import '../widgets/premium_required_dialog.dart';
-import '../../../subscription/presentation/subscription_screen.dart';
+import '../widgets/no_video_message.dart';
+import '../helpers/video_player_helpers.dart';
 
 class VideoPlayerScreen extends ConsumerStatefulWidget {
   const VideoPlayerScreen({
@@ -51,6 +50,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
   Duration _lastSavedPosition = Duration.zero;
   bool _viewRecorded = false;
   StreamingData? _streamingData; // Store streaming data from API
+  bool _noVideoAvailable = false; // Track when no video URL found
 
   @override
   void initState() {
@@ -81,7 +81,14 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
   }
 
   Future<void> _initializePlayer() async {
-    // Access check using playMovie() - returns streaming data or access denied
+    // Check if movie is FREE - allow without access check
+    if (widget.movie.accessType == AccessType.FREE) {
+      // Skip access check for free movies
+      await _continuePlayerInit();
+      return;
+    }
+    
+    // Access check for premium/rental movies
     final watchService = ref.read(movieWatchServiceProvider);
     final result = await watchService.playMovie(widget.movie.slug ?? widget.movie.id);
     
@@ -93,12 +100,11 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
           message: result.errorMessage,
         );
         
-        if (shouldNavigate) {
-          // Navigate to subscription screen
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-          );
-        } else {
+        if (shouldNavigate && mounted) {
+          // Navigate back and then to subscription using GoRouter
+          Navigator.of(context).pop();
+          // User can navigate to subscription from settings
+        } else if (mounted) {
           Navigator.of(context).pop();
         }
       }
@@ -107,6 +113,10 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
     
     // Store streaming data
     _streamingData = result.streamingData;
+    await _continuePlayerInit();
+  }
+  
+  Future<void> _continuePlayerInit() async {
     // Load saved playback state
     final playbackService = ref.read(playbackStateServiceProvider);
     final savedState = await playbackService.getPlaybackState(widget.movie.id);
@@ -116,26 +126,20 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
       _selectedQuality = savedState.quality;
     }
 
-    // Try to get video URL, with fallback options
+    // Try to get video URL, with priority: widget.videoUrl -> episodes
     String? videoUrl = widget.videoUrl;
     
+    // If no videoUrl provided, try to get from episodes first
     if (videoUrl == null || videoUrl.isEmpty) {
-      videoUrl = widget.movie.trailerUrl;
-    }
-    
-    // If still empty, try to get from episodes
-    if (videoUrl == null || videoUrl.isEmpty) {
-      videoUrl = _getVideoUrlWithFallback(widget.movie);
+      videoUrl = VideoUrlHelper.getVideoUrlWithFallback(widget.movie);
     }
     
     if (videoUrl == null || videoUrl.isEmpty) {
       if (mounted) {
-        ToastNotification.showError(
-          context,
-          message: context.i18n.movie.player.videoUrlMissing,
-          duration: const Duration(seconds: 3),
-        );
-        Navigator.of(context).pop();
+        setState(() {
+          _noVideoAvailable = true;
+          _isInitialized = true; // Allow UI to render
+        });
       }
       return;
     }
@@ -150,7 +154,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
     
     // If failed and it's an m3u8 URL, try fallback to embed link
     if (!initialized && videoUrl.contains('.m3u8')) {
-      final fallbackUrl = _getFallbackVideoUrl(widget.movie);
+      final fallbackUrl = VideoUrlHelper.getFallbackVideoUrl(widget.movie);
       if (fallbackUrl != null && fallbackUrl != videoUrl) {
         if (mounted) {
           ToastNotification.showInfo(
@@ -176,66 +180,6 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
         ..writeln('platform=${diag['platform']}');
       _showErrorReportModal(videoUrl, details.toString());
     }
-  }
-
-  String? _getVideoUrlWithFallback(Movie movie) {
-    // 1) Prefer direct stream in trailerUrl only if it's a real media URL
-    if (movie.trailerUrl != null && movie.trailerUrl!.isNotEmpty) {
-      final t = movie.trailerUrl!;
-      final isDirectStream = t.contains('.m3u8') || t.contains('.mp4');
-      final isYouTube = t.contains('youtube.com') || t.contains('youtu.be');
-      if (isDirectStream && !isYouTube) {
-        return t;
-      }
-      // Skip YouTube or non-stream trailer for video_player
-    }
-    
-    if (movie.episodes != null && movie.episodes!.isNotEmpty) {
-      final firstEpisode = movie.episodes!.first;
-      
-      if (firstEpisode['server_data'] != null && firstEpisode['server_data'] is List) {
-        final serverData = firstEpisode['server_data'] as List;
-        if (serverData.isNotEmpty) {
-          final firstVideo = serverData.first;
-          // Prefer m3u8 for better quality (direct stream)
-          if (firstVideo['link_m3u8'] != null &&
-              (firstVideo['link_m3u8'].toString().contains('.m3u8') ||
-               firstVideo['link_m3u8'].toString().contains('.mp4'))) {
-            return firstVideo['link_m3u8'].toString();
-          }
-          if (firstVideo['link_embed'] != null) {
-            return firstVideo['link_embed'].toString();
-          }
-        }
-      }
-      
-      if (firstEpisode['url'] != null) {
-        return firstEpisode['url'].toString();
-      }
-      if (firstEpisode['videoUrl'] != null) {
-        return firstEpisode['videoUrl'].toString();
-      }
-    }
-    
-    return null;
-  }
-
-  String? _getFallbackVideoUrl(Movie movie) {
-    if (movie.episodes != null && movie.episodes!.isNotEmpty) {
-      final firstEpisode = movie.episodes!.first;
-      
-      if (firstEpisode['server_data'] != null && firstEpisode['server_data'] is List) {
-        final serverData = firstEpisode['server_data'] as List;
-        if (serverData.isNotEmpty) {
-          final firstVideo = serverData.first;
-          // Return embed link as fallback
-          if (firstVideo['link_embed'] != null) {
-            return firstVideo['link_embed'].toString();
-          }
-        }
-      }
-    }
-    return null;
   }
 
   Future<bool> _tryInitializeVideo(String videoUrl, PlaybackState? savedState) async {
@@ -380,7 +324,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
   }
 
   Future<void> _handleTrailer(String url) async {
-    if (_isDirectUrl(url)) {
+    if (VideoUrlHelper.isDirectUrl(url)) {
       setState(() {
         _isInitialized = false;
         _showControls = true;
@@ -391,7 +335,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
 
     try {
       final uri = Uri.parse(url);
-      final mode = _isYouTubeUrl(url) ? LaunchMode.externalApplication : LaunchMode.inAppBrowserView;
+      final mode = VideoUrlHelper.isYouTubeUrl(url) ? LaunchMode.externalApplication : LaunchMode.inAppBrowserView;
       final canOpen = await canLaunchUrl(uri);
       if (!canOpen) {
         _showOpenTrailerError();
@@ -408,8 +352,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
     }
   }
 
-  bool _isDirectUrl(String url) => url.contains('.m3u8') || url.contains('.mp4');
-  bool _isYouTubeUrl(String url) => url.contains('youtube.com') || url.contains('youtu.be');
+
 
   void _showOpenTrailerError() {
     if (!mounted) return;
@@ -478,13 +421,6 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
     _startHideControlsTimer();
   }
 
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final hours = twoDigits(duration.inHours);
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return hours == '00' ? '$minutes:$seconds' : '$hours:$minutes:$seconds';
-  }
 
   Future<void> _savePlaybackState() async {
     if (_controller == null || !_isInitialized) return;
@@ -535,7 +471,8 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isInitialized || _controller == null) {
+    // Show loading only if not initialized AND no video available message not shown
+    if (!_isInitialized && !_noVideoAvailable) {
       return Scaffold(
         backgroundColor: AppColors.getBackground(context),
         body: Center(
@@ -559,10 +496,6 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
   }
 
   Widget _buildPortraitPlayer() {
-    final theme = Theme.of(context);
-    final textColor = AppColors.getText(context);
-    final secondaryText = AppColors.getTextSecondary(context);
-
     return Scaffold(
       backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
@@ -582,18 +515,20 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
       body: Column(
         children: [
           // Video Player Section
-          GestureDetector(
-            onTap: _toggleControls,
-            child: Stack(
-              children: [
-                AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: VideoPlayer(_controller!),
+          _noVideoAvailable
+              ? NoVideoMessage(movieTitle: widget.movie.title)
+              : GestureDetector(
+                  onTap: _toggleControls,
+                  child: Stack(
+                    children: [
+                      AspectRatio(
+                        aspectRatio: 16 / 9,
+                        child: VideoPlayer(_controller!),
+                      ),
+                      if (_showControls) _buildPortraitVideoControls(),
+                    ],
+                  ),
                 ),
-                if (_showControls) _buildPortraitVideoControls(),
-              ],
-            ),
-          ),
           // Movie Info Section
           Expanded(
             child: SingleChildScrollView(
@@ -605,6 +540,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                   setState(() {
                     _isInitialized = false;
                     _showControls = true;
+                    _noVideoAvailable = false; // Reset flag
                   });
                   await _tryInitializeVideo(url, null);
                 },
@@ -619,7 +555,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
     );
   }
 
-  
+
 
   Widget _buildPortraitVideoControls() {
     return Positioned.fill(
@@ -699,6 +635,22 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
   }
 
   Widget _buildLandscapePlayer() {
+    // If no video, show message in landscape too
+    if (_noVideoAvailable) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
+        body: NoVideoMessage(movieTitle: widget.movie.title),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: GestureDetector(
@@ -961,13 +913,13 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                _formatDuration(_controller!.value.position),
+                DurationFormatter.format(_controller!.value.position),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Colors.white,
                 ),
               ),
               Text(
-                _formatDuration(_controller!.value.duration),
+                DurationFormatter.format(_controller!.value.duration),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Colors.white,
                 ),

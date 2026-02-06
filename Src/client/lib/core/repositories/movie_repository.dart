@@ -111,7 +111,7 @@ class MovieRepository {
   Future<List<MovieItem>> getSimilar(String movieId, {int limit = 10}) async {
     try {
       final response = await _dio.get(
-        '${ApiConfig.movieServiceUrl}/movies/$movieId/similar',
+        '${ApiConfig.movieServiceUrl}/recommendations/similar/$movieId',
         queryParameters: {'limit': limit},
       );
       if (response.statusCode == 200) {
@@ -132,8 +132,7 @@ class MovieRepository {
   Future<List<MovieItem>> getByFranchise(String franchiseId) async {
     try {
       final response = await _dio.get(
-        '${ApiConfig.movieServiceUrl}/movies',
-        queryParameters: {'franchise': franchiseId},
+        '${ApiConfig.movieServiceUrl}/recommendations/series/$franchiseId',
       );
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data['data'] ?? response.data;

@@ -12,7 +12,7 @@ class ApiConfig {
   
   // Service URLs - Following API Gateway routing patterns
   static String get authServiceUrl => '$baseUrl/api/auth';
-  static String get movieServiceUrl => '$baseUrl/api/movies';
+  static String get movieServiceUrl => '$baseUrl/api'; // Base path, endpoints add /movies
   static String get customerServiceUrl => '$baseUrl/api/customers';
   static String get subscriptionServiceUrl => '$baseUrl/api/subscriptions';
   static String get notificationServiceUrl => '$baseUrl/api/notifications';
