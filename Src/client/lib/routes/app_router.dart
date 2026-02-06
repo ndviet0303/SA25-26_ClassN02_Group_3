@@ -72,6 +72,8 @@ class AppRouter {
   static const helpCenter = '/help-center';
   static const explore = '/explore';
   static const movieCarouselGenre = '/movie-carousel-genre/';
+  static const movieCarouselCountry = '/movie-carousel-country/';
+  static const movieCarouselYear = '/movie-carousel-year/';
   static const movie = '/movie';
   static const videoPlayer = '/video-player';
   static const movieInfo = '/movie-info';
@@ -129,6 +131,14 @@ class AppRouter {
       GoRoute(path: '${movieCarouselGenre}:id', builder: (_, state) {
         final id = state.pathParameters['id']!;
         return ExploreGenreDetails(query: id);
+      }),
+      GoRoute(path: '${movieCarouselCountry}:id', builder: (_, state) {
+        final id = state.pathParameters['id']!;
+        return ExploreGenreDetails(query: id); // Reuse for country filtering
+      }),
+      GoRoute(path: '${movieCarouselYear}:id', builder: (_, state) {
+        final id = state.pathParameters['id']!;
+        return ExploreGenreDetails(query: id); // Reuse for year filtering
       }),
       GoRoute(path: '$explore/:name', builder: (_, state) {
         final name = state.pathParameters['name']!;

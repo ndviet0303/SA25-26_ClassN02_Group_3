@@ -31,7 +31,7 @@ class ExploreGenreDetails extends ConsumerWidget {
     );
     final genreName = mapped['name'] ?? query;
 
-    final moviesAsync = ref.watch(moviesByGenreProvider(genreName));
+    final moviesAsync = ref.watch(moviesByGenreProvider(query));
 
     return Scaffold(
       appBar: AppBar(title: Text('${t.genre.explore.title} $genreName')),

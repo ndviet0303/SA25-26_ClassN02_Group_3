@@ -12,6 +12,7 @@ import 'package:movie_fe/core/widgets/lists/movie_carousel.dart';
 import 'package:movie_fe/routes/app_router.dart';
 import 'package:movie_fe/features/home/data/home_providers.dart';
 import 'package:movie_fe/core/utils/data/genres.dart';
+import 'package:movie_fe/core/utils/data/countries.dart';
 import 'package:movie_fe/core/repositories/movie_repository.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -39,6 +40,10 @@ class HomeScreen extends ConsumerWidget {
           ),
           const Gap(16),
           const _ExploreByGenreSection(),
+          const Gap(16),
+          const _ExploreByCountrySection(),
+          const Gap(16),
+          const _ExploreByYearSection(),
 
           _Section(
             title: context.i18n.home.sections.yourPurchases,
@@ -203,11 +208,18 @@ class _ExploreByGenreSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(userPreferredGenresProvider);
-    return async.when(
-      data: (genres) {
+    final genresAsync = ref.watch(genresProvider);
+    
+    return genresAsync.when(
+      data: (apiGenres) {
+        if (apiGenres.isEmpty) return const SizedBox.shrink();
+        
         final theme = Theme.of(context);
-        final mapped = GenresVi.fromNames(genres);
+        final localGenres = GenresVi.all;
+        
+        // Show first 6 genres on home or based on some logic
+        final displayGenres = apiGenres.take(6).toList();
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -232,13 +244,22 @@ class _ExploreByGenreSection extends ConsumerWidget {
               height: 100,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                itemCount: mapped.length,
+                padding: const EdgeInsets.only(right: 24),
+                itemCount: displayGenres.length,
                 separatorBuilder: (_, __) => const Gap(12),
                 itemBuilder: (context, index) {
-                  final g = mapped[index];
+                  final g = displayGenres[index];
                   final name = g['name'] ?? '';
                   final slug = g['slug'] ?? name;
-                  final img = g['imageUrl'] ?? ImageConstant.imgCard;
+                  
+                  // Find image from local list
+                  final localMatch = localGenres.firstWhere(
+                    (lg) => lg['slug'] == slug || lg['name']?.toLowerCase() == name.toLowerCase(),
+                    orElse: () => {},
+                  );
+                  
+                  final img = localMatch['imageUrl'] ?? ImageConstant.imgCard;
+                  
                   final m = MovieItem(
                     id: slug,
                     title: name,
@@ -250,7 +271,7 @@ class _ExploreByGenreSection extends ConsumerWidget {
                     height: 80,
                     movieCardType: MovieCardType.titleInImg,
                     enableNavigation: false,
-                    onMore: () => context.push('${AppRouter.explore}/$slug'),
+                    onMore: () => context.push('${AppRouter.movieCarouselGenre}$slug'),
                     titleFontSize: 16,
                     overlayOpacity: 0.18,
                   );
@@ -266,3 +287,170 @@ class _ExploreByGenreSection extends ConsumerWidget {
     );
   }
 }
+
+class _ExploreByCountrySection extends ConsumerWidget {
+  const _ExploreByCountrySection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final countriesAsync = ref.watch(countriesProvider);
+    
+    return countriesAsync.when(
+      data: (apiCountries) {
+        if (apiCountries.isEmpty) return const SizedBox.shrink();
+        
+        final theme = Theme.of(context);
+        final localCountries = CountriesVi.all;
+        
+        // Show first 6 countries on home
+        final displayCountries = apiCountries.take(6).toList();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  context.i18n.home.sections.exploreByCountry,
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 22,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward, color: AppColors.primary500),
+                  onPressed: () => context.push('${AppRouter.explore}/country'),
+                ),
+              ],
+            ),
+            const Gap(10),
+            SizedBox(
+              height: 100,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.only(right: 24),
+                itemCount: displayCountries.length,
+                separatorBuilder: (_, __) => const Gap(12),
+                itemBuilder: (context, index) {
+                  final c = displayCountries[index];
+                  final name = c['name'] ?? '';
+                  final slug = c['slug'] ?? name;
+                  
+                  // Find image from local list
+                  final localMatch = localCountries.firstWhere(
+                    (lc) => lc['slug'] == slug || lc['name']?.toLowerCase() == name.toLowerCase(),
+                    orElse: () => {},
+                  );
+                  
+                  final img = localMatch['imageUrl'] ?? ImageConstant.imgCard;
+                  
+                  final m = MovieItem(
+                    id: slug,
+                    title: name,
+                    imageUrl: img,
+                  );
+                  return MovieCard(
+                    movie: m,
+                    width: 160,
+                    height: 80,
+                    movieCardType: MovieCardType.titleInImg,
+                    enableNavigation: false,
+                    onMore: () => context.push('${AppRouter.movieCarouselCountry}$slug'),
+                    titleFontSize: 16,
+                    overlayOpacity: 0.18,
+                  );
+                },
+              ),
+            ),
+            const Gap(10),
+          ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _ExploreByYearSection extends ConsumerWidget {
+  const _ExploreByYearSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final yearsAsync = ref.watch(yearsProvider);
+    
+    return yearsAsync.when(
+      data: (apiYears) {
+        if (apiYears.isEmpty) return const SizedBox.shrink();
+        
+        final theme = Theme.of(context);
+        
+        // Show first 8 years on home
+        final displayYears = apiYears.take(8).toList();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  context.i18n.home.sections.exploreByYear,
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 22,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward, color: AppColors.primary500),
+                  onPressed: () => context.push('${AppRouter.explore}/year'),
+                ),
+              ],
+            ),
+            const Gap(10),
+            SizedBox(
+              height: 50,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.only(right: 24),
+                itemCount: displayYears.length,
+                separatorBuilder: (_, __) => const Gap(12),
+                itemBuilder: (context, index) {
+                  final year = displayYears[index];
+                  return GestureDetector(
+                    onTap: () => context.push('${AppRouter.movieCarouselYear}$year'),
+                    child: Container(
+                      width: 80,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppColors.primary500, AppColors.orange],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        year.toString(),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const Gap(10),
+          ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+

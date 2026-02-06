@@ -4,7 +4,7 @@
 /// To regenerate, run: `dart run slang`
 ///
 /// Locales: 2
-/// Strings: 1036 (518 per locale)
+/// Strings: 1040 (520 per locale)
 
 // coverage:ignore-file
 // ignore_for_file: type=lint
@@ -897,6 +897,8 @@ class _TranslationsHomeSectionsEn {
 	String get yourWishlist => 'Your Wishlist';
 	String get recentlyWatched => 'Recently Watched';
 	String get exploreByGenre => 'Explore by Genre';
+	String get exploreByCountry => 'Explore by Country';
+	String get exploreByYear => 'Explore by Year';
 }
 
 // Path: genre.explore
@@ -3083,6 +3085,8 @@ class _TranslationsHomeSectionsVi extends _TranslationsHomeSectionsEn {
 	@override String get yourWishlist => 'Danh sách yêu thích';
 	@override String get recentlyWatched => 'Xem gần đây';
 	@override String get exploreByGenre => 'Khám phá theo thể loại';
+	@override String get exploreByCountry => 'Khám phá theo quốc gia';
+	@override String get exploreByYear => 'Khám phá theo năm';
 }
 
 // Path: genre.explore
@@ -4896,6 +4900,8 @@ extension on Translations {
 			case 'home.sections.yourWishlist': return 'Your Wishlist';
 			case 'home.sections.recentlyWatched': return 'Recently Watched';
 			case 'home.sections.exploreByGenre': return 'Explore by Genre';
+			case 'home.sections.exploreByCountry': return 'Explore by Country';
+			case 'home.sections.exploreByYear': return 'Explore by Year';
 			case 'genre.explore.title': return 'Genre:';
 			case 'genre.explore.empty': return 'No movies found for';
 			case 'genre.explore.loadFailed': return 'Failed to load movies';
@@ -5422,6 +5428,8 @@ extension on _TranslationsVi {
 			case 'home.sections.yourWishlist': return 'Danh sách yêu thích';
 			case 'home.sections.recentlyWatched': return 'Xem gần đây';
 			case 'home.sections.exploreByGenre': return 'Khám phá theo thể loại';
+			case 'home.sections.exploreByCountry': return 'Khám phá theo quốc gia';
+			case 'home.sections.exploreByYear': return 'Khám phá theo năm';
 			case 'genre.explore.title': return 'Thể loại:';
 			case 'genre.explore.empty': return 'Không tìm thấy phim cho';
 			case 'genre.explore.loadFailed': return 'Không tải được danh sách phim';

@@ -2,6 +2,8 @@ package com.nozie.movieservice.catalog.controller;
 
 import com.nozie.common.dto.ApiResponse;
 import com.nozie.movieservice.common.dto.*;
+import com.nozie.movieservice.common.model.Country;
+import com.nozie.movieservice.common.model.Genre;
 import com.nozie.movieservice.common.model.Movie;
 import com.nozie.movieservice.common.model.MovieReview;
 import com.nozie.movieservice.catalog.service.CatalogService;
@@ -203,5 +205,26 @@ public class CatalogController {
         log.info("GET /api/movies/{}/reviews", id);
         List<MovieReview> reviews = catalogService.getReviews(id, page, size);
         return ResponseEntity.ok(ApiResponse.success(reviews));
+    }
+
+    /** GET /api/movies/genres - Lấy danh sách thể loại */
+    @GetMapping("/genres")
+    public ResponseEntity<ApiResponse<List<Genre>>> getGenres() {
+        log.info("GET /api/movies/genres");
+        return ResponseEntity.ok(ApiResponse.success(catalogService.getAllGenres()));
+    }
+
+    /** GET /api/movies/countries - Lấy danh sách quốc gia */
+    @GetMapping("/countries")
+    public ResponseEntity<ApiResponse<List<Country>>> getCountries() {
+        log.info("GET /api/movies/countries");
+        return ResponseEntity.ok(ApiResponse.success(catalogService.getAllCountries()));
+    }
+
+    /** GET /api/movies/years - Lấy danh sách năm */
+    @GetMapping("/years")
+    public ResponseEntity<ApiResponse<List<Integer>>> getYears() {
+        log.info("GET /api/movies/years");
+        return ResponseEntity.ok(ApiResponse.success(catalogService.getDistinctYears()));
     }
 }

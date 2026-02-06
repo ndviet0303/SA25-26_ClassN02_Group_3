@@ -603,6 +603,8 @@ home:
     yourWishlist: Your Wishlist
     recentlyWatched: Recently Watched
     exploreByGenre: Explore by Genre
+    exploreByCountry: Explore by Country
+    exploreByYear: Explore by Year
 
 # Genre Module
 genre:

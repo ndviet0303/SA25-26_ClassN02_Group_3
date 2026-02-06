@@ -604,6 +604,8 @@ home:
     yourWishlist: Danh sách yêu thích
     recentlyWatched: Xem gần đây
     exploreByGenre: Khám phá theo thể loại
+    exploreByCountry: Khám phá theo quốc gia
+    exploreByYear: Khám phá theo năm
 
 # Genre Module
 genre:

@@ -72,6 +72,59 @@ class MovieRepository {
     return Stream.fromFuture(getByGenre(slugOrName));
   }
 
+  /// Get all genres
+  Future<List<Map<String, String>>> getGenres() async {
+    try {
+      final response = await _dio.get('${ApiConfig.movieServiceUrl}/movies/genres');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.map<Map<String, String>>((json) => {
+          'id': (json['id'] ?? '').toString(),
+          'name': (json['name'] ?? '').toString(),
+          'slug': (json['slug'] ?? '').toString(),
+        }).toList();
+      }
+      return [];
+    } catch (e) {
+      print('[MovieRepository] getGenres error: $e');
+      return [];
+    }
+  }
+
+  /// Get all countries
+  Future<List<Map<String, String>>> getCountries() async {
+    try {
+      final response = await _dio.get('${ApiConfig.movieServiceUrl}/movies/countries');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.map<Map<String, String>>((json) => {
+          'id': (json['id'] ?? '').toString(),
+          'name': (json['name'] ?? '').toString(),
+          'slug': (json['slug'] ?? '').toString(),
+        }).toList();
+      }
+      return [];
+    } catch (e) {
+      print('[MovieRepository] getCountries error: $e');
+      return [];
+    }
+  }
+
+  /// Get all years
+  Future<List<int>> getYears() async {
+    try {
+      final response = await _dio.get('${ApiConfig.movieServiceUrl}/movies/years');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? response.data;
+        return data.map<int>((year) => year is int ? year : int.tryParse(year.toString()) ?? 0).toList();
+      }
+      return [];
+    } catch (e) {
+      print('[MovieRepository] getYears error: $e');
+      return [];
+    }
+  }
+
   /// Get movie by ID or slug
   Future<MovieItem?> getById(String id) async {
     try {
@@ -246,21 +299,22 @@ class MovieRepository {
   /// Get recommendations for user
   Future<List<MovieItem>> getRecommendations({String? userId, int limit = 10}) async {
     try {
+      final path = userId != null 
+          ? '${ApiConfig.movieServiceUrl}/recommendations/$userId'
+          : '${ApiConfig.movieServiceUrl}/recommendations/trending';
+          
       final response = await _dio.get(
-        '${ApiConfig.movieServiceUrl}/recommendations',
+        path,
         queryParameters: {
-          if (userId != null) 'userId': userId,
           'limit': limit,
         },
       );
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data['data'] ?? response.data;
-        return data.map((json) => MovieItem.fromJson(json)).toList();
+        return data.map((json) => MovieItem.fromJson(json as Map<String, dynamic>)).toList();
       }
-      // Fallback to trending if no recommendations
       return getTrending(limit: limit);
     } catch (e) {
-      // Fallback to trending
       return getTrending(limit: limit);
     }
   }
@@ -369,4 +423,16 @@ final movieDetailProvider = FutureProvider.autoDispose.family<Movie?, String>(
 
 final moviesByGenreProvider = StreamProvider.autoDispose.family<List<MovieItem>, String>(
   (ref, genre) => ref.watch(movieRepositoryProvider).streamByGenre(genre),
+);
+
+final genresProvider = FutureProvider.autoDispose<List<Map<String, String>>>(
+  (ref) => ref.watch(movieRepositoryProvider).getGenres(),
+);
+
+final countriesProvider = FutureProvider.autoDispose<List<Map<String, String>>>(
+  (ref) => ref.watch(movieRepositoryProvider).getCountries(),
+);
+
+final yearsProvider = FutureProvider.autoDispose<List<int>>(
+  (ref) => ref.watch(movieRepositoryProvider).getYears(),
 );

@@ -30,7 +30,7 @@ class DiscoverScreen extends ConsumerWidget {
               ),
               const Gap(24),
               _DiscoverSection(
-                sectionType: DiscoverSectionType.topSelling,
+                sectionType: DiscoverSectionType.recommendations,
               ),
               const Gap(24),
               _DiscoverSection(

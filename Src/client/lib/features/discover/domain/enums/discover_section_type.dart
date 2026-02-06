@@ -4,7 +4,7 @@ import '../../../../i18n/translations.g.dart';
 
 enum DiscoverSectionType {
   topCharts,
-  topSelling,
+  recommendations,
   topFree,
   topNewReleases,
 }
@@ -14,8 +14,8 @@ extension DiscoverSectionTypeExtension on DiscoverSectionType {
     switch (this) {
       case DiscoverSectionType.topCharts:
         return t.discover.sections.topCharts;
-      case DiscoverSectionType.topSelling:
-        return t.discover.sections.topSelling;
+      case DiscoverSectionType.recommendations:
+        return t.home.sections.recommendedForYou;
       case DiscoverSectionType.topFree:
         return t.discover.sections.topFree;
       case DiscoverSectionType.topNewReleases:
@@ -27,8 +27,8 @@ extension DiscoverSectionTypeExtension on DiscoverSectionType {
     switch (this) {
       case DiscoverSectionType.topCharts:
         return 'trending';
-      case DiscoverSectionType.topSelling:
-        return 'best selling';
+      case DiscoverSectionType.recommendations:
+        return 'recommended';
       case DiscoverSectionType.topFree:
         return 'free';
       case DiscoverSectionType.topNewReleases:
@@ -42,7 +42,7 @@ extension DiscoverSectionTypeExtension on DiscoverSectionType {
         return const SearchFilters(
           sortBy: SortOption.trending,
         );
-      case DiscoverSectionType.topSelling:
+      case DiscoverSectionType.recommendations:
         return const SearchFilters(
           sortBy: SortOption.highestRating,
         );
