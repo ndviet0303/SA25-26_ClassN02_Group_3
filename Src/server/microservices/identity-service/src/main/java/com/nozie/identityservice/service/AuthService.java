@@ -27,7 +27,6 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final UserProfileRepository userProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
     private final AuditService auditService;
@@ -44,7 +43,6 @@ public class AuthService {
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
-        user.setPhoneNumber(request.getPhone());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setStatus(User.Status.ACTIVE);
 
@@ -58,26 +56,18 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
 
-        // Create and save UserProfile
-        UserProfile profile = UserProfile.builder()
-                .user(savedUser)
-                .fullName(request.getFullName())
-                .dateOfBirth(request.getDateOfBirth())
-                .country(request.getCountry())
-                .gender(request.getGender())
-                .age(request.getAge())
-                .avatarUrl(request.getAvatarUrl())
-                .genres(request.getGenres() != null ? new java.util.HashSet<>(request.getGenres())
-                        : new java.util.HashSet<>())
-                .build();
-        userProfileRepository.save(profile);
-
-        // Notify other services (e.g., Customer Service)
         userEventProducer.sendUserRegisteredEvent(new com.nozie.common.event.UserRegisteredEvent(
                 savedUser.getId(),
                 savedUser.getUsername(),
                 savedUser.getEmail(),
-                request.getFullName()));
+                request.getFullName(),
+                request.getPhoneNumber(),
+                request.getDateOfBirth(),
+                request.getGender(),
+                request.getCountry(),
+                request.getAvatarUrl(),
+                request.getBio(),
+                request.getGenres()));
 
         auditService.logSuccess(savedUser.getId(), AuditLog.Action.REGISTER, ipAddress, userAgent);
 
@@ -207,7 +197,10 @@ public class AuthService {
                 .map(Permission::getName)
                 .collect(Collectors.toSet());
 
-        AuthResponse.AuthResponseBuilder builder = AuthResponse.builder()
+        // Note: Profile data (fullName, avatarUrl, etc.) should be fetched from
+        // customer-service
+        // Client should call customer-service API to get profile data after login
+        return AuthResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .expiresIn(accessTokenExpiration / 1000)
@@ -215,20 +208,8 @@ public class AuthService {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .roles(roles)
-                .permissions(permissions);
-
-        UserProfile profile = user.getProfile();
-        if (profile != null) {
-            builder.fullName(profile.getFullName())
-                    .avatarUrl(profile.getAvatarUrl())
-                    .phone(user.getPhoneNumber())
-                    .country(profile.getCountry())
-                    .dateOfBirth(profile.getDateOfBirth());
-        } else {
-            builder.phone(user.getPhoneNumber());
-        }
-
-        return builder.build();
+                .permissions(permissions)
+                .build();
     }
 
     public void changePassword(Long userId, ChangePasswordRequest request, String ipAddress, String userAgent) {

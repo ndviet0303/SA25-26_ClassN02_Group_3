@@ -20,14 +20,4 @@ public class UserResponse {
     private Set<String> permissions;
     private String lastLoginAt;
     private String createdAt;
-
-    // Profile information
-    private String fullName;
-    private String avatarUrl;
-    private String phone;
-    private String country;
-    private String dateOfBirth;
-    private String gender;
-    private String age;
-    private Set<String> genres;
 }

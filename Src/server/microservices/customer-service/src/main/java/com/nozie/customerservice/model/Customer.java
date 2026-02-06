@@ -2,7 +2,6 @@ package com.nozie.customerservice.model;
 
 import lombok.*;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
 
 /**
@@ -28,24 +27,23 @@ public class Customer {
     @Column(name = "user_id", unique = true, nullable = false)
     private Long userId;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
-    @Column(unique = true, nullable = false)
-    private String email;
-
     @Column(name = "full_name")
     private String fullName;
-
-    @Column(name = "phone_number")
-    private String phoneNumber;
-
-    @Column(name = "avatar_url")
-    private String avatarUrl;
 
     @Column(name = "date_of_birth")
     private String dateOfBirth;
 
     private String gender;
+
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
+    private String country;
+
+    private String bio;
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
 
     @Column(name = "is_subscribed")
     @Builder.Default

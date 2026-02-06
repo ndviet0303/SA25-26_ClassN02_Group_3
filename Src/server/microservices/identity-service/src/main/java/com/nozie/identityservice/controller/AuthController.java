@@ -137,23 +137,6 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Password changed successfully", null));
     }
 
-    @PutMapping("/profile")
-    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(
-            @RequestHeader("Authorization") String authHeader,
-            @Valid @RequestBody UpdateProfileRequest request,
-            HttpServletRequest httpRequest) {
-        log.info("PUT /api/auth/profile");
-
-        String token = authHeader.substring(7);
-        Long userId = tokenService.getUserIdFromToken(token);
-        String ipAddress = getClientIP(httpRequest);
-        String userAgent = httpRequest.getHeader("User-Agent");
-
-        User user = userService.updateProfile(userId, request, ipAddress, userAgent);
-
-        return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", userMapper.toUserResponse(user)));
-    }
-
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser(
             @RequestHeader("Authorization") String authHeader) {

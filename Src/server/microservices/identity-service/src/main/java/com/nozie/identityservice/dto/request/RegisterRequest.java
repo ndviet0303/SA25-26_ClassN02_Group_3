@@ -2,6 +2,7 @@ package com.nozie.identityservice.dto.request;
 
 import lombok.*;
 import jakarta.validation.constraints.*;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -20,12 +21,13 @@ public class RegisterRequest {
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
 
+    // Profile fields - passed to Customer Service via UserRegisteredEvent
     private String fullName;
-    private String phone;
+    private String phoneNumber;
     private String dateOfBirth;
-    private String country;
     private String gender;
-    private String age;
-    private java.util.List<String> genres;
+    private String country;
     private String avatarUrl;
+    private String bio;
+    private List<String> genres; // Initial interests
 }

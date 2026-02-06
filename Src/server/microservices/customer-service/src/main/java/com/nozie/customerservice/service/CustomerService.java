@@ -1,25 +1,20 @@
 package com.nozie.customerservice.service;
 
 import com.nozie.common.exception.BadRequestException;
-import com.nozie.common.exception.ResourceNotFoundException;
+import com.nozie.customerservice.dto.CustomerInterestRequest;
 import com.nozie.customerservice.dto.CustomerRequest;
-import com.nozie.customerservice.model.Customer;
-import com.nozie.customerservice.model.ViewingHistory;
-import com.nozie.customerservice.model.WatchlistItem;
-import com.nozie.customerservice.repository.CustomerRepository;
-import com.nozie.customerservice.repository.ViewingHistoryRepository;
-import com.nozie.customerservice.repository.WatchlistItemRepository;
+import com.nozie.customerservice.model.*;
+import com.nozie.customerservice.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
-/**
- * Layer 2: Business Logic Layer - Customer Service
- */
 @Service
 @Transactional
 @Slf4j
@@ -27,80 +22,72 @@ import java.util.List;
 public class CustomerService {
 
     private final CustomerRepository customerRepository;
-    private final WatchlistItemRepository watchlistItemRepository;
-    private final ViewingHistoryRepository viewingHistoryRepository;
+    private final CustomerInterestRepository interestRepository;
+    private final WatchlistItemRepository watchlistRepository;
+    private final ViewingHistoryRepository historyRepository;
 
-    public Customer createCustomer(CustomerRequest request) {
-        log.info("Creating customer: {}", request.getEmail());
-
-        if (customerRepository.existsByEmail(request.getEmail())) {
-            throw new BadRequestException("Customer with email '" + request.getEmail() + "' already exists");
-        }
-
-        Customer customer = new Customer();
-        customer.setUserId(request.getUserId());
-        customer.setEmail(request.getEmail());
-        customer.setFullName(request.getFullName());
-        customer.setPhoneNumber(request.getPhoneNumber());
-        customer.setAvatarUrl(request.getAvatarUrl());
-        customer.setDateOfBirth(request.getDateOfBirth());
-        customer.setGender(request.getGender());
-
-        return customerRepository.save(customer);
-    }
-
-    @Transactional(readOnly = true)
     public List<Customer> getAllCustomers() {
         return customerRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
     public Customer getCustomerById(Long id) {
         return customerRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer", "id", id));
+                .orElseThrow(() -> new BadRequestException("Customer not found with ID: " + id));
     }
 
-    @Transactional(readOnly = true)
-    public Customer getCustomerByEmail(String email) {
-        return customerRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer", "email", email));
-    }
-
-    @Transactional(readOnly = true)
     public Customer getCustomerByUserId(Long userId) {
         return customerRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer", "userId", userId));
+                .orElseThrow(() -> new BadRequestException("Customer not found for user ID: " + userId));
+    }
+
+    public Customer createCustomer(CustomerRequest request) {
+        log.info("Creating customer for user ID: {}", request.getUserId());
+
+        if (customerRepository.existsByUserId(request.getUserId())) {
+            throw new BadRequestException("Customer for user ID '" + request.getUserId() + "' already exists");
+        }
+
+        Customer customer = Customer.builder()
+                .userId(request.getUserId())
+                .fullName(request.getFullName())
+                .dateOfBirth(request.getDateOfBirth())
+                .gender(request.getGender())
+                .avatarUrl(request.getAvatarUrl())
+                .country(request.getCountry())
+                .bio(request.getBio())
+                .phoneNumber(request.getPhoneNumber())
+                .build();
+
+        Customer saved = customerRepository.save(customer);
+        log.info("Created customer with ID: {} for user: {}", saved.getId(), request.getFullName());
+        return saved;
     }
 
     public Customer updateCustomer(Long id, CustomerRequest request) {
-        Customer existingCustomer = getCustomerById(id);
+        Customer customer = getCustomerById(id);
 
-        if (!existingCustomer.getEmail().equals(request.getEmail()) &&
-                customerRepository.existsByEmail(request.getEmail())) {
-            throw new BadRequestException("Customer with email '" + request.getEmail() + "' already exists");
-        }
+        if (request.getFullName() != null)
+            customer.setFullName(request.getFullName());
+        if (request.getDateOfBirth() != null)
+            customer.setDateOfBirth(request.getDateOfBirth());
+        if (request.getGender() != null)
+            customer.setGender(request.getGender());
+        if (request.getAvatarUrl() != null)
+            customer.setAvatarUrl(request.getAvatarUrl());
+        if (request.getCountry() != null)
+            customer.setCountry(request.getCountry());
+        if (request.getBio() != null)
+            customer.setBio(request.getBio());
+        if (request.getPhoneNumber() != null)
+            customer.setPhoneNumber(request.getPhoneNumber());
 
-        existingCustomer.setEmail(request.getEmail());
-        existingCustomer.setFullName(request.getFullName());
-        existingCustomer.setPhoneNumber(request.getPhoneNumber());
-        existingCustomer.setAvatarUrl(request.getAvatarUrl());
-        existingCustomer.setDateOfBirth(request.getDateOfBirth());
-        existingCustomer.setGender(request.getGender());
-
-        return customerRepository.save(existingCustomer);
+        return customerRepository.save(customer);
     }
 
     public void deleteCustomer(Long id) {
-        if (!customerRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Customer", "id", id);
-        }
-        customerRepository.deleteById(id);
-    }
-
-    public Customer updateStripeCustomerId(Long id, String stripeCustomerId) {
         Customer customer = getCustomerById(id);
-        customer.setStripeCustomerId(stripeCustomerId);
-        return customerRepository.save(customer);
+        customerRepository.delete(customer);
+        log.info("Deleted customer with ID: {}", id);
     }
 
     public Customer updateSubscription(Long id, boolean isSubscribed) {
@@ -109,37 +96,71 @@ public class CustomerService {
         return customerRepository.save(customer);
     }
 
-    // UC12: Watchlist
-    @Transactional(readOnly = true)
+    // ========== Interest Methods ==========
+
+    public List<CustomerInterest> getInterests(Long customerId) {
+        return interestRepository.findByCustomerId(customerId);
+    }
+
+    public List<CustomerInterest> setInterests(Long customerId, CustomerInterestRequest request) {
+        interestRepository.deleteByCustomerId(customerId);
+
+        List<CustomerInterest> interests = request.getGenreSlugs().stream()
+                .map(slug -> CustomerInterest.builder()
+                        .customerId(customerId)
+                        .genreSlug(slug)
+                        .build())
+                .collect(Collectors.toList());
+
+        return interestRepository.saveAll(interests);
+    }
+
+    public CustomerInterest addInterest(Long customerId, String genreSlug) {
+        if (interestRepository.existsByCustomerIdAndGenreSlug(customerId, genreSlug)) {
+            return null;
+        }
+        CustomerInterest interest = CustomerInterest.builder()
+                .customerId(customerId)
+                .genreSlug(genreSlug)
+                .build();
+        return interestRepository.save(interest);
+    }
+
+    public void removeInterest(Long customerId, String genreSlug) {
+        interestRepository.deleteByCustomerIdAndGenreSlug(customerId, genreSlug);
+    }
+
+    // ========== Watchlist Methods ==========
+
     public List<WatchlistItem> getWatchlist(Long customerId) {
-        return watchlistItemRepository.findByCustomerIdOrderByCreatedAtDesc(customerId);
+        return watchlistRepository.findByCustomerIdOrderByCreatedAtDesc(customerId);
     }
 
     public WatchlistItem addToWatchlist(Long customerId, String movieId) {
-        if (watchlistItemRepository.existsByCustomerIdAndMovieId(customerId, movieId)) {
-            return watchlistItemRepository.findByCustomerIdAndMovieId(customerId, movieId).orElseThrow();
-        }
-        WatchlistItem item = WatchlistItem.builder().customerId(customerId).movieId(movieId).build();
-        return watchlistItemRepository.save(item);
+        return watchlistRepository.findByCustomerIdAndMovieId(customerId, movieId)
+                .orElseGet(() -> watchlistRepository.save(WatchlistItem.builder()
+                        .customerId(customerId)
+                        .movieId(movieId)
+                        .build()));
     }
 
     public void removeFromWatchlist(Long customerId, String movieId) {
-        watchlistItemRepository.deleteByCustomerIdAndMovieId(customerId, movieId);
+        watchlistRepository.deleteByCustomerIdAndMovieId(customerId, movieId);
     }
 
-    // UC19: Viewing History
-    @Transactional(readOnly = true)
+    // ========== Viewing History Methods ==========
+
     public List<ViewingHistory> getViewingHistory(Long customerId, int limit) {
-        return viewingHistoryRepository.findByCustomerIdOrderByWatchedAtDesc(
-                customerId, PageRequest.of(0, limit));
+        return historyRepository.findByCustomerIdOrderByWatchedAtDesc(customerId, PageRequest.of(0, limit));
     }
 
-    public ViewingHistory recordViewing(Long customerId, String movieId, Integer progressSeconds) {
-        ViewingHistory h = ViewingHistory.builder()
+    public ViewingHistory recordViewing(Long customerId, String movieId, Integer progress) {
+        ViewingHistory history = ViewingHistory.builder()
                 .customerId(customerId)
                 .movieId(movieId)
-                .progressSeconds(progressSeconds != null ? progressSeconds : 0)
+                .progressSeconds(progress)
+                .watchedAt(LocalDateTime.now())
                 .build();
-        return viewingHistoryRepository.save(h);
+        return historyRepository.save(history);
     }
 }

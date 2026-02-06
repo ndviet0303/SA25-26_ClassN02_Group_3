@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 /**
  * RecommendationService - Generate movie recommendations based on viewing
- * history
+ * history and user interests
  */
 @Service
 @Slf4j
@@ -39,23 +39,35 @@ public class RecommendationService {
         log.info("Generating recommendations for user: {}", userId);
 
         try {
-            // 1. Get viewing history from customer-service
-            List<String> watchedMovieIds = getWatchedMovieIds(userId);
-
-            if (watchedMovieIds.isEmpty()) {
-                log.info("No viewing history for user {}, returning trending", userId);
+            // 1. Get customer ID from user ID
+            Long customerId = getCustomerId(userId);
+            if (customerId == null) {
+                log.warn("Customer not found for user {}, returning trending", userId);
                 return getTrendingMovies(limit);
             }
 
-            // 2. Analyze genres from watched movies
-            List<String> topGenreSlugs = getTopGenresFromMovies(watchedMovieIds, 3);
+            // 2. Get viewing history
+            List<String> watchedMovieIds = getWatchedMovieIds(customerId);
 
-            if (topGenreSlugs.isEmpty()) {
+            // 3. Get explicit interests
+            List<String> interestGenreSlugs = getInterestGenreSlugs(customerId);
+            log.info("User {} explicit interests: {}", userId, interestGenreSlugs);
+
+            // 4. Analyze genres from watched movies
+            List<String> topGenreSlugsFromHistory = getTopGenresFromMovies(watchedMovieIds, 3);
+
+            // 5. Merge genres (interests + history)
+            Set<String> mergedGenres = new HashSet<>(interestGenreSlugs);
+            mergedGenres.addAll(topGenreSlugsFromHistory);
+
+            if (mergedGenres.isEmpty()) {
+                log.info("No history or interests for user {}, returning trending", userId);
                 return getTrendingMovies(limit);
             }
 
-            // 3. Find movies in those genres, excluding already watched
-            List<Movie> recommendations = findMoviesByGenresExcluding(topGenreSlugs, watchedMovieIds, limit);
+            // 6. Find movies in those genres, excluding already watched
+            List<Movie> recommendations = findMoviesByGenresExcluding(new ArrayList<>(mergedGenres), watchedMovieIds,
+                    limit);
 
             log.info("Found {} recommendations for user {}", recommendations.size(), userId);
             return recommendations.stream()
@@ -63,7 +75,7 @@ public class RecommendationService {
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
-            log.error("Error generating recommendations: {}", e.getMessage());
+            log.error("Error generating recommendations for user {}: {}", userId, e.getMessage());
             return getTrendingMovies(limit);
         }
     }
@@ -131,17 +143,39 @@ public class RecommendationService {
     }
 
     /**
+     * Get Customer ID from User ID by calling customer-service
+     */
+    private Long getCustomerId(Long userId) {
+        try {
+            String url = customerServiceUrl + "/api/customers/user/" + userId;
+            var response = restTemplate.exchange(
+                    url, HttpMethod.GET, null,
+                    new ParameterizedTypeReference<Map<String, Object>>() {
+                    });
+
+            if (response.getBody() != null && response.getBody().get("data") != null) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> customer = (Map<String, Object>) response.getBody().get("data");
+                Object id = customer.get("id");
+                if (id instanceof Number) {
+                    return ((Number) id).longValue();
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            log.warn("Failed to fetch customer for user {}: {}", userId, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Fetch watched movie IDs from customer-service
      */
-    private List<String> getWatchedMovieIds(Long userId) {
+    private List<String> getWatchedMovieIds(Long customerId) {
         try {
-            String url = customerServiceUrl + "/api/customers/" + userId + "/history?limit=50";
-            log.debug("Fetching viewing history from: {}", url);
-
+            String url = customerServiceUrl + "/api/customers/" + customerId + "/history?limit=50";
             var response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
+                    url, HttpMethod.GET, null,
                     new ParameterizedTypeReference<Map<String, Object>>() {
                     });
 
@@ -156,7 +190,33 @@ public class RecommendationService {
             }
             return List.of();
         } catch (Exception e) {
-            log.warn("Failed to fetch viewing history: {}", e.getMessage());
+            log.warn("Failed to fetch viewing history for customer {}: {}", customerId, e.getMessage());
+            return List.of();
+        }
+    }
+
+    /**
+     * Fetch explicit interest genre slugs from customer-service
+     */
+    private List<String> getInterestGenreSlugs(Long customerId) {
+        try {
+            String url = customerServiceUrl + "/api/customers/" + customerId + "/interests";
+            var response = restTemplate.exchange(
+                    url, HttpMethod.GET, null,
+                    new ParameterizedTypeReference<Map<String, Object>>() {
+                    });
+
+            if (response.getBody() != null && response.getBody().get("data") != null) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> interests = (List<Map<String, Object>>) response.getBody().get("data");
+                return interests.stream()
+                        .map(i -> (String) i.get("genreSlug"))
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+            }
+            return List.of();
+        } catch (Exception e) {
+            log.warn("Failed to fetch interests for customer {}: {}", customerId, e.getMessage());
             return List.of();
         }
     }
@@ -190,14 +250,11 @@ public class RecommendationService {
      * Find movies by genre slugs, excluding specific movie IDs
      */
     private List<Movie> findMoviesByGenresExcluding(List<String> genreSlugs, List<String> excludeIds, int limit) {
-        // Query all movies and filter in memory (simple approach)
-        // For production, use MongoDB aggregation pipeline
         return movieRepository.findAll().stream()
                 .filter(movie -> !excludeIds.contains(movie.getId()))
                 .filter(movie -> movie.getCategory() != null && movie.getCategory().stream()
                         .anyMatch(cat -> genreSlugs.contains(cat.getSlug())))
                 .sorted((a, b) -> {
-                    // Sort by view count descending
                     Long viewA = a.getView() != null ? a.getView() : 0L;
                     Long viewB = b.getView() != null ? b.getView() : 0L;
                     return viewB.compareTo(viewA);

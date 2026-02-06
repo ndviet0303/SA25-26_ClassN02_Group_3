@@ -1,10 +1,9 @@
 package com.nozie.customerservice.controller;
 
 import com.nozie.common.dto.ApiResponse;
+import com.nozie.customerservice.dto.CustomerInterestRequest;
 import com.nozie.customerservice.dto.CustomerRequest;
-import com.nozie.customerservice.model.Customer;
-import com.nozie.customerservice.model.ViewingHistory;
-import com.nozie.customerservice.model.WatchlistItem;
+import com.nozie.customerservice.model.*;
 import com.nozie.customerservice.service.CustomerService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -17,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Layer 1: Presentation Layer - Customer Controller
+ * Consolidated Customer Controller - handles both account and profile info
  */
 @RestController
 @RequestMapping("/api/customers")
@@ -25,7 +24,6 @@ import java.util.Map;
 public class CustomerController {
 
     private static final Logger log = LoggerFactory.getLogger(CustomerController.class);
-
     private final CustomerService customerService;
 
     public CustomerController(CustomerService customerService) {
@@ -34,7 +32,7 @@ public class CustomerController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<Customer>> createCustomer(@Valid @RequestBody CustomerRequest request) {
-        log.info("POST /api/customers - Creating customer: {}", request.getEmail());
+        log.info("POST /api/customers - Creating customer for user ID: {}", request.getUserId());
         Customer customer = customerService.createCustomer(request);
         return new ResponseEntity<>(ApiResponse.success("Customer created successfully", customer), HttpStatus.CREATED);
     }
@@ -48,15 +46,8 @@ public class CustomerController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Customer>> getCustomerById(@PathVariable Long id) {
-        log.info("GET /api/customers/{} - Fetching customer by ID", id);
+        log.info("GET /api/customers/{} - Fetching customer info", id);
         Customer customer = customerService.getCustomerById(id);
-        return ResponseEntity.ok(ApiResponse.success(customer));
-    }
-
-    @GetMapping("/email/{email}")
-    public ResponseEntity<ApiResponse<Customer>> getCustomerByEmail(@PathVariable String email) {
-        log.info("GET /api/customers/email/{} - Fetching customer by email", email);
-        Customer customer = customerService.getCustomerByEmail(email);
         return ResponseEntity.ok(ApiResponse.success(customer));
     }
 
@@ -70,7 +61,7 @@ public class CustomerController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Customer>> updateCustomer(@PathVariable Long id,
             @Valid @RequestBody CustomerRequest request) {
-        log.info("PUT /api/customers/{} - Updating customer", id);
+        log.info("PUT /api/customers/{} - Updating customer/profile info", id);
         Customer customer = customerService.updateCustomer(id, request);
         return ResponseEntity.ok(ApiResponse.success("Customer updated successfully", customer));
     }
@@ -91,7 +82,44 @@ public class CustomerController {
         return ResponseEntity.ok(ApiResponse.success("Subscription updated successfully", customer));
     }
 
-    // UC12: Watchlist
+    // ==================== Interest Endpoints ====================
+
+    @GetMapping("/{id}/interests")
+    public ResponseEntity<ApiResponse<List<CustomerInterest>>> getInterests(@PathVariable Long id) {
+        log.info("GET /api/customers/{}/interests", id);
+        List<CustomerInterest> interests = customerService.getInterests(id);
+        return ResponseEntity.ok(ApiResponse.success(interests));
+    }
+
+    @PutMapping("/{id}/interests")
+    public ResponseEntity<ApiResponse<List<CustomerInterest>>> setInterests(
+            @PathVariable Long id,
+            @RequestBody CustomerInterestRequest request) {
+        log.info("PUT /api/customers/{}/interests - Setting {} interests", id, request.getGenreSlugs().size());
+        List<CustomerInterest> interests = customerService.setInterests(id, request);
+        return ResponseEntity.ok(ApiResponse.success("Interests updated successfully", interests));
+    }
+
+    @PostMapping("/{id}/interests/{genreSlug}")
+    public ResponseEntity<ApiResponse<CustomerInterest>> addInterest(
+            @PathVariable Long id,
+            @PathVariable String genreSlug) {
+        log.info("POST /api/customers/{}/interests/{}", id, genreSlug);
+        CustomerInterest interest = customerService.addInterest(id, genreSlug);
+        return new ResponseEntity<>(ApiResponse.success("Interest added", interest), HttpStatus.CREATED);
+    }
+
+    @DeleteMapping("/{id}/interests/{genreSlug}")
+    public ResponseEntity<ApiResponse<Void>> removeInterest(
+            @PathVariable Long id,
+            @PathVariable String genreSlug) {
+        log.info("DELETE /api/customers/{}/interests/{}", id, genreSlug);
+        customerService.removeInterest(id, genreSlug);
+        return ResponseEntity.ok(ApiResponse.success("Interest removed", null));
+    }
+
+    // ==================== UC12: Watchlist ====================
+
     @GetMapping("/{id}/watchlist")
     public ResponseEntity<ApiResponse<List<WatchlistItem>>> getWatchlist(@PathVariable Long id) {
         log.info("GET /api/customers/{}/watchlist", id);
@@ -121,7 +149,8 @@ public class CustomerController {
         return ResponseEntity.ok(ApiResponse.success("Removed from watchlist", null));
     }
 
-    // UC19: Viewing History
+    // ==================== UC19: Viewing History ====================
+
     @GetMapping("/{id}/history")
     public ResponseEntity<ApiResponse<List<ViewingHistory>>> getViewingHistory(
             @PathVariable Long id,
@@ -139,7 +168,8 @@ public class CustomerController {
         if (movieId == null || movieId.isBlank()) {
             return ResponseEntity.badRequest().body(ApiResponse.error("movieId is required"));
         }
-        Integer progress = body.get("progressSeconds") != null ? ((Number) body.get("progressSeconds")).intValue() : null;
+        Integer progress = body.get("progressSeconds") != null ? ((Number) body.get("progressSeconds")).intValue()
+                : null;
         log.info("POST /api/customers/{}/history - movieId={}", id, movieId);
         ViewingHistory h = customerService.recordViewing(id, movieId, progress);
         return new ResponseEntity<>(ApiResponse.success("Viewing recorded", h), HttpStatus.CREATED);

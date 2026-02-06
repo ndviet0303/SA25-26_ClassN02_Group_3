@@ -12,13 +12,9 @@ import java.util.Optional;
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
-    Optional<Customer> findByEmail(String email);
-
     Optional<Customer> findByUserId(Long userId);
 
     Optional<Customer> findByStripeCustomerId(String stripeCustomerId);
-
-    boolean existsByEmail(String email);
 
     boolean existsByUserId(Long userId);
 }

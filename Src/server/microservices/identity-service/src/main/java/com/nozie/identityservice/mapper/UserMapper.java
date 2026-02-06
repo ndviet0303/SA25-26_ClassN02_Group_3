@@ -11,6 +11,9 @@ import org.mapstruct.Named;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Maps User entity to UserResponse DTO.
+ */
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
@@ -19,14 +22,6 @@ public interface UserMapper {
     @Mapping(target = "permissions", source = "roles", qualifiedByName = "mapPermissions")
     @Mapping(target = "lastLoginAt", expression = "java(user.getLastLoginAt() != null ? user.getLastLoginAt().toString() : \"\")")
     @Mapping(target = "createdAt", expression = "java(user.getCreatedAt().toString())")
-    @Mapping(target = "fullName", source = "profile.fullName")
-    @Mapping(target = "avatarUrl", source = "profile.avatarUrl")
-    @Mapping(target = "phone", source = "user", qualifiedByName = "mapPhone")
-    @Mapping(target = "country", source = "profile.country")
-    @Mapping(target = "dateOfBirth", source = "profile.dateOfBirth")
-    @Mapping(target = "gender", source = "profile.gender")
-    @Mapping(target = "age", source = "profile.age")
-    @Mapping(target = "genres", source = "profile.genres")
     UserResponse toUserResponse(User user);
 
     @Named("mapRoles")
@@ -46,10 +41,5 @@ public interface UserMapper {
                 .flatMap(role -> role.getPermissions().stream())
                 .map(Permission::getName)
                 .collect(Collectors.toSet());
-    }
-
-    @Named("mapPhone")
-    default String mapPhone(User user) {
-        return user.getPhoneNumber();
     }
 }

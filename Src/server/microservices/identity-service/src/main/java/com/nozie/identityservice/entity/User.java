@@ -33,9 +33,6 @@ public class User {
     @Column(unique = true)
     private String email;
 
-    @Column(name = "phone_number")
-    private String phoneNumber;
-
     @NotBlank(message = "Password is required")
     @Column(nullable = false)
     private String password;
@@ -65,9 +62,6 @@ public class User {
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private UserProfile profile;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
