@@ -5,18 +5,27 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/customers/:id/history
+  url: {{baseUrl}}/api/customers/{{customerId}}/history
   body: json
   auth: inherit
 }
 
-params:path {
-  id: 1
-}
-
 body:json {
   {
-    "movieId": "697c2df9c30683a13f1d172e",
-    "progressSeconds": 1200
+    "movieId": "movie-123",
+    "progressSeconds": 3600
   }
+}
+
+vars:pre-request {
+  customerId: 1
+}
+
+docs {
+  Record a viewing event for customer (UC19).
+  progressSeconds: playback position in seconds
+}
+
+settings {
+  encodeUrl: true
 }

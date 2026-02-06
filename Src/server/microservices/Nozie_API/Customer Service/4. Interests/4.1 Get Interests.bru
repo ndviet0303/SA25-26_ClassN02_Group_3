@@ -1,11 +1,11 @@
 meta {
-  name: 2.1 Get Watchlist
+  name: 4.1 Get Interests
   type: http
   seq: 1
 }
 
 get {
-  url: {{baseUrl}}/api/customers/{{customerId}}/watchlist
+  url: {{baseUrl}}/api/customers/{{customerId}}/interests
   body: none
   auth: inherit
 }
@@ -15,7 +15,7 @@ vars:pre-request {
 }
 
 docs {
-  Get all movies in customer's watchlist (UC12).
+  Get customer's genre interests/preferences.
 }
 
 settings {

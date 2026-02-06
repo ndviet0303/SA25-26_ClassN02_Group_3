@@ -1,0 +1,24 @@
+meta {
+  name: 4.3 Add Interest
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/customers/{{customerId}}/interests/{{genreSlug}}
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  customerId: 1
+  genreSlug: horror
+}
+
+docs {
+  Add a single genre interest to customer.
+}
+
+settings {
+  encodeUrl: true
+}

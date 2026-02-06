@@ -1,0 +1,24 @@
+meta {
+  name: 4.4 Remove Interest
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/customers/{{customerId}}/interests/{{genreSlug}}
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  customerId: 1
+  genreSlug: horror
+}
+
+docs {
+  Remove a single genre interest from customer.
+}
+
+settings {
+  encodeUrl: true
+}

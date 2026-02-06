@@ -18,8 +18,23 @@ body:json {
   {
     "username": "nhatcoifb",
     "email": "nhatcoifb@gmail.com",
-    "password": "nhatcoifb"
+    "password": "nhatcoifb",
+    "fullName": "Nhat Coi Facebook",
+    "phoneNumber": "0912345678",
+    "dateOfBirth": "1995-05-15",
+    "gender": "male",
+    "country": "Vietnam",
+    "avatarUrl": "https://example.com/avatar.jpg",
+    "bio": "I love movies!",
+    "genres": ["action", "comedy", "drama"]
   }
+}
+
+docs {
+  Register a new user. Profile fields (fullName, phoneNumber, etc.) are passed to Customer Service via message queue.
+  
+  Identity Service stores: username, email, password, roles
+  Customer Service stores: fullName, phoneNumber, dateOfBirth, gender, country, avatarUrl, bio, genres (interests)
 }
 
 settings {

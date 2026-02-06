@@ -5,12 +5,20 @@ meta {
 }
 
 delete {
-  url: {{baseUrl}}/api/customers/:id/watchlist/:movieId
+  url: {{baseUrl}}/api/customers/{{customerId}}/watchlist/{{movieId}}
   body: none
   auth: inherit
 }
 
-params:path {
-  id: 1
-  movieId: 697c2df9c30683a13f1d172e
+vars:pre-request {
+  customerId: 1
+  movieId: movie-123
+}
+
+docs {
+  Remove a movie from customer's watchlist (UC12).
+}
+
+settings {
+  encodeUrl: true
 }

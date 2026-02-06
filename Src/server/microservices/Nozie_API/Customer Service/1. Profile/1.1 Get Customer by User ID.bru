@@ -1,0 +1,24 @@
+meta {
+  name: 1.1 Get Customer by User ID
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/customers/user/{{userId}}
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  userId: 1
+}
+
+docs {
+  Get customer record (including all profile info) by User ID.
+  Returns: id, userId, fullName, phoneNumber, dateOfBirth, gender, country, avatarUrl, bio, subscription info.
+}
+
+settings {
+  encodeUrl: true
+}

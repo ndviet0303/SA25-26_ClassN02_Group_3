@@ -5,17 +5,25 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/customers/:id/watchlist
+  url: {{baseUrl}}/api/customers/{{customerId}}/watchlist
   body: json
   auth: inherit
 }
 
-params:path {
-  id: 1
-}
-
 body:json {
   {
-    "movieId": "697c2df9c30683a13f1d172e"
+    "movieId": "movie-123"
   }
+}
+
+vars:pre-request {
+  customerId: 1
+}
+
+docs {
+  Add a movie to customer's watchlist (UC12).
+}
+
+settings {
+  encodeUrl: true
 }

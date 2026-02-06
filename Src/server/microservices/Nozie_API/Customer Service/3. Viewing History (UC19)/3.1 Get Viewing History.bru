@@ -5,15 +5,20 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/customers/:id/history
+  url: {{baseUrl}}/api/customers/{{customerId}}/history?limit=50
   body: none
   auth: inherit
 }
 
-params:path {
-  id: 1
+vars:pre-request {
+  customerId: 1
 }
 
-params:query {
-  limit: 50
+docs {
+  Get customer's viewing history (UC19).
+  Optional query param: limit (default 50)
+}
+
+settings {
+  encodeUrl: true
 }

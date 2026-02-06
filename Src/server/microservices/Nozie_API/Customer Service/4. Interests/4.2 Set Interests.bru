@@ -1,0 +1,30 @@
+meta {
+  name: 4.2 Set Interests
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/customers/{{customerId}}/interests
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "genreSlugs": ["action", "comedy", "drama", "thriller"]
+  }
+}
+
+vars:pre-request {
+  customerId: 1
+}
+
+docs {
+  Replace all customer interests with new list.
+  Existing interests will be deleted and replaced.
+}
+
+settings {
+  encodeUrl: true
+}
