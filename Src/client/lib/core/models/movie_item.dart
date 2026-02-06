@@ -27,7 +27,7 @@ class MovieItem extends Equatable {
     // Fallback image URL nếu không có poster hoặc thumb
     String imageUrl = movie.imageUrl;
     if (imageUrl.isEmpty) {
-      imageUrl = 'lib/assets/images/common/img_card.png';
+      imageUrl = 'lib/assets/images/common/card.png';
     }
 
     return MovieItem(
@@ -54,7 +54,7 @@ class MovieItem extends Equatable {
     // Parse image URL - prefer posterUrl, fallback to thumbUrl, then image_url
     String imageUrl = json['posterUrl'] ?? json['thumbUrl'] ?? json['image_url'] ?? '';
     if (imageUrl.isEmpty) {
-      imageUrl = 'lib/assets/images/common/img_card.png';
+      imageUrl = 'lib/assets/images/common/card.png';
     }
 
     // Parse title - prefer name, fallback to title

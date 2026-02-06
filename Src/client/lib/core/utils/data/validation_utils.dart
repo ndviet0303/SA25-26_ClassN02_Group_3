@@ -21,10 +21,15 @@ class ValidationUtils {
     if (value?.trim().isEmpty ?? true) {
       return t.validation.email.required;
     }
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!.trim())) {
+    if (!isValidEmail(value)) {
       return t.validation.email.invalid;
     }
     return null;
+  }
+
+  static bool isValidEmail(String? value) {
+    if (value == null || value.trim().isEmpty) return false;
+    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim());
   }
 
 

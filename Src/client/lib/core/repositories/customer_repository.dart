@@ -15,7 +15,6 @@ class CustomerRepository {
   final Dio _dio;
   final Ref _ref;
 
-  String? get _userId => _ref.read(currentUserIdProvider);
   String? get _accessToken => _ref.read(accessTokenProvider);
 
   Map<String, String> get _headers => {
@@ -193,11 +192,12 @@ class CustomerProfile {
   final int id;
   final int userId;
   final String? fullName;
-  final String? phone;
+  final String? phoneNumber;
   final String? country;
   final String? dateOfBirth;
   final String? gender;
   final String? avatarUrl;
+  final String? bio;
   final bool isSubscribed;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -206,11 +206,12 @@ class CustomerProfile {
     required this.id,
     required this.userId,
     this.fullName,
-    this.phone,
+    this.phoneNumber,
     this.country,
     this.dateOfBirth,
     this.gender,
     this.avatarUrl,
+    this.bio,
     this.isSubscribed = false,
     this.createdAt,
     this.updatedAt,
@@ -221,11 +222,12 @@ class CustomerProfile {
       id: json['id'] ?? 0,
       userId: json['userId'] ?? 0,
       fullName: json['fullName'],
-      phone: json['phone'],
+      phoneNumber: json['phoneNumber'] ?? json['phone'],
       country: json['country'],
       dateOfBirth: json['dateOfBirth'],
       gender: json['gender'],
       avatarUrl: json['avatarUrl'],
+      bio: json['bio'],
       isSubscribed: json['isSubscribed'] ?? false,
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
@@ -236,38 +238,42 @@ class CustomerProfile {
     'id': id,
     'userId': userId,
     'fullName': fullName,
-    'phone': phone,
+    'phoneNumber': phoneNumber,
     'country': country,
     'dateOfBirth': dateOfBirth,
     'gender': gender,
     'avatarUrl': avatarUrl,
+    'bio': bio,
     'isSubscribed': isSubscribed,
   };
 }
 
 class CustomerUpdateRequest {
   final String? fullName;
-  final String? phone;
+  final String? phoneNumber;
   final String? country;
   final String? dateOfBirth;
   final String? gender;
+  final String? bio;
   final String? avatarUrl;
 
   CustomerUpdateRequest({
     this.fullName,
-    this.phone,
+    this.phoneNumber,
     this.country,
     this.dateOfBirth,
     this.gender,
+    this.bio,
     this.avatarUrl,
   });
 
   Map<String, dynamic> toJson() => {
     if (fullName != null) 'fullName': fullName,
-    if (phone != null) 'phone': phone,
+    if (phoneNumber != null) 'phoneNumber': phoneNumber,
     if (country != null) 'country': country,
     if (dateOfBirth != null) 'dateOfBirth': dateOfBirth,
     if (gender != null) 'gender': gender,
+    if (bio != null) 'bio': bio,
     if (avatarUrl != null) 'avatarUrl': avatarUrl,
   };
 }

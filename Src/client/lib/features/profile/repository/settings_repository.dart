@@ -30,7 +30,35 @@ class SettingsRepository {
   final Ref _ref;
 
   Future<UserProfile> fetchProfile() async {
-    // Try to get from Auth state first
+    // Try to get from Customer Service first for full data
+    try {
+      final userId = _ref.read(currentUserIdProvider);
+      if (userId != null) {
+        final customerRepo = _ref.read(customerRepositoryProvider);
+        final customerProfile = await customerRepo.getCustomerByUserId(int.parse(userId));
+        if (customerProfile != null) {
+          final authUser = _ref.read(authStateNotifierProvider).user;
+          final profile = UserProfile(
+            id: userId,
+            fullName: customerProfile.fullName ?? authUser?.fullName ?? '',
+            username: authUser?.username ?? '',
+            email: authUser?.email ?? '',
+            phoneNumber: customerProfile.phoneNumber ?? authUser?.phone ?? '',
+            dateOfBirth: customerProfile.dateOfBirth ?? authUser?.dateOfBirth ?? '',
+            country: customerProfile.country ?? authUser?.country ?? '',
+            avatarUrl: customerProfile.avatarUrl ?? authUser?.avatarUrl ?? '',
+            gender: customerProfile.gender ?? '',
+            bio: customerProfile.bio ?? '',
+          );
+          await _prefs.setString(_keyProfile, jsonEncode(profile.toJson()));
+          return profile;
+        }
+      }
+    } catch (e) {
+      debugPrint('[SettingsRepository] Failed to fetch customer profile, falling back: $e');
+    }
+
+    // Fallback to Auth state
     final authUser = _ref.read(authStateNotifierProvider).user;
     if (authUser != null) {
       final profile = UserProfile(
@@ -38,10 +66,12 @@ class SettingsRepository {
         fullName: authUser.fullName ?? '',
         username: authUser.username,
         email: authUser.email,
-        phone: authUser.phone ?? '',
+        phoneNumber: authUser.phone ?? '',
         dateOfBirth: authUser.dateOfBirth ?? '',
         country: authUser.country ?? '',
         avatarUrl: authUser.avatarUrl ?? '',
+        gender: '',
+        bio: '',
       );
       // Sync local storage
       await _prefs.setString(_keyProfile, jsonEncode(profile.toJson()));
@@ -55,10 +85,12 @@ class SettingsRepository {
         fullName: 'Noah Noah',
         username: 'nhat.noah.dev',
         email: 'vnhat.dev@gmail.com',
-        phone: '+84 123 456 789',
-        dateOfBirth: '01/01/1990',
-        country: 'vn',
+        phoneNumber: '+84 123 456 789',
+        dateOfBirth: '1990-01-01',
+        country: 'Vietnam',
         avatarUrl: '',
+        gender: 'male',
+        bio: 'I love movies and coding!',
       );
       await _prefs.setString(_keyProfile, jsonEncode(fallback.toJson()));
       return fallback;
@@ -70,7 +102,8 @@ class SettingsRepository {
     final accessToken = _ref.read(accessTokenProvider);
     if (accessToken == null) throw Exception('Not authenticated');
 
-    // 1. Check if email changed
+    // 1. Check if email changed - handled separately in UI as per request, 
+    // but keeping here as safety check
     final currentAuthUser = _ref.read(authStateNotifierProvider).user;
     if (currentAuthUser != null && currentAuthUser.email != profile.email) {
       debugPrint('[SettingsRepository] Email changed, updating via Identity Service');
@@ -87,10 +120,12 @@ class SettingsRepository {
         customerProfile.id,
         CustomerUpdateRequest(
           fullName: profile.fullName,
-          phone: profile.phone,
+          phoneNumber: profile.phoneNumber,
           country: profile.country,
           dateOfBirth: profile.dateOfBirth,
           avatarUrl: profile.avatarUrl,
+          gender: profile.gender,
+          bio: profile.bio,
         ),
       );
     }
@@ -105,7 +140,7 @@ class SettingsRepository {
         username: currentAuthUser.username,
         email: profile.email,
         fullName: profile.fullName,
-        phone: profile.phone,
+        phone: profile.phoneNumber,
         country: profile.country,
         dateOfBirth: profile.dateOfBirth,
         avatarUrl: profile.avatarUrl,

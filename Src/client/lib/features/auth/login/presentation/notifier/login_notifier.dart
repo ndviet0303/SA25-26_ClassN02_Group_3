@@ -55,10 +55,12 @@ class LoginNotifier extends StateNotifier<UIState<bool>> {
         fullName: authUser.fullName ?? '',
         username: authUser.username,
         email: authUser.email,
-        phone: authUser.phone ?? '',
+        phoneNumber: authUser.phone ?? '',
         dateOfBirth: authUser.dateOfBirth ?? '',
         country: authUser.country ?? '',
         avatarUrl: authUser.avatarUrl ?? '',
+        gender: '',
+        bio: '',
       );
 
       final settingsRepository = _ref.read(settingsRepositoryProvider);

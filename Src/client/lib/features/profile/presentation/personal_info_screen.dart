@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:movie_fe/core/app_export.dart';
+import '../../../core/auth/auth_providers.dart';
 
 import '../models/user_profile.dart';
 import '../notifiers/profile_notifier.dart';
@@ -20,17 +21,19 @@ class PersonalInfoScreen extends ConsumerStatefulWidget {
 class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _fullName = TextEditingController();
-  final TextEditingController _username = TextEditingController();
   final TextEditingController _email = TextEditingController();
   final TextEditingController _phone = TextEditingController();
   final TextEditingController _dob = TextEditingController();
+  final TextEditingController _bio = TextEditingController();
 
   final FocusNode _fullNameFocus = FocusNode();
-  final FocusNode _usernameFocus = FocusNode();
   final FocusNode _emailFocus = FocusNode();
   final FocusNode _phoneFocus = FocusNode();
   final FocusNode _dobFocus = FocusNode();
+  final FocusNode _bioFocus = FocusNode();
 
+  String? _username;
+  String? _gender;
   String? _country;
   File? _avatarFile;
   String _userId = '';
@@ -40,15 +43,15 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
   @override
   void dispose() {
     _fullName.dispose();
-    _username.dispose();
     _email.dispose();
     _phone.dispose();
     _dob.dispose();
+    _bio.dispose();
     _fullNameFocus.dispose();
-    _usernameFocus.dispose();
     _emailFocus.dispose();
     _phoneFocus.dispose();
     _dobFocus.dispose();
+    _bioFocus.dispose();
     _profileSubscription?.close();
     super.dispose();
   }
@@ -73,11 +76,13 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
     setState(() {
       _initialized = true;
       _userId = profile.id;
+      _username = profile.username;
       _fullName.text = profile.fullName;
-      _username.text = profile.username;
       _email.text = profile.email;
-      _phone.text = profile.phone;
+      _phone.text = profile.phoneNumber;
       _dob.text = profile.dateOfBirth;
+      _gender = profile.gender.isNotEmpty ? profile.gender.toLowerCase() : null;
+      _bio.text = profile.bio;
       _country = profile.country.isNotEmpty ? profile.country : null;
       if (profile.avatarUrl.isNotEmpty) {
         _avatarFile = null; // network avatar, keep null
@@ -89,8 +94,37 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
     final DateTime? picked = await pickDate(context);
     if (picked != null) {
       setState(() {
-        _dob.text = formatDateDDMMYYYY(picked);
+        _dob.text = picked.toIso8601String().split('T')[0]; // Format as YYYY-MM-DD for API
       });
+    }
+  }
+
+  Future<void> _updateEmail() async {
+    final email = _email.text.trim();
+    if (email.isEmpty) return;
+    
+    // Simple verification
+    if (!ValidationUtils.isValidEmail(email)) {
+      ToastNotification.showError(context, message: "Invalid email format");
+      return;
+    }
+
+    try {
+      final authRepo = ref.read(authRepositoryProvider);
+      final accessToken = ref.read(accessTokenProvider);
+      if (accessToken == null) return;
+
+      ToastNotification.showInfo(context, message: "Updating email...");
+      await authRepo.updateEmail(email, accessToken);
+      
+      if (!mounted) return;
+      ToastNotification.showSuccess(context, message: "Email updated successfully");
+      
+      // Refresh profile to sync
+      ref.invalidate(profileNotifierProvider);
+    } catch (e) {
+      if (!mounted) return;
+      ToastNotification.showError(context, message: "Failed to update email: $e");
     }
   }
 
@@ -101,10 +135,6 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
     final isSaving = profileState.isLoading;
     final currentProfile = profileState.asData?.value;
     final t = context.i18n;
-
-    if (profileState.hasError && !profileState.isLoading && currentProfile == null) {
-      debugPrint('Profile error: ${profileState.error}');
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -148,25 +178,18 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
             const SizedBox(height: 24),
             
             Divider(
-              color: AppColors.getTextSecondary(context).withOpacity(0.15),
+              color: AppColors.getSurface(context),
               height: 1,
               thickness: 1,
             ),
 
+            const SizedBox(height: 32),
+            
+            // Username Display (Non-editable, No TextField)
+            _buildReadOnlyInfo("Username", _username ?? "...", context),
+            
             const SizedBox(height: 24),
-            InfoField(
-              label: t.profile.personalInfo.fields.username.label,
-              hintText: t.profile.personalInfo.fields.username.hint,
-              controller: _username,
-              focusNode: _usernameFocus,
-              isReadOnly: true,
-              onSubmitted: (_) => _fullNameFocus.requestFocus(),
-              validator: (value) =>
-                  ValidationUtils.validateUsername(value, context),
-              backgroundColor: Colors.transparent,
-              focusedBackgroundColor: Colors.transparent,
-            ),
-            const SizedBox(height: 16),
+
             InfoField(
               label: t.profile.personalInfo.fields.fullName.label,
               hintText: t.profile.personalInfo.fields.fullName.hint,
@@ -190,11 +213,16 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                   ValidationUtils.validateEmail(value, context),
               backgroundColor: Colors.transparent,
               focusedBackgroundColor: Colors.transparent,
+              suffixIcon: IconButton(
+                onPressed: _updateEmail,
+                icon: const Icon(Icons.update, color: AppColors.primary500, size: 28),
+                tooltip: "Update Email",
+              ),
             ),
             const SizedBox(height: 16),
             InfoField(
-              label: t.profile.personalInfo.fields.phone.label,
-              hintText: t.profile.personalInfo.fields.phone.hint,
+              label: "Phone Number",
+              hintText: "Enter your phone number",
               controller: _phone,
               focusNode: _phoneFocus,
               keyboardType: TextInputType.phone,
@@ -227,14 +255,31 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
             ),
             const SizedBox(height: 16),
             CustomDropdown(
+              label: "Gender",
+              value: _gender,
+              items: Genders.getOptions(context).entries.map((e) => DropdownItem(value: e.key, label: e.value)).toList(),
+              onChanged: (value) => setState(() => _gender = value),
+              hint: "Select Gender",
+            ),
+            const SizedBox(height: 16),
+            CustomDropdown(
               label: t.profile.personalInfo.fields.country.label,
               value: _country,
               items: Countries.list,
               onChanged: (value) => setState(() => _country = value),
               validator: (value) =>
                   ValidationUtils.validateCountry(value, context),
-
               hint: t.profile.personalInfo.fields.country.hint,
+            ),
+            const SizedBox(height: 16),
+            InfoField(
+              label: "Bio",
+              hintText: "Tell us something about yourself",
+              controller: _bio,
+              focusNode: _bioFocus,
+              maxLines: 3,
+              backgroundColor: Colors.transparent,
+              focusedBackgroundColor: Colors.transparent,
             ),
             const SizedBox(height: 32),
             PrimaryButton(
@@ -268,12 +313,14 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                 final updated = UserProfile(
                   id: userId,
                   fullName: _fullName.text.trim(),
-                  username: _username.text.trim(),
+                  username: _username ?? baseProfile.username,
                   email: _email.text.trim(),
-                  phone: _phone.text.trim(),
+                  phoneNumber: _phone.text.trim(),
                   dateOfBirth: _dob.text.trim(),
                   country: _country ?? '',
                   avatarUrl: finalAvatarUrl ?? '',
+                  gender: _gender ?? '',
+                  bio: _bio.text.trim(),
                 );
                 ref.read(profileNotifierProvider.notifier).update(updated).then((_) {
                   if (!mounted) return;
@@ -291,21 +338,43 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
               text: t.common.cancel,
               onPressed: () => Navigator.of(context).maybePop(),
             ),
-            const SizedBox(height: 24),
-            if (profileState.hasError && !_initialized)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  t.profile.personalInfo.loadError,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.warning,
-                      ),
-                ),
-              ),
+            const SizedBox(height: 32),
           ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildReadOnlyInfo(String label, String value, BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AppTypography.bodyMSemibold.copyWith(
+            color: AppColors.getText(context),
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: AppColors.primary500, width: 1)),
+          ),
+          child: Text(
+            value,
+            style: AppTypography.bodyMRegular.copyWith(
+              color: AppColors.getTextSecondary(context),
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
