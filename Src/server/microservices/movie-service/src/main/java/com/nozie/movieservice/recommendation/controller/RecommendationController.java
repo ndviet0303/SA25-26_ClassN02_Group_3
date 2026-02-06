@@ -47,6 +47,18 @@ public class RecommendationController {
     }
 
     /**
+     * GET /api/recommendations/series/{movieId} - Series/Franchise movies
+     */
+    @GetMapping("/series/{movieId}")
+    public ResponseEntity<ApiResponse<List<MovieListItemResponse>>> getSeriesMovies(
+            @PathVariable String movieId,
+            @RequestParam(defaultValue = "12") int limit) {
+        log.info("GET /api/recommendations/series/{} - limit={}", movieId, limit);
+        List<MovieListItemResponse> series = recommendationService.getSeriesMovies(movieId, limit);
+        return ResponseEntity.ok(ApiResponse.success(series));
+    }
+
+    /**
      * GET /api/recommendations/trending - Trending movies (public fallback)
      */
     @GetMapping("/trending")

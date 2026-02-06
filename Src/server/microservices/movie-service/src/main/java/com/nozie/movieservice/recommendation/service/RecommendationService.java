@@ -96,6 +96,31 @@ public class RecommendationService {
     }
 
     /**
+     * Get movies in the same series/franchise (same slug prefix)
+     */
+    public List<MovieListItemResponse> getSeriesMovies(String movieId, int limit) {
+        log.info("Finding franchise/series movies for: {}", movieId);
+
+        return movieRepository.findById(movieId)
+                .map(movie -> {
+                    String slug = movie.getSlug();
+                    if (slug == null || !slug.contains("-")) {
+                        return List.<MovieListItemResponse>of();
+                    }
+                    String prefix = slug.split("-")[0];
+                    List<Movie> series = movieRepository.findAll().stream()
+                            .filter(m -> !m.getId().equals(movieId))
+                            .filter(m -> m.getSlug() != null && m.getSlug().startsWith(prefix + "-"))
+                            .limit(limit)
+                            .collect(Collectors.toList());
+                    return series.stream()
+                            .map(movieMapper::toListItem)
+                            .collect(Collectors.toList());
+                })
+                .orElse(List.of());
+    }
+
+    /**
      * Get trending movies (fallback)
      */
     public List<MovieListItemResponse> getTrendingMovies(int limit) {
