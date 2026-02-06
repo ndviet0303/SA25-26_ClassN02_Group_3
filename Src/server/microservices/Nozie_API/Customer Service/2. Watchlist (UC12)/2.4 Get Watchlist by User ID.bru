@@ -1,0 +1,23 @@
+meta {
+  name: 2.4 Get Watchlist by User ID
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/customers/user/{{userId}}/watchlist
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  userId: 1
+}
+
+docs {
+  Get all movies in customer's watchlist by User ID.
+}
+
+settings {
+  encodeUrl: true
+}

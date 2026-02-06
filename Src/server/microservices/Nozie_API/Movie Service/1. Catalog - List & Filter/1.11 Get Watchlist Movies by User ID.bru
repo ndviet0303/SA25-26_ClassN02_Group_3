@@ -1,0 +1,24 @@
+meta {
+  name: 1.11 Get Watchlist Movies by User ID
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/movies/user/{{userId}}/watchlist
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  userId: 1
+}
+
+docs {
+  Get full movie details for all items in a user's watchlist.
+  This calls customer-service internally to fetch movie IDs.
+}
+
+settings {
+  encodeUrl: true
+}
