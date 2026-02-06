@@ -65,7 +65,15 @@ public class CustomerService {
 
     public Customer updateCustomer(Long id, CustomerRequest request) {
         Customer customer = getCustomerById(id);
+        return updateFields(customer, request);
+    }
 
+    public Customer updateCustomerByUserId(Long userId, CustomerRequest request) {
+        Customer customer = getCustomerByUserId(userId);
+        return updateFields(customer, request);
+    }
+
+    private Customer updateFields(Customer customer, CustomerRequest request) {
         if (request.getFullName() != null)
             customer.setFullName(request.getFullName());
         if (request.getDateOfBirth() != null)

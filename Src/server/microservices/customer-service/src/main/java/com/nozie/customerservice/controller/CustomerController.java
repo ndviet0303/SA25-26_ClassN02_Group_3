@@ -66,6 +66,14 @@ public class CustomerController {
         return ResponseEntity.ok(ApiResponse.success("Customer updated successfully", customer));
     }
 
+    @PutMapping("/user/{userId}")
+    public ResponseEntity<ApiResponse<Customer>> updateCustomerByUserId(@PathVariable Long userId,
+            @Valid @RequestBody CustomerRequest request) {
+        log.info("PUT /api/customers/user/{} - Updating customer by user ID", userId);
+        Customer customer = customerService.updateCustomerByUserId(userId, request);
+        return ResponseEntity.ok(ApiResponse.success("Customer updated successfully", customer));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteCustomer(@PathVariable Long id) {
         log.info("DELETE /api/customers/{} - Deleting customer", id);
