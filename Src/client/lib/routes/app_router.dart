@@ -16,7 +16,6 @@ import 'package:movie_fe/features/home/presentation/screens/movie_type_screen.da
 import 'package:movie_fe/features/notification/presentation/notification_screen.dart';
 import 'package:movie_fe/features/profile/presentation/help_center_screen.dart';
 import 'package:movie_fe/features/profile/presentation/language_screen.dart';
-import 'package:movie_fe/features/profile/presentation/payment_screen.dart';
 import 'package:movie_fe/features/profile/presentation/personal_info_screen.dart';
 import 'package:movie_fe/features/profile/presentation/preferences_screen.dart';
 import 'package:movie_fe/features/profile/presentation/profile_screen.dart';
@@ -24,7 +23,6 @@ import 'package:movie_fe/features/profile/presentation/security_screen.dart';
 import 'package:movie_fe/features/profile/presentation/notification_screen.dart'
     as profile_notification;
 import 'package:movie_fe/features/purchase/presentation/purchase_screen.dart';
-import 'package:movie_fe/features/purchase/presentation/screens/purchase_detail_screen.dart';
 import 'package:movie_fe/features/search/presentation/screens/search_screen.dart';
 import 'package:movie_fe/features/setting/presentation/screens/setting_screen.dart';
 import 'package:movie_fe/features/welcome/welcome_screen.dart';
@@ -33,9 +31,9 @@ import 'package:movie_fe/features/movie/presentation/screens/movie_detail_screen
 import 'package:movie_fe/features/movie/presentation/screens/video_player_screen.dart';
 import 'package:movie_fe/features/movie/presentation/screens/movie_info_screen.dart';
 import 'package:movie_fe/features/movie/presentation/screens/ratings_detail_screen.dart';
-import 'package:movie_fe/features/purchase/presentation/widgets/checkout_screen.dart';
 import 'package:movie_fe/core/models/movie.dart';
 import 'package:movie_fe/features/subscription/presentation/subscription_screen.dart';
+import 'package:movie_fe/features/subscription/presentation/payment_success_screen.dart';
 import '../core/auth/auth_providers.dart';
 import '../core/auth/auth_state_notifier.dart';
 import '../core/layouts/main_layout.dart';
@@ -78,10 +76,10 @@ class AppRouter {
   static const videoPlayer = '/video-player';
   static const movieInfo = '/movie-info';
   static const ratings = '/ratings';
-  static const checkout = '/checkout';
-  static const purchaseDetail = '/purchase-detail';
   static const movieType = '/movie-type';
   static const subscription = '/subscription';
+  static const paymentSuccess = '/payment/success';
+  static const paymentCancel = '/payment/cancel';
 
   static const _publicPaths = {
     welcome,
@@ -205,36 +203,10 @@ class AppRouter {
         }
         return RatingsDetailScreen(movieId: id, movieTitle: title ?? id);
       }),
-      GoRoute(path: checkout, builder: (_, state) {
-        final extra = state.extra;
-        Movie? movie;
-        if (extra is Map) {
-          movie = extra['movie'] as Movie?;
-        } else if (extra is Movie) {
-          movie = extra;
-        }
-        
-        if (movie == null) {
-          return Scaffold(
-            body: Center(
-              child: Text('Movie not found'),
-            ),
-          );
-        }
-        
-        return CheckoutScreen(movie: movie);
-      }),
-      GoRoute(path: '$purchaseDetail/:movieId', builder: (_, state) {
-        final movieId = state.pathParameters['movieId']!;
-        return PurchaseDetailScreen(movieId: movieId);
-      }),
       GoRoute(path: '$movieType/:type', builder: (_, state) {
         final typeStr = state.pathParameters['type']!;
         MovieListType type;
         switch (typeStr) {
-          case 'purchase':
-            type = MovieListType.purchase;
-            break;
           case 'wishlist':
             type = MovieListType.wishlist;
             break;
@@ -263,13 +235,14 @@ class AppRouter {
         path: notificationSettings,
         builder: (_, __) => const profile_notification.NotificationSettingsScreen(),
       ),
-      GoRoute(path: paymentMethods, builder: (_, __) => const PaymentScreen()),
       GoRoute(path: personalInfo, builder: (_, __) => const PersonalInfoScreen()),
       GoRoute(path: security, builder: (_, __) => const SecurityScreen()),
       GoRoute(path: preferences, builder: (_, __) => const PreferencesScreen()),
       GoRoute(path: language, builder: (_, __) => const LanguageScreen()),
       GoRoute(path: helpCenter, builder: (_, __) => const HelpCenterScreen()),
       GoRoute(path: subscription, builder: (_, __) => const SubscriptionScreen()),
+      GoRoute(path: paymentSuccess, builder: (_, __) => const PaymentSuccessScreen()),
+      GoRoute(path: paymentCancel, builder: (_, __) => const SubscriptionScreen()),
       GoRoute(path: search, builder: (_, state) {
         final extra = state.extra;
         SearchSource searchSource = SearchSource.all;
@@ -278,8 +251,6 @@ class AppRouter {
           final source = extra['searchSource'] as String?;
           if (source == 'wishlist') {
             searchSource = SearchSource.wishlist;
-          } else if (source == 'purchase') {
-            searchSource = SearchSource.purchase;
           }
         }
         

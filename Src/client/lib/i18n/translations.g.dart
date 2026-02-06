@@ -4,7 +4,7 @@
 /// To regenerate, run: `dart run slang`
 ///
 /// Locales: 2
-/// Strings: 1040 (520 per locale)
+/// Strings: 1056 (528 per locale)
 
 // coverage:ignore-file
 // ignore_for_file: type=lint
@@ -320,7 +320,7 @@ class _TranslationsNavigationEn {
 	String get home => 'Home';
 	String get discover => 'Discover';
 	String get wishlist => 'Wishlist';
-	String get purchase => 'Purchase';
+	String get purchase => 'Premium';
 	String get profile => 'Profile';
 }
 
@@ -449,6 +449,7 @@ class _TranslationsPremiumEn {
 
 	// Translations
 	String get title => 'Upgrade to Premium';
+	String get subtitle => 'Go Premium';
 	String get description => 'Enjoy thousands of premium movies, no ads, and 4K quality.';
 	late final _TranslationsPremiumFeaturesEn features = _TranslationsPremiumFeaturesEn._(_root);
 	late final _TranslationsPremiumPlansEn plans = _TranslationsPremiumPlansEn._(_root);
@@ -456,6 +457,18 @@ class _TranslationsPremiumEn {
 	String get premiumBadge => 'PREMIUM';
 	String get alreadyPremium => 'You are a Premium member!';
 	String get expired => 'Your subscription has expired';
+	String get manage => 'Manage Subscription';
+	String get history => 'Subscription History';
+	String get cancel => 'Cancel Subscription';
+	String get cancelConfirm => 'Are you sure you want to cancel your premium subscription? You will lose access to premium features at the end of the current billing cycle.';
+	String get canceled => 'Subscription canceled successfully';
+	String get active => 'Active';
+	String get canceledStatus => 'Canceled';
+	String get expiredStatus => 'Expired';
+	String get historyEmpty => 'No subscription history found';
+	String get currentSub => 'Current Plan';
+	String get nextBillingDate => 'Next billing date';
+	String get daysLeft => 'days left';
 }
 
 // Path: wishlist
@@ -1101,8 +1114,10 @@ class _TranslationsPremiumPlansEn {
 	final Translations _root; // ignore: unused_field
 
 	// Translations
+	String get availablePlans => 'Available Plans';
 	String get monthly => 'Monthly Plan';
 	String get yearly => 'Yearly Plan';
+	String get bestValue => 'Best Value';
 }
 
 // Path: wishlist.common
@@ -2508,7 +2523,7 @@ class _TranslationsNavigationVi extends _TranslationsNavigationEn {
 	@override String get home => 'Trang chủ';
 	@override String get discover => 'Khám phá';
 	@override String get wishlist => 'Yêu thích';
-	@override String get purchase => 'Mua';
+	@override String get purchase => 'Premium';
 	@override String get profile => 'Hồ sơ';
 }
 
@@ -3289,6 +3304,7 @@ class _TranslationsPremiumPlansVi extends _TranslationsPremiumPlansEn {
 	@override final _TranslationsVi _root; // ignore: unused_field
 
 	// Translations
+	@override String get availablePlans => 'Các gói hiện có';
 	@override String get monthly => 'Gói hàng tháng';
 	@override String get yearly => 'Gói hàng năm';
 }
@@ -4819,7 +4835,7 @@ extension on Translations {
 			case 'navigation.home': return 'Home';
 			case 'navigation.discover': return 'Discover';
 			case 'navigation.wishlist': return 'Wishlist';
-			case 'navigation.purchase': return 'Purchase';
+			case 'navigation.purchase': return 'Premium';
 			case 'navigation.profile': return 'Profile';
 			case 'search.searchMovies': return 'Search movies, TV shows, actors...';
 			case 'search.popularSearches': return 'Popular Searches';
@@ -5001,17 +5017,32 @@ extension on Translations {
 			case 'movie.report.success': return 'Report submitted successfully. Thank you for your feedback!';
 			case 'movie.report.failurePrefix': return 'Failed to submit report:';
 			case 'premium.title': return 'Upgrade to Premium';
+			case 'premium.subtitle': return 'Go Premium';
 			case 'premium.description': return 'Enjoy thousands of premium movies, no ads, and 4K quality.';
 			case 'premium.features.t1': return 'Unlimited access to all movies';
 			case 'premium.features.t2': return 'Ad-free experience';
 			case 'premium.features.t3': return '4K Ultra HD quality';
 			case 'premium.features.t4': return 'Download and watch offline';
+			case 'premium.plans.availablePlans': return 'Available Plans';
 			case 'premium.plans.monthly': return 'Monthly Plan';
 			case 'premium.plans.yearly': return 'Yearly Plan';
+			case 'premium.plans.bestValue': return 'Best Value';
 			case 'premium.subscribe': return 'Subscribe Now';
 			case 'premium.premiumBadge': return 'PREMIUM';
 			case 'premium.alreadyPremium': return 'You are a Premium member!';
 			case 'premium.expired': return 'Your subscription has expired';
+			case 'premium.manage': return 'Manage Subscription';
+			case 'premium.history': return 'Subscription History';
+			case 'premium.cancel': return 'Cancel Subscription';
+			case 'premium.cancelConfirm': return 'Are you sure you want to cancel your premium subscription? You will lose access to premium features at the end of the current billing cycle.';
+			case 'premium.canceled': return 'Subscription canceled successfully';
+			case 'premium.active': return 'Active';
+			case 'premium.canceledStatus': return 'Canceled';
+			case 'premium.expiredStatus': return 'Expired';
+			case 'premium.historyEmpty': return 'No subscription history found';
+			case 'premium.currentSub': return 'Current Plan';
+			case 'premium.nextBillingDate': return 'Next billing date';
+			case 'premium.daysLeft': return 'days left';
 			case 'wishlist.common.retry': return 'Retry';
 			case 'wishlist.common.errorPrefix': return 'Error:';
 			case 'wishlist.common.movieNotFound': return 'Movie not found';
@@ -5347,7 +5378,7 @@ extension on _TranslationsVi {
 			case 'navigation.home': return 'Trang chủ';
 			case 'navigation.discover': return 'Khám phá';
 			case 'navigation.wishlist': return 'Yêu thích';
-			case 'navigation.purchase': return 'Mua';
+			case 'navigation.purchase': return 'Premium';
 			case 'navigation.profile': return 'Hồ sơ';
 			case 'search.searchMovies': return 'Tìm kiếm phim, chương trình TV, diễn viên...';
 			case 'search.popularSearches': return 'Tìm kiếm phổ biến';
@@ -5534,6 +5565,7 @@ extension on _TranslationsVi {
 			case 'premium.features.t2': return 'Trải nghiệm không quảng cáo';
 			case 'premium.features.t3': return 'Chất lượng 4K Ultra HD';
 			case 'premium.features.t4': return 'Tải về và xem ngoại tuyến';
+			case 'premium.plans.availablePlans': return 'Các gói hiện có';
 			case 'premium.plans.monthly': return 'Gói hàng tháng';
 			case 'premium.plans.yearly': return 'Gói hàng năm';
 			case 'premium.subscribe': return 'Đăng ký ngay';

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../auth/auth_providers.dart';
@@ -44,6 +45,7 @@ class SubscriptionRepository {
       return [
         SubscriptionPlan(
           id: '1',
+          planType: 'PREMIUM_MONTHLY',
           name: 'Monthly Premium',
           description: 'Access all premium content',
           price: 9.99,
@@ -53,6 +55,7 @@ class SubscriptionRepository {
         ),
         SubscriptionPlan(
           id: '2',
+          planType: 'PREMIUM_YEARLY',
           name: 'Yearly Premium',
           description: 'Best value - save 20%',
           price: 99.99,
@@ -66,23 +69,27 @@ class SubscriptionRepository {
 
   /// Subscribe to a plan - opens Stripe Checkout
   /// API: POST /subscriptions/subscribe
-  Future<bool> subscribe(String planId) async {
+  Future<bool> subscribe(String planId, {String? planType}) async {
     if (_userId == null) {
       throw Exception('User not authenticated');
     }
 
     try {
+      final dynamic userIdPayload = int.tryParse(_userId!) ?? _userId;
+      
       final response = await _dio.post(
         '${ApiConfig.subscriptionServiceUrl}/subscribe',
         data: {
-          'userId': int.parse(_userId!),
-          'planId': int.parse(planId),
+          'userId': userIdPayload,
+          'planType': planType ?? planId, // Bruno uses planType
+          'planId': planId, // Keep for compatibility
         },
         options: Options(headers: _headers),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
+        // The API returns the checkout URL directly or wrapped in data
         final checkoutUrl = data['data']?['checkoutUrl'] ?? data['checkoutUrl'];
         
         if (checkoutUrl != null) {
@@ -95,6 +102,7 @@ class SubscriptionRepository {
       }
       return false;
     } catch (e) {
+      debugPrint('[SubscriptionRepository] Error subscribing: $e');
       rethrow;
     }
   }
@@ -111,13 +119,14 @@ class SubscriptionRepository {
       );
 
       if (response.statusCode == 200) {
-        final data = response.data['data'] ?? response.data;
-        if (data != null) {
-          return UserSubscription.fromJson(data);
+        final data = response.data['data'];
+        if (data != null && (data is Map) && data.isNotEmpty) {
+          return UserSubscription.fromJson(data.cast<String, dynamic>());
         }
       }
       return null;
     } catch (e) {
+      debugPrint('[SubscriptionRepository] Error getting current sub: $e');
       return null;
     }
   }
@@ -132,8 +141,14 @@ class SubscriptionRepository {
         '${ApiConfig.subscriptionServiceUrl}/active/$_userId',
         options: Options(headers: _headers),
       );
-      return response.statusCode == 200 && (response.data['data'] == true || response.data == true);
+      
+      if (response.statusCode == 200) {
+        final data = response.data['data'] ?? response.data;
+        return data == true;
+      }
+      return false;
     } catch (e) {
+      debugPrint('[SubscriptionRepository] Error checking active sub: $e');
       final sub = await getCurrentSubscription();
       return sub?.isActive ?? false;
     }
@@ -195,6 +210,8 @@ final subscriptionHistoryProvider = FutureProvider<List<UserSubscription>>((ref)
   return ref.watch(subscriptionRepositoryProvider).getSubscriptionHistory();
 });
 
-final isUserSubscribedProvider = FutureProvider.family<bool, int>((ref, userId) {
+final isUserSubscribedProvider = FutureProvider.family<bool, String>((ref, userId) {
+  // Repository uses the internal _userId from AuthState, 
+  // but we can pass the userId if we want to check specifically.
   return ref.watch(subscriptionRepositoryProvider).hasActiveSubscription();
 });

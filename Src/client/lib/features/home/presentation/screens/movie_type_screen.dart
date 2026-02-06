@@ -7,7 +7,7 @@ import 'package:movie_fe/core/widgets/cards/movie_card.dart';
 import 'package:movie_fe/core/widgets/lists/list_title_movie.dart';
 import '../../data/home_providers.dart';
 
-enum MovieListType { recommended, purchase, wishlist, recent }
+enum MovieListType { recommended, wishlist, recent }
 enum ViewMode { grid, list }
 final viewModeProvider = StateProvider<ViewMode>((_) => ViewMode.grid);
 
@@ -26,8 +26,6 @@ class MovieTypeScreen extends ConsumerWidget {
       switch (type) {
         case MovieListType.recommended:
           return t.recommendedForYou;
-        case MovieListType.purchase:
-          return t.yourPurchases;
         case MovieListType.wishlist:
           return t.yourWishlist;
         case MovieListType.recent:
@@ -39,8 +37,6 @@ class MovieTypeScreen extends ConsumerWidget {
       switch (type) {
         case MovieListType.recommended:
           return recommendedMoviesProvider;
-        case MovieListType.purchase:
-          return purchasedMoviesProvider;
         case MovieListType.wishlist:
           return wishlistMoviesProvider;
         case MovieListType.recent:

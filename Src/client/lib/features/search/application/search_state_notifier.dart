@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/auth/auth_providers.dart';
+import 'package:movie_fe/core/auth/auth_providers.dart';
 import '../entities/search_result.dart';
 import '../entities/search_filter.dart';
 import '../repositories/search_repository.dart';
 import '../presentation/screens/search_screen.dart';
 import 'package:movie_fe/core/repositories/wishlist_repository.dart';
-import '../../purchase/data/repositories/purchase_repository.dart';
 
 final searchStateProvider = StateNotifierProvider<SearchStateNotifier, SearchState>(
       (ref) => SearchStateNotifier(ref),
@@ -92,7 +91,6 @@ class SearchStateNotifier extends StateNotifier<SearchState> {
   
   SearchRepository get _repository => _ref.read(searchRepositoryProvider);
   WishlistRepository get _wishlistRepository => _ref.read(wishlistRepositoryProvider);
-  PurchaseRepository get _purchaseRepository => _ref.read(purchaseRepositoryProvider);
 
   void updateQuery(String query) {
     _debounceTimer?.cancel();
@@ -127,22 +125,14 @@ class SearchStateNotifier extends StateNotifier<SearchState> {
     try {
       List<String>? sourceMovieIds;
       if (state.searchSource == SearchSource.wishlist) {
-        final wishlist = await _wishlistRepository.getWishlist();
-        sourceMovieIds = wishlist.map((m) => m.id).toList();
-        
-        if (sourceMovieIds.isEmpty) {
-          state = state.copyWith(
-            isSearching: false,
-            status: SearchStatus.success,
-            results: [],
-            hasResults: false,
-            hasMoreResults: false,
-          );
+        final userId = _ref.read(currentUserIdProvider);
+        if (userId == null) {
+          state = state.copyWith(isSearching: false, status: SearchStatus.success, results: []);
           return;
         }
-      } else if (state.searchSource == SearchSource.purchase) {
-        final purchases = await _purchaseRepository.getPurchases();
-        sourceMovieIds = purchases.map((p) => p.id).toList();
+        
+        final watchlist = await _wishlistRepository.getWatchlist(userId);
+        sourceMovieIds = watchlist.map((m) => m.id).toList();
         
         if (sourceMovieIds.isEmpty) {
           state = state.copyWith(
@@ -155,7 +145,6 @@ class SearchStateNotifier extends StateNotifier<SearchState> {
           return;
         }
       }
-      
       final results = await _repository.search(
         query, 
         filters: state.filters, 
@@ -203,13 +192,12 @@ class SearchStateNotifier extends StateNotifier<SearchState> {
     try {
       List<String>? sourceMovieIds;
       if (state.searchSource == SearchSource.wishlist) {
-        final wishlist = await _wishlistRepository.getWishlist();
-        sourceMovieIds = wishlist.map((m) => m.id).toList();
-      } else if (state.searchSource == SearchSource.purchase) {
-        final purchases = await _purchaseRepository.getPurchases();
-        sourceMovieIds = purchases.map((p) => p.id).toList();
+        final userId = _ref.read(currentUserIdProvider);
+        if (userId != null) {
+          final watchlist = await _wishlistRepository.getWatchlist(userId);
+          sourceMovieIds = watchlist.map((m) => m.id).toList();
+        }
       }
-      
       final results = await _repository.search(
         state.query, 
         filters: state.filters, 

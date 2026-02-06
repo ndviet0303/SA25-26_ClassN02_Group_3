@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/services/shared_prefs_provider.dart';
 import '../models/language_settings.dart';
 import '../models/notification_settings.dart';
-import '../models/payment_method.dart';
 import '../models/preferences.dart';
 import '../models/security_settings.dart';
 import '../models/user_profile.dart';
@@ -23,7 +22,6 @@ class SettingsRepository {
   static const _keyPreferences = 'profile:preferences';
   static const _keySecurity = 'profile:security';
   static const _keyLanguage = 'profile:language';
-  static const _keyPayments = 'profile:payments';
 
   final SharedPreferences _prefs;
   final AuthRepository _authRepository;
@@ -244,33 +242,6 @@ class SettingsRepository {
     return settings;
   }
 
-  Future<List<PaymentMethod>> fetchPaymentMethods() async {
-    final jsonString = _prefs.getString(_keyPayments);
-    if (jsonString == null) {
-      final defaults = PaymentMethod.sampleMethods;
-      await _prefs.setString(
-        _keyPayments,
-        jsonEncode(defaults.map((e) => e.toJson()).toList()),
-      );
-      return defaults;
-    }
-    final list = jsonDecode(jsonString) as List<dynamic>;
-    return list.map((e) => PaymentMethod.fromJson(e as Map<String, dynamic>)).toList();
-  }
-
-  Future<List<PaymentMethod>> setDefaultPayment(String id) async {
-    final current = await fetchPaymentMethods();
-    final updated = current
-        .map((e) => e.copyWith(isDefault: e.id == id))
-        .toList(growable: false);
-    await _prefs.setString(
-      _keyPayments,
-      jsonEncode(updated.map((e) => e.toJson()).toList()),
-    );
-    _log('Default payment set', {'id': id});
-    return updated;
-  }
-
   Future<void> clearUserData() async {
     try {
       await _prefs.remove(_keyProfile);
@@ -278,7 +249,6 @@ class SettingsRepository {
       await _prefs.remove(_keyPreferences);
       await _prefs.remove(_keySecurity);
       await _prefs.remove(_keyLanguage);
-      await _prefs.remove(_keyPayments);
       _log('User data cleared', {});
     } catch (error) {
       debugPrint('[SettingsRepository] Failed to clear user data: $error');

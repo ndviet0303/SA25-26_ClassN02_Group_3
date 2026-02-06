@@ -3,7 +3,7 @@ import 'package:movie_fe/features/auth/forgot_password/domain/repositories/auth_
 
 class ForgotPasswordRepositoryImpl implements domain.AuthRepository {
   ForgotPasswordRepositoryImpl({Dio? client, String? baseUrl})
-      : _dio = client ?? Dio(BaseOptions(baseUrl: baseUrl ?? 'http://localhost:3000'));
+      : _dio = client ?? Dio(BaseOptions(baseUrl: baseUrl ?? 'http://192.168.1.20:3000'));
 
   final Dio _dio;
 

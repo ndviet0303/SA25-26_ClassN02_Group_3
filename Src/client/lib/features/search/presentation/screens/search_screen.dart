@@ -13,7 +13,6 @@ import '../widgets/search_body.dart';
 enum SearchSource {
   all,
   wishlist,
-  purchase,
 }
 
 class SearchScreen extends ConsumerStatefulWidget {

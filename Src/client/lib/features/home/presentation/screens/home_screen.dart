@@ -46,11 +46,6 @@ class HomeScreen extends ConsumerWidget {
           const _ExploreByYearSection(),
 
           _Section(
-            title: context.i18n.home.sections.yourPurchases,
-            provider: purchasedMoviesProvider,
-            onMore: () => context.push('${AppRouter.movieType}/purchase'),
-          ),
-          _Section(
             title: context.i18n.home.sections.yourWishlist,
             provider: wishlistMoviesProvider,
             onMore: () => context.push('${AppRouter.movieType}/wishlist'),
@@ -98,7 +93,7 @@ class _Section extends ConsumerWidget {
       },
       loading: () => const Padding(
         padding: EdgeInsets.symmetric(vertical: 16),
-        child: Center(child: CircularProgressIndicator()),
+        child: const LoadingCustom(assetName: ImageConstant.loadingIcon, size: 40),
       ),
       error: (_, __) => const SizedBox.shrink(),
     );

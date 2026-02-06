@@ -3,7 +3,6 @@ import 'package:movie_fe/core/auth/auth_providers.dart';
 import 'package:movie_fe/core/models/movie_item.dart';
 import 'package:movie_fe/core/repositories/movie_repository.dart';
 import 'package:movie_fe/core/repositories/wishlist_repository.dart';
-import 'package:movie_fe/features/purchase/data/repositories/purchase_repository.dart';
 import 'package:movie_fe/features/profile/repository/settings_repository.dart';
 
 // User preferred genres from profile
@@ -33,22 +32,9 @@ final recommendedMoviesProvider = StreamProvider.autoDispose<List<MovieItem>>((r
   return movieRepo.streamRecommendations(userId: userId, limit: 10);
 });
 
-// Purchased movies
-final purchasedMoviesProvider = StreamProvider.autoDispose<List<MovieItem>>((ref) {
-  final repo = ref.watch(purchaseRepositoryProvider);
-  return repo.streamPurchases().map((purchases) => purchases.map((p) => MovieItem(
-    id: p.id,
-    title: p.title,
-    imageUrl: p.imageUrl,
-    rating: p.rating,
-    price: p.price,
-  )).toList());
-});
-
 // Wishlist movies
 final wishlistMoviesProvider = StreamProvider.autoDispose<List<MovieItem>>((ref) {
-  final repo = ref.watch(wishlistRepositoryProvider);
-  return repo.streamWishlist();
+  return ref.watch(wishlistProvider.future).asStream();
 });
 
 // Recently watched movies (use new releases as fallback)

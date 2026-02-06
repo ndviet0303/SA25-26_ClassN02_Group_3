@@ -12,7 +12,6 @@ import '../../../../core/auth/auth_providers.dart';
 import '../../../../routes/app_router.dart';
 import '../../data/repositories/movie_repository.dart';
 import 'package:movie_fe/core/repositories/wishlist_repository.dart';
-import '../../../purchase/data/repositories/purchase_repository.dart';
 import '../widgets/movie_hero_section.dart';
 import '../widgets/movie_rating_section.dart';
 import '../widgets/movie_series_section.dart';
@@ -61,13 +60,31 @@ class _WishlistButton extends ConsumerWidget {
       ),
       onPressed: () async {
         try {
+          final userId = ref.read(currentUserIdProvider);
+          if (userId == null) {
+            if (context.mounted) {
+              ToastNotification.showError(context, message: "Please login to use this feature");
+            }
+            return;
+          }
+
           final repo = ref.read(wishlistRepositoryProvider);
-          await repo.toggleWishlist(movieId);
+          final isInWishlist = isInWishlistAsync.value ?? false;
+
+          if (isInWishlist) {
+            await repo.removeFromWatchlist(userId, movieId);
+          } else {
+            await repo.addToWatchlist(userId, movieId);
+          }
+
+          // Invalidate to refresh UI and list
+          ref.invalidate(isInWishlistProvider(movieId));
+          ref.invalidate(wishlistProvider);
+
           if (context.mounted) {
-            final isIn = await repo.isInWishlist(movieId);
             ToastNotification.showSuccess(
               context,
-              message: isIn ? 'Added to wishlist' : 'Removed from wishlist',
+              message: !isInWishlist ? 'Added to watchlist' : 'Removed from watchlist',
               duration: const Duration(seconds: 2),
             );
           }
@@ -200,7 +217,7 @@ class _MovieDetailScreenState extends ConsumerState<MovieDetailScreen> {
     Movie movie,
   ) {
     final user = ref.watch(currentAuthUserProvider);
-    final userId = int.tryParse(user?.id ?? '') ?? 0;
+    final userId = user?.id ?? '';
     final isSubscribed = ref.watch(isUserSubscribedProvider(userId)).value ?? false;
     
     bool shouldWatchNow = false;
@@ -209,15 +226,10 @@ class _MovieDetailScreenState extends ConsumerState<MovieDetailScreen> {
     if (movie.accessType == AccessType.FREE) {
       shouldWatchNow = true;
     } else if (movie.accessType == AccessType.PREMIUM) {
+      // Treat RENTAL as PREMIUM now or just ignore it
       shouldWatchNow = isSubscribed;
       if (!isSubscribed) {
         buttonOverrideText = context.i18n.movie.hero.getPremium;
-      }
-    } else if (movie.accessType == AccessType.RENTAL) {
-      final isPurchased = ref.watch(isPurchasedProvider(movie.id)).value ?? false;
-      shouldWatchNow = isPurchased || isSubscribed;
-      if (!shouldWatchNow) {
-        buttonOverrideText = context.i18n.movie.hero.rentMovie;
       }
     }
 
@@ -268,13 +280,12 @@ class _MovieDetailScreenState extends ConsumerState<MovieDetailScreen> {
                 genres: movie.genres,
                 metadata: movie.metadata,
                 description: movie.description,
-                isPurchased: shouldWatchNow,
                 buttonOverrideText: buttonOverrideText,
                 ratingCount: movie.ratingCount,
                 durationText: (movie.time ?? '').isEmpty ? null : movie.time,
                 qualityText: context.i18n.movie.details.quality1080p,
                 viewsText: (movie.view == null) ? null : movie.viewsString,
-                onBuyPressed: () async {
+                onActionPressed: () async {
                   if (shouldWatchNow) {
                     if (context.mounted) {
                       final videoUrl = _getVideoUrl(movie);
@@ -289,40 +300,9 @@ class _MovieDetailScreenState extends ConsumerState<MovieDetailScreen> {
                     return;
                   }
 
-                  if (movie.accessType == AccessType.PREMIUM && !isSubscribed) {
+                  // If not accessible and not subscribed, go to subscription
+                  if (!isSubscribed) {
                     context.push(AppRouter.subscription);
-                    return;
-                  }
-                  
-                  try {
-                    final purchaseRepo = ref.read(purchaseRepositoryProvider);
-                    // Rental check
-                    final isAlreadyPurchased = await purchaseRepo.isPurchased(movie.id);
-                    
-                    if (isAlreadyPurchased) {
-                       // This should be handled by shouldWatchNow but double check
-                      return;
-                    }
-                    
-                    // Navigate to checkout screen for RENTAL
-                    if (context.mounted) {
-                      final result = await context.push(
-                        AppRouter.checkout,
-                        extra: {'movie': movie},
-                      );
-                      
-                      if (result == true && context.mounted) {
-                        ref.invalidate(isPurchasedProvider(movie.id));
-                      }
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ToastNotification.showError(
-                        context,
-                        message: '${context.i18n.common.errorPrefix} ${e.toString()}',
-                        duration: const Duration(seconds: 3),
-                      );
-                    }
                   }
                 },
                 onViewMorePressed: () {
@@ -464,15 +444,28 @@ class _MovieDetailScreenState extends ConsumerState<MovieDetailScreen> {
                 size: 20,
               ),
             ),
-            onPressed: movie != null
-                ? () async {
+            onPressed: () async {
                     try {
+                      final userId = ref.read(currentUserIdProvider);
+                      if (userId == null) return;
+                      
                       final repo = ref.read(wishlistRepositoryProvider);
-                      await repo.toggleWishlist(movie.id);
+                      final isInWishlist = isInWishlistAsync?.value ?? false;
+
+                      if (isInWishlist) {
+                        await repo.removeFromWatchlist(userId, movie.id);
+                      } else {
+                        await repo.addToWatchlist(userId, movie.id);
+                      }
+
+                      // Invalidate to refresh UI and list
+                      ref.invalidate(isInWishlistProvider(movie.id));
+                      ref.invalidate(wishlistProvider);
+
                       if (context.mounted) {
                         ToastNotification.showSuccess(
                           context,
-                          message: isInWishlistAsync?.value ?? false
+                          message: isInWishlist
                               ? 'Removed from wishlist'
                               : 'Added to wishlist',
                           duration: const Duration(seconds: 2),
@@ -487,8 +480,7 @@ class _MovieDetailScreenState extends ConsumerState<MovieDetailScreen> {
                         );
                       }
                     }
-                  }
-                : null,
+                  },
           ),
         const SizedBox(width: 8),
       ],

@@ -89,7 +89,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
     // Check if movie is FREE or user is premium via Customer Service
     final isFree = widget.movie.accessType == AccessType.FREE;
     final user = ref.read(currentAuthUserProvider);
-    final userId = int.tryParse(user?.id ?? '') ?? 0;
+    final userId = user?.id ?? '';
     final isSubscribed = await ref.read(isUserSubscribedProvider(userId).future);
     
     // Skip access check if movie is FREE or user is premium

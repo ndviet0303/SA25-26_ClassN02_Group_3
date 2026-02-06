@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:movie_fe/core/auth/auth_providers.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +10,7 @@ import 'package:movie_fe/core/models/movie_item.dart';
 import 'package:movie_fe/core/widgets/image_utils.dart';
 import 'package:movie_fe/core/repositories/wishlist_repository.dart';
 import '../../../../routes/app_router.dart';
+import 'package:movie_fe/features/wishlist/application/wishlist_state_notifier.dart';
 import 'package:movie_fe/core/repositories/movie_repository.dart';
 
 enum WishlistAction {
@@ -175,8 +177,18 @@ class _WishlistItemState extends ConsumerState<WishlistItem> {
     switch (action) {
       case WishlistAction.remove:
         try {
+          final userId = ref.read(currentUserIdProvider);
+          if (userId == null) return;
+          
           final repo = ref.read(wishlistRepositoryProvider);
-          await repo.removeFromWishlist(widget.movie.id);
+          await repo.removeFromWatchlist(userId, widget.movie.id);
+          
+          // Update local state for immediate feedback
+          ref.read(wishlistStateProvider.notifier).removeFromWishlist(widget.movie.id);
+          
+          // Invalidate to refresh the list from server
+          ref.invalidate(wishlistProvider);
+          
           if (context.mounted) {
             ToastNotification.showSuccess(
               context,

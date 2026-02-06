@@ -4,7 +4,7 @@ import 'package:movie_fe/features/auth/forgot_password/domain/repositories/auth_
 
 final forgotBaseUrlProvider = Provider<String>((ref) {
   // Local dev server; adjust if needed
-  return 'http://localhost:3000';
+  return 'http://192.168.1.20:3000';
 });
 
 final forgotPasswordRepositoryProvider = Provider<domain.AuthRepository>((ref) {

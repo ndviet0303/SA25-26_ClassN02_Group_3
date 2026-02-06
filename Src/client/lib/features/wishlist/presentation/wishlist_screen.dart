@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 
 import 'package:movie_fe/core/app_export.dart';
-import 'package:movie_fe/core/constants/app_padding.dart';
-import '../application/wishlist_state_notifier.dart';
-import 'package:movie_fe/core/repositories/wishlist_repository.dart';
+import 'package:movie_fe/features/wishlist/application/wishlist_state_notifier.dart';
+import '../../../../core/widgets/loading.dart';
+import '../../../../core/repositories/wishlist_repository.dart';
 import 'widgets/wishlist_item.dart';
 
 class WishlistScreen extends ConsumerWidget {
@@ -17,16 +17,35 @@ class WishlistScreen extends ConsumerWidget {
     final wishlistState = ref.watch(wishlistStateProvider);
 
     return Scaffold(
-      body: wishlistAsync.when(
-        data: (items) {
-          final filteredItems = items.where((item) => !wishlistState.removedIds.contains(item.id)).toList();
-          if (filteredItems.isEmpty) {
-            return _buildEmpty(context);
-          }
-          return _buildList(context, ref, filteredItems);
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => _buildError(context, ref, error),
+      appBar: AppBar(
+        title: Text(
+          context.i18n.navigation.wishlist,
+          style: AppTypography.h6.copyWith(
+            color: AppColors.getText(context),
+          ),
+        ),
+        backgroundColor: AppColors.getBackground(context),
+        elevation: 0,
+        centerTitle: true,
+      ),
+      body: RefreshIndicator(
+        onRefresh: () => ref.refresh(wishlistProvider.future),
+        child: wishlistAsync.when(
+          data: (items) {
+            final filteredItems = items.where((item) => !wishlistState.removedIds.contains(item.id)).toList();
+            if (filteredItems.isEmpty) {
+              return Stack(
+                children: [
+                  ListView(), // Required for RefreshIndicator to work on empty list
+                  _buildEmpty(context),
+                ],
+              );
+            }
+            return _buildList(context, ref, filteredItems);
+          },
+          loading: () => const LoadingCustom(assetName: ImageConstant.loadingIcon, size: 40),
+          error: (error, stack) => _buildError(context, ref, error),
+        ),
       ),
     );
   }

@@ -58,12 +58,6 @@ class ProfileScreen extends ConsumerWidget {
           children: [
             _ProfileHeader(userState: userState),
             const LinedTextDivider(),
-            _SettingItem(
-              lightBackgroundColor: const Color(0xFFE7F8EF),
-              iconAsset: ImageConstant.walletColorIcon,
-              title: t.profile.menu.paymentMethods,
-              onTap: () => context.push(AppRouter.paymentMethods),
-            ),
             const LinedTextDivider(),
             _SettingItem(
               lightBackgroundColor: const Color(0xFFE9F0FF),

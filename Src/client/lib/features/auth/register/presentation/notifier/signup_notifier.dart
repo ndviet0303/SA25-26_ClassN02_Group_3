@@ -4,26 +4,19 @@ import 'package:movie_fe/features/auth/shared/services/storage_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:movie_fe/core/auth/auth_providers.dart';
-import 'package:movie_fe/core/auth/auth_models.dart';
 import 'package:movie_fe/core/common/ui_state.dart';
 import 'package:movie_fe/features/auth/register/domain/models/user_registration.dart';
-import 'package:movie_fe/core/repositories/auth_repository.dart';
-import 'package:movie_fe/features/profile/models/user_profile.dart'
-    as profile_models;
 import 'package:movie_fe/features/profile/notifiers/profile_notifier.dart';
-import 'package:movie_fe/features/profile/repository/settings_repository.dart';
 
 final signupNotifierProvider =
     StateNotifierProvider<SignupNotifier, UIState<UserReg>>((ref) {
-  final repository = ref.watch(authRepositoryProvider);
-  return SignupNotifier(ref, repository);
+  return SignupNotifier(ref);
 });
 
 class SignupNotifier extends StateNotifier<UIState<UserReg>> {
-  SignupNotifier(this._ref, this._repository) : super(const Idle<UserReg>());
+  SignupNotifier(this._ref) : super(const Idle<UserReg>());
 
   final Ref _ref;
-  final AuthRepository _repository;
 
   Future<UIState<UserReg>> registerUser({
     String? gender,
@@ -69,8 +62,8 @@ class SignupNotifier extends StateNotifier<UIState<UserReg>> {
         account: userAccount,
       );
 
-      // Register user via microservice API
-      await _repository.register(RegisterRequest(
+      // Register user via central AuthStateNotifier (handles registration and auto-login)
+      await _ref.read(authStateNotifierProvider.notifier).register(
         username: userAccount.username,
         email: userAccount.email,
         password: userAccount.password,
@@ -82,7 +75,7 @@ class SignupNotifier extends StateNotifier<UIState<UserReg>> {
         age: age,
         genres: genres,
         avatarUrl: avatarUrl,
-      ));
+      );
 
       // Sync user profile from auth state
       await _syncUserProfile();
@@ -108,23 +101,10 @@ class SignupNotifier extends StateNotifier<UIState<UserReg>> {
 
       debugPrint('[SignupNotifier] Syncing user profile from auth: ${authUser.username}');
 
-      final profile = profile_models.UserProfile(
-        id: authUser.id,
-        fullName: authUser.fullName ?? '',
-        username: authUser.username,
-        email: authUser.email,
-        phoneNumber: authUser.phone ?? '',
-        dateOfBirth: authUser.dateOfBirth ?? '',
-        country: authUser.country ?? '',
-        avatarUrl: authUser.avatarUrl ?? '',
-        gender: '',
-        bio: '',
-      );
-
-      final settingsRepository = _ref.read(settingsRepositoryProvider);
-      await settingsRepository.updateProfile(profile);
-      _ref.read(profileNotifierProvider.notifier).setProfile(profile);
-      debugPrint('[SignupNotifier] User profile synced successfully');
+      // Invalidate the profile notifier to force it to refetch data from the server
+      _ref.invalidate(profileNotifierProvider);
+      
+      debugPrint('[SignupNotifier] User profile refreshed successfully');
     } catch (error) {
       debugPrint('[SignupNotifier] Failed to sync user profile: $error');
     }

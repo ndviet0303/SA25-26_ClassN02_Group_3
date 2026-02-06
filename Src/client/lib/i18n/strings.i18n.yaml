@@ -486,7 +486,7 @@ navigation:
   home: Home
   discover: Discover
   wishlist: Wishlist
-  purchase: Purchase
+  purchase: Premium
   profile: Profile
 
 # Search
@@ -738,6 +738,7 @@ movie:
 # Premium Subscription Module
 premium:
   title: Upgrade to Premium
+  subtitle: Go Premium
   description: Enjoy thousands of premium movies, no ads, and 4K quality.
   features:
     t1: Unlimited access to all movies
@@ -745,12 +746,26 @@ premium:
     t3: 4K Ultra HD quality
     t4: Download and watch offline
   plans:
+    availablePlans: Available Plans
     monthly: Monthly Plan
     yearly: Yearly Plan
+    bestValue: Best Value
   subscribe: Subscribe Now
   premiumBadge: PREMIUM
   alreadyPremium: You are a Premium member!
   expired: Your subscription has expired
+  manage: Manage Subscription
+  history: Subscription History
+  cancel: Cancel Subscription
+  cancelConfirm: Are you sure you want to cancel your premium subscription? You will lose access to premium features at the end of the current billing cycle.
+  canceled: Subscription canceled successfully
+  active: Active
+  canceledStatus: Canceled
+  expiredStatus: Expired
+  historyEmpty: No subscription history found
+  currentSub: Current Plan
+  nextBillingDate: Next billing date
+  daysLeft: days left
 # Wishlist Module
 wishlist:
   common:

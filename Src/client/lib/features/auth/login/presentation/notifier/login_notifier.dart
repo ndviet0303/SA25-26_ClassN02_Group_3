@@ -1,32 +1,32 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../../core/auth/auth_models.dart';
-
 import '../../../../../core/auth/auth_providers.dart';
 import '../../../../../core/common/ui_state.dart';
 import '../../../../profile/notifiers/profile_notifier.dart';
-import '../../../../profile/repository/settings_repository.dart';
-import '../../../../profile/models/user_profile.dart' as profile_models;
-import '../../../../../core/repositories/auth_repository.dart';
 
 final loginNotifierProvider =
     StateNotifierProvider<LoginNotifier, UIState<bool>>((ref) {
-  final repository = ref.watch(authRepositoryProvider);
-  return LoginNotifier(ref, repository);
+  return LoginNotifier(ref);
 });
 
 class LoginNotifier extends StateNotifier<UIState<bool>> {
-  LoginNotifier(this._ref, this._repository) : super(const Idle<bool>());
+  LoginNotifier(this._ref) : super(const Idle<bool>());
 
   final Ref _ref;
-  final AuthRepository _repository;
 
   Future<void> signIn({required String email, required String password}) async {
     try {
       state = const Loading<bool>();
-      // Use core login with LoginRequest. Username is email here.
-      await _repository.login(LoginRequest(username: email, password: password));
+      
+      // 1. Use central AuthStateNotifier for login to handle global state and token persistence
+      await _ref.read(authStateNotifierProvider.notifier).login(
+            username: email,
+            password: password,
+          );
+          
+      // 2. Sync user profile state
       await _syncUserProfile();
+      
       state = const Success<bool>(true);
     } catch (error) {
       final message = error.toString().replaceFirst('Exception: ', '');
@@ -50,24 +50,11 @@ class LoginNotifier extends StateNotifier<UIState<bool>> {
 
       debugPrint('[LoginNotifier] Syncing user profile from auth: ${authUser.username}');
 
-      final profile = profile_models.UserProfile(
-        id: authUser.id,
-        fullName: authUser.fullName ?? '',
-        username: authUser.username,
-        email: authUser.email,
-        phoneNumber: authUser.phone ?? '',
-        dateOfBirth: authUser.dateOfBirth ?? '',
-        country: authUser.country ?? '',
-        avatarUrl: authUser.avatarUrl ?? '',
-        gender: '',
-        bio: '',
-      );
-
-      final settingsRepository = _ref.read(settingsRepositoryProvider);
-      await settingsRepository.updateProfile(profile);
-
-      _ref.read(profileNotifierProvider.notifier).setProfile(profile);
-      debugPrint('[LoginNotifier] User profile synced successfully');
+      // Invalidate the profile notifier to force it to refetch data from the server
+      // using the newly acquired access token.
+      _ref.invalidate(profileNotifierProvider);
+      
+      debugPrint('[LoginNotifier] User profile refreshed successfully');
     } catch (error) {
       debugPrint('[LoginNotifier] Failed to sync user profile: $error');
     }

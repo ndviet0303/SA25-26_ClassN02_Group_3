@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/app_export.dart';
+import '../../../../core/widgets/loading.dart';
 import '../../../../core/constants/app_padding.dart';
 import '../../../../routes/app_router.dart';
 import '../../../../features/search/application/search_state_notifier.dart';
@@ -123,7 +124,7 @@ class _LoadingSection extends StatelessWidget {
         const Center(
           child: Padding(
             padding: EdgeInsets.symmetric(vertical: 32),
-            child: CircularProgressIndicator(),
+            child: LoadingCustom(assetName: ImageConstant.loadingIcon, size: 40),
           ),
         ),
       ],

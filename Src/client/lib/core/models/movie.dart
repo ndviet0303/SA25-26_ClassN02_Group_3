@@ -2,7 +2,6 @@
 enum AccessType {
   FREE,
   PREMIUM,
-  RENTAL,
 }
 
 class Movie {
@@ -153,8 +152,7 @@ class Movie {
     AccessType parseAccessType(dynamic value) {
       if (value == null) return AccessType.FREE;
       final typeStr = value.toString().toUpperCase();
-      if (typeStr == 'PREMIUM') return AccessType.PREMIUM;
-      if (typeStr == 'RENTAL') return AccessType.RENTAL;
+      if (typeStr == 'PREMIUM' || typeStr == 'RENTAL') return AccessType.PREMIUM;
       return AccessType.FREE;
     }
 

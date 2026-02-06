@@ -486,7 +486,7 @@ navigation:
   home: Trang chủ
   discover: Khám phá
   wishlist: Yêu thích
-  purchase: Mua
+  purchase: Premium
   profile: Hồ sơ
 
 # Search
@@ -746,6 +746,7 @@ premium:
     t3: Chất lượng 4K Ultra HD
     t4: Tải về và xem ngoại tuyến
   plans:
+    availablePlans: Các gói hiện có
     monthly: Gói hàng tháng
     yearly: Gói hàng năm
   subscribe: Đăng ký ngay

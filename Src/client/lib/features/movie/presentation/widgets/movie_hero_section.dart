@@ -18,9 +18,8 @@ class MovieHeroSection extends ConsumerWidget {
     required this.genres,
     required this.metadata,
     required this.description,
-    required this.onBuyPressed,
+    required this.onActionPressed,
     required this.onViewMorePressed,
-    this.isPurchased = false,
     this.buttonOverrideText,
     this.ratingCount,
     this.durationText,
@@ -33,9 +32,8 @@ class MovieHeroSection extends ConsumerWidget {
   final List<String> genres;
   final String metadata;
   final String description;
-  final VoidCallback? onBuyPressed;
+  final VoidCallback? onActionPressed;
   final VoidCallback? onViewMorePressed;
-  final bool isPurchased;
   final String? buttonOverrideText;
   final int? ratingCount;
   final String? durationText;
@@ -209,17 +207,16 @@ class MovieHeroSection extends ConsumerWidget {
 
   Widget _buildBuyButton(BuildContext context, ThemeData theme) {
     final isFree = movie.accessType == AccessType.FREE;
-    final shouldShowWatchNow = isFree || isPurchased;
     
-    final buttonText = buttonOverrideText ?? (shouldShowWatchNow 
+    final buttonText = buttonOverrideText ?? (isFree 
         ? context.i18n.movie.hero.watchNow 
-        : PriceUtils.formatPriceForButton(movie));
+        : context.i18n.movie.hero.getPremium);
     
     return SizedBox(
       width: double.infinity,
       child: PrimaryButton(
         text: buttonText,
-        onPressed: onBuyPressed,
+        onPressed: onActionPressed,
       ),
     );
   }

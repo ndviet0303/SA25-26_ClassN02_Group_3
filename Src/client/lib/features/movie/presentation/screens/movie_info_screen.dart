@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:movie_fe/core/auth/auth_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import '../../../../core/app_export.dart';
@@ -8,6 +9,8 @@ import '../widgets/movie_info_panel.dart';
 import '../widgets/movie_series_section.dart';
 import '../widgets/movie_similar_section.dart';
 import '../widgets/movie_rating_section.dart';
+import 'package:movie_fe/core/repositories/wishlist_repository.dart';
+import 'package:movie_fe/core/repositories/customer_repository.dart';
 
 class MovieInfoScreen extends ConsumerWidget {
   const MovieInfoScreen({super.key, required this.movie});
@@ -37,10 +40,47 @@ class MovieInfoScreen extends ConsumerWidget {
               // Share logic
             },
           ),
-          IconButton(
-            icon: Icon(Icons.bookmark_border, color: textColor),
-            onPressed: () {
-              // Bookmark logic
+          Consumer(
+            builder: (context, ref, child) {
+              final isInWishlist = ref.watch(isInWishlistProvider(movie.id)).value ?? false;
+              return IconButton(
+                icon: Icon(
+                  isInWishlist ? Icons.bookmark : Icons.bookmark_border,
+                  color: isInWishlist ? AppColors.primary500 : textColor,
+                ),
+                onPressed: () async {
+                  try {
+                    final userId = ref.read(currentUserIdProvider);
+                    if (userId == null) {
+                      if (context.mounted) {
+                        ToastNotification.showError(context, message: "Vui lòng đăng nhập để sử dụng tính năng này");
+                      }
+                      return;
+                    }
+
+                    final repo = ref.read(wishlistRepositoryProvider);
+                    if (isInWishlist) {
+                      await repo.removeFromWatchlist(userId, movie.id);
+                      if (context.mounted) {
+                        ToastNotification.showSuccess(context, message: "Đã xóa khỏi danh sách xem sau");
+                      }
+                    } else {
+                      await repo.addToWatchlist(userId, movie.id);
+                      if (context.mounted) {
+                        ToastNotification.showSuccess(context, message: "Đã thêm vào danh sách xem sau");
+                      }
+                    }
+                    
+                    // Refresh state
+                    ref.invalidate(isInWishlistProvider(movie.id));
+                    ref.invalidate(wishlistProvider);
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastNotification.showError(context, message: "Lỗi: $e");
+                    }
+                  }
+                },
+              );
             },
           ),
           const Gap(12),
