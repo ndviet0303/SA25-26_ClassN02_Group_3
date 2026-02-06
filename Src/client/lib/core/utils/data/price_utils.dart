@@ -31,8 +31,10 @@ class PriceUtils {
 
   /// Format price string theo locale (VND cho tiếng Việt, USD cho tiếng Anh)
   static String formatPrice(MovieItem movie) {
-    if (movie.accessType == AccessType.FREE) return '';
-    if (movie.accessType == AccessType.PREMIUM) return 'PREMIUM';
+    // Only show FREE badge for free movies
+    if (movie.accessType == AccessType.FREE) return 'FREE';
+    // Don't show PREMIUM badge - just hide it
+    if (movie.accessType == AccessType.PREMIUM) return '';
 
     final locale = LocaleSettings.currentLocale;
     final isVietnamese = locale == AppLocale.vi;

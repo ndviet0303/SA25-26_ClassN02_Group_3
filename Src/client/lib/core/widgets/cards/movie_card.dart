@@ -230,13 +230,13 @@ class MovieCard extends StatelessWidget {
       return const SizedBox.shrink();
     }
     
-    final isPremium = movie.accessType == AccessType.PREMIUM;
+    final isFree = movie.accessType == AccessType.FREE;
     
     return Text(
       priceText, 
       style: textStyle?.copyWith(
-        color: isPremium ? AppColors.primary500 : textStyle.color,
-        fontWeight: isPremium ? FontWeight.w800 : textStyle.fontWeight,
+        color: isFree ? Colors.green : textStyle.color,
+        fontWeight: isFree ? FontWeight.w800 : textStyle.fontWeight,
       ),
     );
   }
