@@ -21,15 +21,15 @@
 4. Architectural Design  
 4.1 Layered Architecture  
 4.2 Microservices Decomposition  
-4.3 C4 Model (System Context, Container/Component)  
+4.3 C4 Model (Context, Container, Component, Code Diagram)  
 4.4 Event-Driven Architecture  
 4.5 Deployment View & System Infrastructure  
 
 5. Server Implementation  
-5.1 Layered Architecture Implementation (CRUD per Labs 2–3)  
-5.2 Movie Microservice & Database per Service (Lab 5)  
-5.3 API Gateway & Edge Security (Lab 6)  
-5.4 EDA with RabbitMQ: Payment ↔ Notification (Lab 7)  
+5.1 Layered Architecture Implementation
+5.2 Microservice & Database per Service
+5.3 API Gateway & Edge Security  
+5.4 EDA with RabbitMQ: Payment ↔ Notification
 
 6. Client Implementation  
 6.1 Client Architecture and Module Organization  
