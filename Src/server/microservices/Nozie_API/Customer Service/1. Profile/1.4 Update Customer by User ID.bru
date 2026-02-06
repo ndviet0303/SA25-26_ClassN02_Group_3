@@ -1,0 +1,32 @@
+meta {
+  name: 1.4 Update Customer by User ID
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/customers/user/{{userId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "fullName": "Test User Updated",
+    "phoneNumber": "0987654321",
+    "dateOfBirth": "1995-05-15",
+    "gender": "male",
+    "country": "Vietnam",
+    "bio": "I love movies and coding!",
+    "avatarUrl": "https://example.com/new-avatar.jpg"
+  }
+}
+
+vars:pre-request {
+  userId: 1
+}
+
+docs {
+  Update customer profile information using userId.
+  All fields are optional - only provided fields will be updated.
+}
