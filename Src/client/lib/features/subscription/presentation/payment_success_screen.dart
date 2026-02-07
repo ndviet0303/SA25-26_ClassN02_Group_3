@@ -1,17 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/app_export.dart';
 import '../../../core/widgets/buttons/primary_button.dart';
-import '../../../core/widgets/loading.dart';
+import '../../../core/repositories/subscription_repository.dart';
 
-class PaymentSuccessScreen extends StatelessWidget {
+class PaymentSuccessScreen extends ConsumerWidget {
   const PaymentSuccessScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     
+    // Refresh subscription status automatically when landing on this screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(currentSubscriptionProvider);
+      ref.invalidate(hasSubscriptionProvider);
+      ref.invalidate(subscriptionHistoryProvider);
+    });
+
     return Scaffold(
       body: Center(
         child: Padding(
@@ -48,7 +56,10 @@ class PaymentSuccessScreen extends StatelessWidget {
               const Gap(40),
               PrimaryButton(
                 text: 'Back to Home',
-                onPressed: () => context.go('/home'),
+                onPressed: () {
+                  // Final safeguard: also go home
+                  context.go('/home');
+                },
               ),
             ],
           ),

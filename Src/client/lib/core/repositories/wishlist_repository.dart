@@ -93,17 +93,5 @@ class WishlistRepository {
   }
 }
 
-// Providers
-final wishlistProvider = FutureProvider.autoDispose<List<MovieItem>>((ref) async {
-  final userId = ref.watch(currentUserIdProvider);
-  if (userId == null) return [];
-  
-  return ref.watch(wishlistRepositoryProvider).getWatchlist(userId);
-});
+// Providers moved to features/wishlist/application/wishlist_state_notifier.dart
 
-final isInWishlistProvider = FutureProvider.autoDispose.family<bool, String>((ref, movieId) async {
-  final userId = ref.watch(currentUserIdProvider);
-  if (userId == null) return false;
-  
-  return ref.watch(wishlistRepositoryProvider).isInWatchlist(userId, movieId);
-});

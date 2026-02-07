@@ -111,8 +111,10 @@ class AppRouter {
       refreshListenable: _AuthStateRefreshNotifier(authNotifier),
       redirect: guard.redirect,
       routes: _buildRoutes(),
-      errorBuilder: (context, state) =>
-          const Scaffold(body: Center(child: Text('Route not found'))),
+      errorBuilder: (context, state) {
+        debugPrint('GoRouter Error: Route not found -> ${state.uri}');
+        return const Scaffold(body: Center(child: Text('Route not found')));
+      },
     );
   }
 

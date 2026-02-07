@@ -27,57 +27,66 @@ class SubscriptionScreen extends ConsumerWidget {
         centerTitle: true,
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              currentSubAsync.when(
-                data: (sub) => sub != null && sub.isActive
-                    ? _buildCurrentSubscription(context, sub, isDark)
-                    : const SizedBox.shrink(),
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
-              ),
-              const Gap(16),
-              _buildHeader(context),
-              const Gap(24),
-              Expanded(
-                child: plansAsync.when(
-                  data: (plans) => ListView.separated(
-                    itemCount: plans.length,
-                    separatorBuilder: (_, __) => const Gap(16),
-                    itemBuilder: (context, index) => _buildPlanCard(
-                      context,
-                      ref,
-                      plans[index],
-                      isDark,
-                      isRecommended: index == 1,
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(subscriptionPlansProvider);
+            ref.invalidate(currentSubscriptionProvider);
+            return ref.read(currentSubscriptionProvider.future);
+          },
+          color: AppColors.primary500,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                currentSubAsync.when(
+                  data: (sub) => sub != null && sub.isActive
+                      ? _buildCurrentSubscription(context, sub, isDark)
+                      : const SizedBox.shrink(),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+                const Gap(16),
+                _buildHeader(context),
+                const Gap(24),
+                Expanded(
+                  child: plansAsync.when(
+                    data: (plans) => ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(), // Important for RefreshIndicator
+                      itemCount: plans.length,
+                      separatorBuilder: (_, __) => const Gap(16),
+                      itemBuilder: (context, index) => _buildPlanCard(
+                        context,
+                        ref,
+                        plans[index],
+                        isDark,
+                        isRecommended: index == 1,
+                      ),
                     ),
-                  ),
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary500),
-                  ),
-                  error: (e, _) => Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, size: 48, color: AppColors.warning),
-                        const Gap(16),
-                        Text('Failed to load plans', style: theme.textTheme.bodyLarge),
-                        const Gap(8),
-                        PrimaryButton(
-                          text: 'Retry',
-                          width: 120,
-                          height: 44,
-                          onPressed: () => ref.invalidate(subscriptionPlansProvider),
-                        ),
-                      ],
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(color: AppColors.primary500),
+                    ),
+                    error: (e, _) => Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error_outline, size: 48, color: AppColors.warning),
+                          const Gap(16),
+                          Text('Failed to load plans', style: theme.textTheme.bodyLarge),
+                          const Gap(8),
+                          PrimaryButton(
+                            text: 'Retry',
+                            width: 120,
+                            height: 44,
+                            onPressed: () => ref.invalidate(subscriptionPlansProvider),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

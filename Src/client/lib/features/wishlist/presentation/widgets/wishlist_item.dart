@@ -177,17 +177,8 @@ class _WishlistItemState extends ConsumerState<WishlistItem> {
     switch (action) {
       case WishlistAction.remove:
         try {
-          final userId = ref.read(currentUserIdProvider);
-          if (userId == null) return;
-          
-          final repo = ref.read(wishlistRepositoryProvider);
-          await repo.removeFromWatchlist(userId, widget.movie.id);
-          
-          // Update local state for immediate feedback
-          ref.read(wishlistStateProvider.notifier).removeFromWishlist(widget.movie.id);
-          
-          // Invalidate to refresh the list from server
-          ref.invalidate(wishlistProvider);
+          // Centralized removal logic in the notifier
+          await ref.read(wishlistProvider.notifier).removeFromWishlist(widget.movie.id);
           
           if (context.mounted) {
             ToastNotification.showSuccess(

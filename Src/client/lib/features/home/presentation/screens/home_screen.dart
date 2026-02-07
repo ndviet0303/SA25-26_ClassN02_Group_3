@@ -14,6 +14,7 @@ import 'package:movie_fe/features/home/data/home_providers.dart';
 import 'package:movie_fe/core/utils/data/genres.dart';
 import 'package:movie_fe/core/utils/data/countries.dart';
 import 'package:movie_fe/core/repositories/movie_repository.dart';
+import 'package:movie_fe/core/widgets/loading.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -91,9 +92,9 @@ class _Section extends ConsumerWidget {
           movieCarouselType: minimal ? MovieCarouselType.minimal : MovieCarouselType.normal,
         );
       },
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 16),
-        child: const LoadingCustom(assetName: ImageConstant.loadingIcon, size: 40),
+      loading: () => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: LoadingCustom(assetName: ImageConstant.loadingIcon, size: 40),
       ),
       error: (_, __) => const SizedBox.shrink(),
     );

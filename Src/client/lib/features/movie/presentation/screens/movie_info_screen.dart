@@ -11,6 +11,8 @@ import '../widgets/movie_similar_section.dart';
 import '../widgets/movie_rating_section.dart';
 import 'package:movie_fe/core/repositories/wishlist_repository.dart';
 import 'package:movie_fe/core/repositories/customer_repository.dart';
+import '../../../../core/models/movie_item.dart';
+import 'package:movie_fe/features/wishlist/application/wishlist_state_notifier.dart';
 
 class MovieInfoScreen extends ConsumerWidget {
   const MovieInfoScreen({super.key, required this.movie});
@@ -50,30 +52,18 @@ class MovieInfoScreen extends ConsumerWidget {
                 ),
                 onPressed: () async {
                   try {
-                    final userId = ref.read(currentUserIdProvider);
-                    if (userId == null) {
-                      if (context.mounted) {
-                        ToastNotification.showError(context, message: "Vui lòng đăng nhập để sử dụng tính năng này");
-                      }
-                      return;
-                    }
-
-                    final repo = ref.read(wishlistRepositoryProvider);
+                    final wishlistNotifier = ref.read(wishlistProvider.notifier);
                     if (isInWishlist) {
-                      await repo.removeFromWatchlist(userId, movie.id);
+                      await wishlistNotifier.removeFromWishlist(movie.id);
                       if (context.mounted) {
                         ToastNotification.showSuccess(context, message: "Đã xóa khỏi danh sách xem sau");
                       }
                     } else {
-                      await repo.addToWatchlist(userId, movie.id);
+                      await wishlistNotifier.addToWishlist(MovieItem.fromMovie(movie));
                       if (context.mounted) {
                         ToastNotification.showSuccess(context, message: "Đã thêm vào danh sách xem sau");
                       }
                     }
-                    
-                    // Refresh state
-                    ref.invalidate(isInWishlistProvider(movie.id));
-                    ref.invalidate(wishlistProvider);
                   } catch (e) {
                     if (context.mounted) {
                       ToastNotification.showError(context, message: "Lỗi: $e");

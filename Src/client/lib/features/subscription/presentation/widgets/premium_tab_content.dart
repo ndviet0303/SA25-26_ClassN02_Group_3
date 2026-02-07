@@ -28,7 +28,7 @@ class PremiumTabContent extends ConsumerWidget {
             data: (sub) => sub != null && sub.isActive
                 ? _buildActiveSubCard(context, ref, sub)
                 : _buildNoSubHeader(context),
-            loading: () => const LoadingCustom(assetName: ImageConstant.loadingIcon, size: 40),
+            loading: () => LoadingCustom(assetName: ImageConstant.loadingIcon, size: 40),
             error: (e, __) => const SizedBox.shrink(),
           ),
           
@@ -41,10 +41,22 @@ class PremiumTabContent extends ConsumerWidget {
           ),
           const Gap(16),
           plansAsync.when(
-            data: (plans) => Column(
-              children: plans.map((plan) => _buildPlanCard(context, ref, plan)).toList(),
-            ),
-            loading: () => const LoadingCustom(assetName: ImageConstant.loadingIcon, size: 40),
+            data: (plans) {
+              final currentSub = currentSubAsync.value;
+              final hasActiveSub = currentSub != null && currentSub.isActive;
+              final filteredPlans = plans.where((p) {
+                if (p.planType == 'FREE') return false;
+                if (currentSub != null && currentSub.isActive && currentSub.planName == p.planType) {
+                  return false;
+                }
+                return true;
+              }).toList();
+              
+              return Column(
+                children: filteredPlans.map((plan) => _buildPlanCard(context, ref, plan, hasActiveSub: hasActiveSub)).toList(),
+              );
+            },
+            loading: () => LoadingCustom(assetName: ImageConstant.loadingIcon, size: 40),
             error: (e, __) => Center(child: Text('Error loading plans: $e')),
           ),
           
@@ -62,7 +74,7 @@ class PremiumTabContent extends ConsumerWidget {
                 : Column(
                     children: history.map((h) => _buildHistoryItem(context, h)).toList(),
                   ),
-            loading: () => const LoadingCustom(assetName: ImageConstant.loadingIcon, size: 40),
+            loading: () => LoadingCustom(assetName: ImageConstant.loadingIcon, size: 40),
             error: (e, __) => Text('Error loading history: $e'),
           ),
           const Gap(40),
@@ -181,7 +193,7 @@ class PremiumTabContent extends ConsumerWidget {
     );
   }
 
-  Widget _buildPlanCard(BuildContext context, WidgetRef ref, SubscriptionPlan plan) {
+  Widget _buildPlanCard(BuildContext context, WidgetRef ref, SubscriptionPlan plan, {bool hasActiveSub = false}) {
     final theme = Theme.of(context);
 
     return Container(
@@ -213,6 +225,16 @@ class PremiumTabContent extends ConsumerWidget {
               plan.durationLabel,
               style: theme.textTheme.bodySmall?.copyWith(color: AppColors.getTextSecondary(context)),
             ),
+            if (plan.description.isNotEmpty) ...[
+              const Gap(8),
+              Text(
+                plan.description,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.getTextSecondary(context),
+                  fontSize: 13,
+                ),
+              ),
+            ],
             const Gap(16),
             ...plan.features.take(3).map((f) => Padding(
               padding: const EdgeInsets.only(bottom: 6),
@@ -227,8 +249,9 @@ class PremiumTabContent extends ConsumerWidget {
             const Gap(16),
             PrimaryButton(
               text: context.i18n.premium.subscribe,
-              onPressed: () => _handleSubscribe(context, ref, plan),
+              onPressed: hasActiveSub ? null : () => _handleSubscribe(context, ref, plan),
               height: 48,
+              backgroundColor: hasActiveSub ? AppColors.greyscale400 : null,
             ),
           ],
         ),
@@ -326,6 +349,18 @@ class PremiumTabContent extends ConsumerWidget {
 
   Future<void> _handleSubscribe(BuildContext context, WidgetRef ref, SubscriptionPlan plan) async {
      try {
+       // Guard against subscribing if already subscribed
+       final currentSub = ref.read(currentSubscriptionProvider).value;
+       if (currentSub != null && currentSub.isActive) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(
+             content: Text('You already have an active subscription.'),
+             backgroundColor: AppColors.warning,
+           ),
+         );
+         return;
+       }
+
       showDialog(
         context: context,
         barrierDismissible: false,

@@ -4,6 +4,7 @@ import 'package:movie_fe/core/models/movie_item.dart';
 import 'package:movie_fe/core/repositories/movie_repository.dart';
 import 'package:movie_fe/core/repositories/wishlist_repository.dart';
 import 'package:movie_fe/features/profile/repository/settings_repository.dart';
+import 'package:movie_fe/features/wishlist/application/wishlist_state_notifier.dart';
 
 // User preferred genres from profile
 final userPreferredGenresProvider = FutureProvider.autoDispose<List<String>>((ref) async {

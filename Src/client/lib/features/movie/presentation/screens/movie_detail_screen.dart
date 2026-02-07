@@ -19,6 +19,7 @@ import '../widgets/movie_similar_section.dart';
 import '../widgets/movie_info_panel.dart';
 import 'package:movie_fe/core/repositories/customer_repository.dart';
 import 'package:movie_fe/core/repositories/subscription_repository.dart';
+import 'package:movie_fe/features/wishlist/application/wishlist_state_notifier.dart';
 
 
 class _WishlistButton extends ConsumerWidget {
@@ -60,26 +61,17 @@ class _WishlistButton extends ConsumerWidget {
       ),
       onPressed: () async {
         try {
-          final userId = ref.read(currentUserIdProvider);
-          if (userId == null) {
-            if (context.mounted) {
-              ToastNotification.showError(context, message: "Please login to use this feature");
-            }
-            return;
-          }
+          final movieDetail = ref.read(movieDetailProvider(movieId)).value;
+          if (movieDetail == null) return;
 
-          final repo = ref.read(wishlistRepositoryProvider);
+          final wishlistNotifier = ref.read(wishlistProvider.notifier);
           final isInWishlist = isInWishlistAsync.value ?? false;
 
           if (isInWishlist) {
-            await repo.removeFromWatchlist(userId, movieId);
+            await wishlistNotifier.removeFromWishlist(movieId);
           } else {
-            await repo.addToWatchlist(userId, movieId);
+            await wishlistNotifier.addToWishlist(MovieItem.fromMovie(movieDetail));
           }
-
-          // Invalidate to refresh UI and list
-          ref.invalidate(isInWishlistProvider(movieId));
-          ref.invalidate(wishlistProvider);
 
           if (context.mounted) {
             ToastNotification.showSuccess(
@@ -445,42 +437,38 @@ class _MovieDetailScreenState extends ConsumerState<MovieDetailScreen> {
               ),
             ),
             onPressed: () async {
-                    try {
-                      final userId = ref.read(currentUserIdProvider);
-                      if (userId == null) return;
-                      
-                      final repo = ref.read(wishlistRepositoryProvider);
-                      final isInWishlist = isInWishlistAsync?.value ?? false;
+                      try {
+                        final movieDetail = ref.read(movieDetailProvider(movie.id)).value;
+                        if (movieDetail == null) return;
 
-                      if (isInWishlist) {
-                        await repo.removeFromWatchlist(userId, movie.id);
-                      } else {
-                        await repo.addToWatchlist(userId, movie.id);
-                      }
+                        final wishlistNotifier = ref.read(wishlistProvider.notifier);
+                        final isInWishlist = isInWishlistAsync?.value ?? false;
 
-                      // Invalidate to refresh UI and list
-                      ref.invalidate(isInWishlistProvider(movie.id));
-                      ref.invalidate(wishlistProvider);
+                        if (isInWishlist) {
+                          await wishlistNotifier.removeFromWishlist(movie.id);
+                        } else {
+                          await wishlistNotifier.addToWishlist(MovieItem.fromMovie(movieDetail));
+                        }
 
-                      if (context.mounted) {
-                        ToastNotification.showSuccess(
-                          context,
-                          message: isInWishlist
-                              ? 'Removed from wishlist'
-                              : 'Added to wishlist',
-                          duration: const Duration(seconds: 2),
-                        );
+                        if (context.mounted) {
+                          ToastNotification.showSuccess(
+                            context,
+                            message: isInWishlist
+                                ? 'Removed from wishlist'
+                                : 'Added to watchlist',
+                            duration: const Duration(seconds: 2),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ToastNotification.showError(
+                            context,
+                            message: 'Error: ${e.toString()}',
+                            duration: const Duration(seconds: 2),
+                          );
+                        }
                       }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ToastNotification.showError(
-                          context,
-                          message: 'Error: ${e.toString()}',
-                          duration: const Duration(seconds: 2),
-                        );
-                      }
-                    }
-                  },
+                    },
           ),
         const SizedBox(width: 8),
       ],

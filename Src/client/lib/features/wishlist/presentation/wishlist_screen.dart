@@ -14,7 +14,6 @@ class WishlistScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wishlistAsync = ref.watch(wishlistProvider);
-    final wishlistState = ref.watch(wishlistStateProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -32,8 +31,7 @@ class WishlistScreen extends ConsumerWidget {
         onRefresh: () => ref.refresh(wishlistProvider.future),
         child: wishlistAsync.when(
           data: (items) {
-            final filteredItems = items.where((item) => !wishlistState.removedIds.contains(item.id)).toList();
-            if (filteredItems.isEmpty) {
+            if (items.isEmpty) {
               return Stack(
                 children: [
                   ListView(), // Required for RefreshIndicator to work on empty list
@@ -41,9 +39,9 @@ class WishlistScreen extends ConsumerWidget {
                 ],
               );
             }
-            return _buildList(context, ref, filteredItems);
+            return _buildList(context, ref, items);
           },
-          loading: () => const LoadingCustom(assetName: ImageConstant.loadingIcon, size: 40),
+          loading: () => LoadingCustom(assetName: ImageConstant.loadingIcon, size: 40),
           error: (error, stack) => _buildError(context, ref, error),
         ),
       ),
