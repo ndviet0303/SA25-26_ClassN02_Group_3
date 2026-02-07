@@ -1,0 +1,92 @@
+@startuml SequenceDiagram_Movie_Detail_Watch_Nozie
+' Movie Detail & Watch flow - Nozie (simplified)
+' Render: PlantUML, or https://www.plantuml.com/plantuml/uml/
+!theme plain
+title Movie Detail & Watch - Nozie (Simplified)
+
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 120
+
+actor User
+participant "Router" as Router
+participant "MovieDetailScreen" as Detail
+participant "VideoPlayerScreen" as Player
+participant "MovieRepository" as MovieRepo
+participant "WishlistNotifier" as Wishlist
+participant "SubscriptionRepo" as SubRepo
+participant "MovieWatchService" as WatchSvc
+participant "API Gateway" as GW
+participant "Movie Service" as MovieSvc
+participant "Customer/Payment" as Backend
+
+== Open movie detail ==
+User -> Router : Tap movie card (e.g. from Home)
+Router -> Detail : push /movie/:id
+Detail -> Detail : ref.watch(movieDetailProvider(movieId))
+Detail -> MovieRepo : getMovieDetail(id)
+MovieRepo -> GW : GET /movies/:id
+GW -> MovieSvc : movie detail
+MovieSvc --> GW : 200 movie
+GW --> MovieRepo : data
+MovieRepo --> Detail : Movie
+Detail -> Detail : ref.watch(isInWishlistProvider(movieId))
+Detail -> Wishlist : (wishlist state)
+Detail -> User : Hero, Play, Wishlist, Rating, Series, Similar
+
+== Wishlist toggle ==
+User -> Detail : Tap Wishlist button
+alt in wishlist
+    Detail -> Wishlist : removeFromWishlist(movieId)
+    Wishlist -> GW : DELETE .../watchlist/movieId
+else not in wishlist
+    Detail -> Wishlist : addToWishlist(MovieItem)
+    Wishlist -> GW : POST .../watchlist
+end
+GW --> Wishlist : ok
+Detail -> User : Toast Added/Removed
+
+== Tap Play ==
+User -> Detail : Tap Play
+Detail -> SubRepo : isUserSubscribedProvider(userId)
+SubRepo -> Backend : GET subscription current
+Backend --> SubRepo : active or not
+alt FREE movie OR subscribed
+    Detail -> Router : push /video-player/:id extra movie, videoUrl
+else not subscribed (premium movie)
+    Detail -> User : push /subscription
+end
+
+== Video player init ==
+Router -> Player : VideoPlayerScreen(movie, videoUrl?)
+Player -> Player : isFree OR isSubscribed?
+alt has access
+    Player -> Player : getPlaybackState(movieId) [resume position]
+    Player -> Player : get videoUrl (widget or episodes)
+    Player -> User : init player, play stream (HLS/CDN)
+else no access
+    Player -> WatchSvc : playMovie(slug)
+    WatchSvc -> GW : GET /slug/:slug/play
+    GW -> MovieSvc : play (access check)
+    MovieSvc --> GW : hasAccess + streamingData or 403
+    alt hasAccess
+        WatchSvc --> Player : StreamingData (m3u8Url)
+        Player -> User : init player, play
+    else no access
+        WatchSvc --> Player : hasAccess false
+        Player -> User : PremiumRequiredDialog → /subscription or back
+    end
+end
+
+== During watch ==
+Player -> Player : _savePlaybackState() (position, speed, quality)
+Player -> Player : PlaybackStateService.save (local)
+opt viewing history
+    Player -> Backend : POST .../viewing-history (movieId, progress)
+end
+
+== Exit player ==
+User -> Player : Back
+Player -> Player : _savePlaybackState() on dispose
+Router -> User : previous screen
+
+@enduml

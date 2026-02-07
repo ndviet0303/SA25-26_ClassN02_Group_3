@@ -1,0 +1,55 @@
+@startuml SequenceDiagram_Home_Browse_Part2_APIs
+' Part 2: Backend APIs for Home sections
+!theme plain
+title Home & Browse - Part 2: Catalog APIs (Movie / Customer)
+
+skinparam maxMessageSize 100
+
+participant "MovieRepository" as Repo
+participant "WishlistRepository" as WishRepo
+participant "API Gateway" as GW
+participant "Movie Service" as MovieSvc
+database "DB" as DB
+
+== Trending ==
+Repo -> GW : GET /movies/trending
+GW -> MovieSvc : trending
+MovieSvc -> DB : query
+DB --> MovieSvc : list
+MovieSvc --> GW : 200 movies
+GW --> Repo : data
+
+== Recommendations ==
+Repo -> GW : GET /recommendations/:userId? limit=
+GW -> MovieSvc : recommendations
+MovieSvc -> DB : by user or trending fallback
+DB --> MovieSvc : list
+MovieSvc --> GW : 200
+GW --> Repo : data
+
+== Genres / Countries / Years ==
+Repo -> GW : GET /movies/genres
+GW -> MovieSvc : genres
+MovieSvc --> GW : 200 list
+Repo -> GW : GET /movies/countries
+GW -> MovieSvc : countries
+MovieSvc --> GW : 200 list
+Repo -> GW : GET /movies/years
+GW -> MovieSvc : years
+MovieSvc --> GW : 200 list
+
+== Wishlist ==
+WishRepo -> GW : GET /user/:userId/watchlist
+GW -> MovieSvc : watchlist (or Customer Service)
+MovieSvc -> DB : watchlist items
+DB --> MovieSvc : list
+MovieSvc --> GW : 200
+GW --> WishRepo : data
+
+== Top new releases (Recently Watched) ==
+Repo -> GW : GET /movies (latest) or topNewReleases
+GW -> MovieSvc : latest
+MovieSvc --> GW : 200 list
+GW --> Repo : data
+
+@enduml

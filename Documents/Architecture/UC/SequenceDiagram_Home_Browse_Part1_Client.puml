@@ -1,0 +1,42 @@
+@startuml SequenceDiagram_Home_Browse_Part1_Client
+' Part 1: Client - Home screen & navigation
+!theme plain
+title Home & Browse - Part 1: Client (Flutter)
+
+skinparam maxMessageSize 100
+
+actor User
+participant "MainLayout" as Layout
+participant "HomeScreen" as Home
+participant "Riverpod" as Prov
+
+== Load Home ==
+User -> Layout : Select Home tab
+Layout -> Home : build HomeScreen
+Home -> Prov : ref.watch(trendingMoviesProvider)
+Home -> Prov : ref.watch(recommendedMoviesProvider)
+Home -> Prov : ref.watch(genresProvider)
+Home -> Prov : ref.watch(countriesProvider)
+Home -> Prov : ref.watch(yearsProvider)
+Home -> Prov : ref.watch(wishlistMoviesProvider)
+Home -> Prov : ref.watch(recentMoviesProvider)
+note right of Prov : Each provider triggers\nMovieRepo or Wishlist API
+Prov --> Home : async data per section
+Home -> User : Trending carousel, Recommended, Explore by Genre/Country/Year, Wishlist, Recently Watched
+
+== Tap movie card ==
+User -> Home : Tap poster/card
+Home -> Home : context.push(/movie/:id)
+Home -> User : MovieDetailScreen
+
+== Tap More ==
+User -> Home : Tap "Xem thêm" (More)
+Home -> Home : push /movie-type/recommended | wishlist | recent
+Home -> User : MovieTypeScreen
+
+== Tap Explore (genre/country/year) ==
+User -> Home : Tap genre chip or year
+Home -> Home : push /movie-carousel-genre/:slug or /explore/:name or .../year/:y
+Home -> User : ExploreGenreDetails / ExploreGenre
+
+@enduml

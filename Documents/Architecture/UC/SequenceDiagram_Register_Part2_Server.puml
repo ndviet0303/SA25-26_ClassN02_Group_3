@@ -1,0 +1,46 @@
+@startuml SequenceDiagram_Register_Part2_Server
+' Part 2: Server-side only (smaller diagram)
+!theme plain
+title Registration Flow - Part 2: Server (Identity + events)
+
+skinparam maxMessageSize 100
+
+participant "AuthRepository" as Repo
+participant "API Gateway" as GW
+participant "AuthController" as Ctrl
+participant "AuthService" as Svc
+database "UserRepository" as DB
+participant "UserEventProducer" as MQ
+participant "AuditService" as Audit
+
+== Register ==
+Repo -> GW : POST /api/auth/register
+GW -> Ctrl : register(request)
+Ctrl -> Svc : register(req, ip, userAgent)
+Svc -> DB : existsByUsername?
+alt exists
+    DB -> Svc : true
+    Svc --> Ctrl : BadRequestException
+    Ctrl --> GW : 400
+else not exists
+    DB -> Svc : false
+    Svc -> Svc : new User, encode password, add role USER
+    Svc -> DB : save(user)
+    DB -> Svc : savedUser
+    Svc -> MQ : UserRegisteredEvent
+    Svc -> Audit : logSuccess REGISTER
+    Svc --> Ctrl : savedUser
+    Ctrl --> GW : 201 UserResponse
+end
+GW --> Repo : response
+
+== Auto-login (same service) ==
+Repo -> GW : POST /api/auth/login
+GW -> Ctrl : login
+Ctrl -> Svc : login(...)
+Svc -> DB : find user, validate, create tokens
+Svc --> Ctrl : AuthResponse
+Ctrl --> GW : 200 tokens
+GW --> Repo : AuthTokens
+
+@enduml

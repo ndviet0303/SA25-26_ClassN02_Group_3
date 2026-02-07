@@ -1,0 +1,50 @@
+@startuml SequenceDiagram_Login_Part2_Server
+' Part 2: Server-side only (Login)
+!theme plain
+title Login Flow - Part 2: Server (Identity)
+
+skinparam maxMessageSize 100
+
+participant "AuthRepository" as Repo
+participant "API Gateway" as GW
+participant "AuthController" as Ctrl
+participant "AuthService" as Svc
+database "UserRepository" as DB
+participant "AuditService" as Audit
+
+== Login ==
+Repo -> GW : POST /api/auth/login
+GW -> Ctrl : login(request)
+Ctrl -> Svc : login(req, ip, userAgent, deviceInfo)
+Svc -> DB : findByUsernameOrEmail(username)
+alt not found
+    DB -> Svc : empty
+    Svc -> Audit : logFailure LOGIN_FAILED
+    Svc --> Ctrl : BadRequestException
+    Ctrl --> GW : 400
+else found
+    DB -> Svc : user
+    Svc -> Svc : check locked, disabled
+    alt locked or disabled
+        Svc -> Audit : logFailure
+        Svc --> Ctrl : BadRequestException
+        Ctrl --> GW : 400
+    else ok
+        Svc -> Svc : passwordEncoder.matches
+        alt password invalid
+            Svc -> DB : save failed attempts
+            Svc -> Audit : logFailure
+            Svc --> Ctrl : BadRequestException
+            Ctrl --> GW : 400
+        else password valid
+            Svc -> Svc : recordLogin, generate tokens
+            Svc -> DB : save(user), save(UserSession)
+            Svc -> Audit : logSuccess LOGIN
+            Svc --> Ctrl : AuthResponse
+            Ctrl --> GW : 200 tokens + user
+        end
+    end
+end
+GW --> Repo : response
+
+@enduml

@@ -1,0 +1,49 @@
+@startuml SequenceDiagram_Premium_Payment_Part1_Client
+' Part 1: Client - Subscription screen and checkout
+!theme plain
+title Premium and Payment - Part 1: Client (Flutter)
+
+skinparam maxMessageSize 100
+
+actor User
+participant "GoRouter" as Router
+participant "SubscriptionScreen" as Screen
+participant "SubscriptionRepository" as SubRepo
+participant "PaymentSuccessScreen" as SuccessScreen
+
+== Open Premium ==
+User -> Router : Tap Premium or /subscription
+Router -> Screen : SubscriptionScreen
+Screen -> Screen : ref.watch(plans), ref.watch(currentSubscription)
+Screen -> SubRepo : getPlans(), getCurrentSubscription()
+SubRepo --> Screen : plans, currentSub
+Screen -> User : Current plan card (if active), plan list, Subscribe
+
+== Refresh (pull to refresh) ==
+User -> Screen : Pull to refresh
+Screen -> SubRepo : invalidate providers, getCurrentSubscription()
+SubRepo --> Screen : fresh data
+
+== Subscribe ==
+User -> Screen : Tap Subscribe on plan
+Screen -> Screen : show loading dialog
+Screen -> SubRepo : subscribe(plan.id)
+SubRepo -> SubRepo : POST /subscribe, get checkoutUrl
+SubRepo -> SubRepo : launchUrl(checkoutUrl, externalApplication)
+SubRepo --> Screen : true or false
+Screen -> User : close dialog, SnackBar "Redirecting..." or "Failed to start checkout"
+User -> User : Browser opens Stripe Checkout (external)
+
+== Success return ==
+User -> Router : Deep link or web redirect to /payment/success
+Router -> SuccessScreen : PaymentSuccessScreen
+SuccessScreen -> SuccessScreen : addPostFrameCallback invalidate providers
+SuccessScreen -> User : "Payment Successful!", Back to Home button
+User -> SuccessScreen : Tap Back to Home
+SuccessScreen -> Router : context.go(/home)
+
+== Cancel return ==
+User -> Router : Redirect to /payment/cancel
+Router -> Screen : SubscriptionScreen (same as open)
+
+@enduml

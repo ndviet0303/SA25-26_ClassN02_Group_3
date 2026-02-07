@@ -1,0 +1,51 @@
+@startuml SequenceDiagram_Home_Browse_Nozie
+' Home & Browse content flow - Nozie (simplified)
+' Render: PlantUML, or https://www.plantuml.com/plantuml/uml/
+!theme plain
+title Home & Browse Content - Nozie (Simplified)
+
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 120
+
+actor User
+participant "GoRouter" as Router
+participant "HomeScreen" as Home
+participant "Providers" as Prov
+participant "MovieRepository" as MovieRepo
+participant "WishlistNotifier" as Wishlist
+participant "API Gateway" as GW
+participant "Movie Service" as MovieSvc
+
+== Open Home ==
+User -> Router : Tap Home (bottom nav)
+Router -> Home : /home (ShellRoute)
+Home -> Prov : watch trending, recommended, genres, countries, years, wishlist, recent
+Prov -> MovieRepo : streamTrending, streamRecommendations, getGenres, getCountries, getYears, streamTopNewReleases
+Prov -> Wishlist : getWatchlist (wishlistProvider)
+MovieRepo -> GW : GET /movies/trending, /recommendations, /genres, /countries, /years, /movies/latest
+Wishlist -> GW : GET /user/{id}/watchlist
+GW -> MovieSvc : catalog APIs
+MovieSvc --> GW : lists (movies, genres, countries, years)
+GW --> MovieRepo : data
+GW --> Wishlist : watchlist
+MovieRepo --> Prov : Stream/Future data
+Wishlist --> Prov : list
+Prov --> Home : data
+Home -> User : Show sections: Trending, Recommended, Explore by Genre/Country/Year, Wishlist, Recently Watched
+
+== Browse: tap movie ==
+User -> Home : Tap movie card
+Home -> Router : push /movie/:id
+Router -> User : MovieDetailScreen
+
+== Browse: tap More ==
+User -> Home : Tap "More" on section
+Home -> Router : push /movie-type/recommended | wishlist | recent
+Router -> User : MovieTypeScreen (list by type)
+
+== Browse: tap Explore ==
+User -> Home : Tap genre / country / year
+Home -> Router : push /movie-carousel-genre/:slug or explore/:name or carousel-year/:year
+Router -> User : ExploreGenreDetails or ExploreGenre
+
+@enduml

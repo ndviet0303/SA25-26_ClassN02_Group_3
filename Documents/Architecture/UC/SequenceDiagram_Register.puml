@@ -1,0 +1,72 @@
+@startuml SequenceDiagram_Register_Nozie
+' Registration flow - Nozie (simplified to avoid PlantUML heap OOM)
+' Render: PlantUML, or https://www.plantuml.com/plantuml/uml/
+!theme plain
+title Registration Flow - Nozie (Simplified)
+
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 120
+
+actor User
+participant "SignupFlowScreen" as Screen
+participant "SignupNotifier" as Notifier
+participant "AuthStateNotifier" as Auth
+participant "AuthRepository" as Repo
+participant "API Gateway" as GW
+participant "Identity Service" as IdSvc
+database "DB" as DB
+participant "RabbitMQ" as MQ
+
+== Client: Signup steps 1-5 ==
+User -> Screen : Tap Sign up
+Screen -> User : Steps: Gender, Age, Genre, Profile, Account
+User -> Screen : Fill & Submit (optional avatar → ImgBB)
+Screen -> Notifier : registerUser(...)
+
+== Client: Register request ==
+Notifier -> Notifier : state = Loading
+Notifier -> Auth : register(...)
+Auth -> Repo : register(RegisterRequest)
+Repo -> GW : POST /api/auth/register
+
+== Server: Identity ==
+GW -> IdSvc : register(request)
+IdSvc -> DB : existsByUsername?
+alt username exists
+    DB -> IdSvc : true
+    IdSvc --> GW : 400 BadRequest
+    GW --> Repo : error
+    Repo --> Auth : throw
+    Auth --> Notifier : throw
+    Notifier -> Notifier : state = Error
+    Notifier --> Screen : Error
+    Screen -> User : Modal Error → go(welcome)
+else username free
+    DB -> IdSvc : false
+    IdSvc -> IdSvc : create User, encode password, add role USER
+    IdSvc -> DB : save(user)
+    DB -> IdSvc : savedUser
+    IdSvc -> MQ : UserRegisteredEvent
+    IdSvc -> IdSvc : audit REGISTER
+    IdSvc --> GW : 201 UserResponse
+end
+
+== Auto-login & finish ==
+GW --> Repo : 201
+Repo --> Auth : ok
+Auth -> Repo : login(username, password)
+Repo -> GW : POST /api/auth/login
+GW -> IdSvc : login
+IdSvc -> DB : validate, create tokens
+IdSvc --> GW : AuthResponse
+GW --> Repo : tokens
+Repo --> Auth : tokens + user
+Auth -> Auth : state = logged in
+Auth --> Notifier : return
+Notifier -> Notifier : _syncUserProfile(), state = Success
+Notifier --> Screen : Success
+Screen -> User : Modal "Registration successful!"
+User -> Screen : OK
+Screen -> User : go(/home)
+
+@enduml

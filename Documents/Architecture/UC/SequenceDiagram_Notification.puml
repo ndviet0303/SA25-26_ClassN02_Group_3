@@ -1,0 +1,75 @@
+@startuml SequenceDiagram_Notification_Nozie
+' Notification flow - Nozie (simplified)
+' Render: PlantUML, or https://www.plantuml.com/plantuml/uml/
+!theme plain
+title Notification Flow - Nozie (Simplified)
+
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 120
+
+actor User
+participant "NotificationScreen" as Screen
+participant "NotificationRepository" as NotifRepo
+participant "API Gateway" as GW
+participant "Notification Service" as NotifSvc
+database "DB" as DB
+participant "RabbitMQ" as MQ
+participant "UserEventConsumer" as UserCons
+participant "SubscriptionEventConsumer" as SubCons
+participant "EmailService" as Email
+
+== Event-driven: create notifications ==
+note over MQ, Email
+  Identity or Payment Service publishes event
+end note
+MQ -> UserCons : UserRegisteredEvent
+UserCons -> NotifSvc : handleUserRegistered(userId, email, name)
+NotifSvc -> Email : sendWelcomeEmail
+NotifSvc -> NotifSvc : createNotification (Welcome, in-app)
+NotifSvc -> DB : save Notification
+MQ -> SubCons : SubscriptionActivatedEvent
+SubCons -> NotifSvc : createNotification (plan activated)
+NotifSvc -> DB : save Notification
+opt email
+    NotifSvc -> Email : sendSubscriptionActivatedEmail
+end
+
+== App: open notification list ==
+User -> Screen : Open /notification
+Screen -> Screen : ref.watch(notificationsProvider)
+Screen -> NotifRepo : fetchNotifications() or watchNotifications()
+NotifRepo -> GW : GET /notifications/:userId
+GW -> NotifSvc : getNotifications(customerId)
+NotifSvc -> DB : findByCustomerIdOrderByCreatedAtDesc
+DB --> NotifSvc : list
+NotifSvc --> GW : 200 list
+GW --> NotifRepo : data
+NotifRepo --> Screen : notifications
+Screen -> User : List (or empty state), Mark all as read, Settings
+
+== Mark as read ==
+User -> Screen : Tap notification or Mark all as read
+Screen -> NotifRepo : markAsRead(id) or markAllAsRead()
+NotifRepo -> GW : PATCH /notifications/:id/read
+GW -> NotifSvc : markAsRead(id)
+NotifSvc -> DB : find, setRead(true), save
+NotifSvc --> GW : 200
+GW --> NotifRepo : ok
+Screen -> Screen : invalidate or refetch
+Screen -> User : list updated
+
+== Unread count (e.g. badge) ==
+Screen -> NotifRepo : getUnreadCount()
+NotifRepo -> GW : GET /notifications/:userId/count
+GW -> NotifSvc : count
+NotifSvc -> DB : countByCustomerIdAndReadFalse
+DB --> NotifSvc : count
+NotifSvc --> GW : 200 unreadCount
+GW --> NotifRepo : count
+NotifRepo --> Screen : count
+
+== Settings ==
+User -> Screen : Tap Settings
+Screen -> User : push /notification-settings
+
+@enduml

@@ -1,0 +1,61 @@
+@startuml SequenceDiagram_Premium_Payment_Part2_Server
+' Part 2: Payment Service and Stripe
+!theme plain
+title Premium and Payment - Part 2: Server (Payment Service, Stripe)
+
+skinparam maxMessageSize 100
+
+participant "SubscriptionRepository" as SubRepo
+participant "API Gateway" as GW
+participant "SubscriptionController" as Ctrl
+participant "SubscriptionAppService" as Svc
+participant "StripeService" as StripeSvc
+participant "Stripe" as Stripe
+database "DB" as DB
+participant "RabbitMQ" as MQ
+
+== GET plans ==
+SubRepo -> GW : GET /plans
+GW -> Ctrl : getPlans
+Ctrl -> Svc : get plans
+Svc -> DB : SubscriptionPlanRepository
+DB --> Svc : plans
+Svc --> Ctrl : list
+Ctrl --> GW : 200
+GW --> SubRepo : data
+
+== GET current subscription ==
+SubRepo -> GW : GET /current/:userId
+GW -> Ctrl : getCurrent
+Ctrl -> Svc : get current subscription
+Svc -> DB : SubscriptionRepository findByUserId
+DB --> Svc : subscription or null
+Svc --> Ctrl : UserSubscription
+Ctrl --> GW : 200
+GW --> SubRepo : data
+
+== POST subscribe (create checkout) ==
+SubRepo -> GW : POST /subscribe userId, planId, planType
+GW -> Ctrl : subscribe(request)
+Ctrl -> Svc : createCheckout(request)
+Svc -> Svc : find plan, check pending session
+Svc -> StripeSvc : createCheckoutSession(plan, userId, successUrl, cancelUrl)
+StripeSvc -> Stripe : Session.create(params)
+Stripe --> StripeSvc : Session with URL
+StripeSvc --> Svc : checkoutUrl
+Svc --> Ctrl : SubscriptionResponse(checkoutUrl)
+Ctrl --> GW : 200 checkoutUrl
+GW --> SubRepo : response
+
+== Webhook: checkout.session.completed ==
+Stripe -> Ctrl : POST /webhook payload, signature
+Ctrl -> Svc : handleWebhook(payload, sig)
+Svc -> Svc : Webhook.constructEvent verify signature
+Svc -> Svc : switch eventType checkout.session.completed
+Svc -> Svc : save Subscription, Transaction to DB
+Svc -> DB : save
+Svc -> MQ : publish PaymentSucceededEvent (optional)
+Svc --> Ctrl : ok
+Ctrl --> Stripe : 200
+
+@enduml

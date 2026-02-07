@@ -1,0 +1,47 @@
+@startuml SequenceDiagram_Login_Part1_Client
+' Part 1: Client-side only (Login)
+!theme plain
+title Login Flow - Part 1: Client (Flutter)
+
+skinparam maxMessageSize 100
+
+actor User
+participant "GoRouter" as Router
+participant "LoginScreen" as Screen
+participant "LoginNotifier" as Notifier
+participant "AuthStateNotifier" as Auth
+participant "AuthRepository" as Repo
+
+== Navigate & input ==
+User -> Router : Sign in (from Welcome or link)
+Router -> Screen : /sign-in
+Screen -> User : Show email, password, Remember me
+
+== Submit ==
+User -> Screen : Enter email, password; tap Sign in
+Screen -> Screen : validateEmail2, password required
+Screen -> Notifier : signIn(email, password)
+Notifier -> Notifier : state = Loading
+Notifier -> Auth : login(username, password)
+Auth -> Repo : login(LoginRequest)
+Repo -> Repo : POST /api/auth/login
+... wait response ...
+
+== On success ==
+Repo --> Auth : tokens
+Auth -> Auth : _saveTokens (SharedPreferences)
+Auth -> Repo : getCurrentUser(accessToken)
+Repo --> Auth : user
+Auth --> Notifier : return
+Notifier -> Notifier : _syncUserProfile(), state = Success
+Notifier --> Screen : Success
+Screen -> Router : context.go(/home)
+Router -> User : Home
+
+== On error ==
+Repo --> Auth : throw
+Auth --> Notifier : throw
+Notifier -> Notifier : state = Error
+Screen -> User : Toast error message
+
+@enduml

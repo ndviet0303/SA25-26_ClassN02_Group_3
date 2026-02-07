@@ -190,14 +190,25 @@
 
 ---
 
-## Tóm tắt phân công theo thành viên
+## Work distribution
+
+| Member | Role (short) |
+|--------|--------------|
+| **Nguyễn Văn Nhật** | Tech lead. Design and implement microservices, API Gateway, EDA (message broker). Flutter development and E2E integration. Reports: architecture and backend implementation. |
+| **Nghiêm Đức Việt** | Requirements design (Actor, Use Case, ASR, FR/NFR), layered architecture, CRUD backend. Deployment view and ATAM. Flutter development and integration. Reports: requirements, layering, EDA and deployment. |
+| **Nguyễn Duy Minh** | Diagram and documentation formatting. Collect inputs from the team. Reports: requirements, layering, Gateway, Flutter. |
+| **Đặng Nhất Nhất** | C4 diagrams support, evidence collection. Integration. Reports: CRUD, microservices, Gateway, final integration. |
+
+---
+
+## Tóm tắt phân công theo thành viên (theo tên gọi)
 
 | Thành viên | Công việc thực hiện (Code/Thiết kế) | Công việc báo cáo |
 |------------|-------------------------------------|-------------------|
-| **Nhật (Lead)** | Lab 4 (Phân rã MS + C4), Lab 6 (Gateway), Lab 7 (EDA), Lab 8 (Deployment + ATAM); W9 (Flutter), W10 (tích hợp). Giám sát kỹ thuật toàn bộ. | **Lab 8.** Hỗ trợ minh chứng cho Lab 4, 6, 7. |
-| **Việt** | Lab 1 (Actor, UC, ASR, FR/NFR), Lab 2 (Phân lớp + Component), Lab 3 (CRUD layered), Lab 5 (Movie Microservice); W9 (Flutter), W10 (tích hợp). | **Lab 5.** Cung cấp tài liệu/input cho Lab 1, 2, 3 (Minh/Nhất). |
-| **Minh** | Hỗ trợ chỉnh diagram/format (Lab 1, 2); thu thập tài liệu từ Nhật (Lab 6). | **Lab 1, Lab 2, Lab 6, W9.** |
-| **Nhất** | Hỗ trợ vẽ C4 (Lab 4); thu thập minh chứng từ Việt (Lab 3), Nhật (Lab 4, 7); W10 (tích hợp). | **Lab 3, Lab 4, Lab 7, W10.** |
+| **Nhật (Lead)** | Lab 4 (Phân rã MS + C4), Lab 5 (Movie MS), Lab 6 (Gateway), Lab 7 (EDA), Lab 8 (Deployment + ATAM); W9 (Flutter), W10 (tích hợp). Giám sát kỹ thuật toàn bộ. | **Lab 4, Lab 5, W9.** Cùng Việt W10. Hỗ trợ minh chứng cho Lab 6, 7. |
+| **Việt** | Lab 1 (Actor, UC, ASR, FR/NFR), Lab 2 (Phân lớp + Component), Lab 3 (CRUD layered), Lab 8 (Deployment + ATAM); W9 (Flutter), W10 (tích hợp). | **Lab 7, Lab 8.** Cùng Nhật W10. Cung cấp tài liệu/input cho Lab 1, 2, 3 (Minh/Nhất). |
+| **Minh** | Hỗ trợ chỉnh diagram/format (Lab 1, 2); thu thập tài liệu từ Nhật (Lab 6), Nhật & Việt (W9). | **Lab 1, Lab 2, W9.** |
+| **Nhất** | Hỗ trợ vẽ C4 (Lab 4); thu thập minh chứng từ Việt (Lab 3), Nhật (Lab 4, 7); W10 (tích hợp). | **Lab 3, Lab 6, W10.** |
 
 ---
 

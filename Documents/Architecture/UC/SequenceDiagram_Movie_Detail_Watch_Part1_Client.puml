@@ -1,0 +1,58 @@
+@startuml SequenceDiagram_Movie_Detail_Watch_Part1_Client
+' Part 1: Client - Movie detail & video player
+!theme plain
+title Movie Detail & Watch - Part 1: Client (Flutter)
+
+skinparam maxMessageSize 100
+
+actor User
+participant "GoRouter" as Router
+participant "MovieDetailScreen" as Detail
+participant "VideoPlayerScreen" as Player
+participant "Riverpod" as Prov
+
+== Load detail ==
+User -> Router : Tap movie
+Router -> Detail : /movie/:id
+Detail -> Prov : movieDetailProvider(id), isInWishlistProvider(id)
+Prov --> Detail : movie, isInWishlist
+Detail -> User : Hero (poster, Play, Wishlist), Rating, Series, Similar
+
+== Wishlist ==
+User -> Detail : Tap Wishlist
+Detail -> Prov : wishlistNotifier.add / remove
+Prov --> Detail : optimistic update
+Detail -> User : Toast
+
+== Play (access check) ==
+User -> Detail : Tap Play
+Detail -> Prov : isUserSubscribedProvider
+Prov --> Detail : true/false
+alt can watch
+    Detail -> Router : push /video-player/:id (movie, videoUrl)
+    Router -> Player : VideoPlayerScreen
+else cannot watch
+    Detail -> User : push /subscription
+end
+
+== Player init ==
+Player -> Player : isFree or isSubscribed?
+alt has access
+    Player -> Prov : getPlaybackState(movieId)
+    Player -> User : init VideoPlayerController, play
+else check play API
+    Player -> Prov : movieWatchService.playMovie(slug)
+    Prov --> Player : hasAccess, streamingData
+    alt hasAccess
+        Player -> User : play m3u8Url
+    else
+        Player -> User : PremiumRequiredDialog
+    end
+end
+
+== During watch ==
+Player -> Player : savePlaybackState (position, speed) [local]
+User -> Player : seek / pause / back
+Player -> Player : _savePlaybackState on dispose
+
+@enduml

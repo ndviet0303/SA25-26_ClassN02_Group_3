@@ -1,0 +1,66 @@
+@startuml SequenceDiagram_Premium_Payment_Nozie
+' Premium subscription and payment flow - Nozie (simplified)
+' Render: PlantUML, or https://www.plantuml.com/plantuml/uml/
+!theme plain
+title Premium Subscription and Payment - Nozie (Simplified)
+
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 120
+
+actor User
+participant "SubscriptionScreen" as Screen
+participant "SubscriptionRepository" as SubRepo
+participant "API Gateway" as GW
+participant "Payment Service" as PaySvc
+participant "Stripe" as Stripe
+participant "PaymentSuccessScreen" as SuccessScreen
+
+== Load plans and current subscription ==
+User -> Screen : Open Premium (e.g. /subscription)
+Screen -> Screen : watch subscriptionPlansProvider, currentSubscriptionProvider
+Screen -> SubRepo : getPlans(), getCurrentSubscription()
+SubRepo -> GW : GET /plans, GET /current/:userId
+GW -> PaySvc : plans, current subscription
+PaySvc --> GW : 200 plans list, 200 UserSubscription or null
+GW --> SubRepo : data
+SubRepo --> Screen : plans, currentSub
+Screen -> User : Show current plan (if active), plan cards, Subscribe buttons
+
+== Subscribe: create checkout ==
+User -> Screen : Tap Subscribe on plan
+Screen -> Screen : loading dialog
+Screen -> SubRepo : subscribe(planId, planType)
+SubRepo -> GW : POST /subscribe { userId, planId, planType }
+GW -> PaySvc : create checkout
+PaySvc -> PaySvc : find plan, create or reuse Stripe Session
+PaySvc -> Stripe : create Checkout Session (successUrl, cancelUrl)
+Stripe --> PaySvc : session with URL
+PaySvc --> GW : 200 checkoutUrl
+GW --> SubRepo : checkoutUrl
+SubRepo -> SubRepo : launchUrl(checkoutUrl, externalApplication)
+SubRepo --> Screen : true
+Screen -> User : SnackBar "Redirecting to payment...", open browser
+
+== User pays on Stripe (browser) ==
+User -> Stripe : Enter card, pay
+Stripe -> Stripe : process payment
+Stripe -> PaySvc : POST /webhook (checkout.session.completed)
+PaySvc -> PaySvc : verify signature, parse event
+PaySvc -> PaySvc : save Subscription, Transaction, publish PaymentSucceededEvent
+PaySvc --> Stripe : 200
+Stripe -> User : redirect to successUrl (app deep link or web)
+
+== Return to app: success ==
+User -> SuccessScreen : open /payment/success
+SuccessScreen -> SuccessScreen : invalidate currentSubscription, hasSubscription, history
+SuccessScreen -> SubRepo : (refetch on next read)
+SuccessScreen -> User : "Payment Successful!", Back to Home
+User -> SuccessScreen : Tap Back to Home
+SuccessScreen -> User : context.go(/home)
+
+== Cancel path ==
+User -> Stripe : Cancel on Stripe page
+Stripe -> User : redirect to cancelUrl
+User -> Screen : open /payment/cancel (SubscriptionScreen again)
+
+@enduml

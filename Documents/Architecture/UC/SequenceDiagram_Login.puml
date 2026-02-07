@@ -1,0 +1,71 @@
+@startuml SequenceDiagram_Login_Nozie
+' Login flow - Nozie (simplified to avoid PlantUML heap OOM)
+' Render: PlantUML, or https://www.plantuml.com/plantuml/uml/
+!theme plain
+title Login Flow - Nozie (Simplified)
+
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 120
+
+actor User
+participant "LoginScreen" as Screen
+participant "LoginNotifier" as Notifier
+participant "AuthStateNotifier" as Auth
+participant "AuthRepository" as Repo
+participant "API Gateway" as GW
+participant "Identity Service" as IdSvc
+database "DB" as DB
+
+== Client: Submit login ==
+User -> Screen : Enter email/username, password (optional Remember me)
+User -> Screen : Tap Sign in
+Screen -> Screen : validate email, password
+Screen -> Notifier : signIn(email, password)
+
+== Client: Login request ==
+Notifier -> Notifier : state = Loading
+Notifier -> Auth : login(username, password)
+Auth -> Auth : state = loading
+Auth -> Repo : login(LoginRequest)
+Repo -> GW : POST /api/auth/login
+
+== Server: Identity ==
+GW -> IdSvc : login(request)
+IdSvc -> DB : findByUsernameOrEmail
+alt user not found / invalid password / locked / disabled
+    DB -> IdSvc : not found or invalid
+    IdSvc -> IdSvc : audit LOGIN_FAILED
+    IdSvc --> GW : 400 BadRequest
+    GW --> Repo : error
+    Repo --> Auth : throw
+    Auth --> Notifier : throw
+    Notifier -> Notifier : state = Error
+    Notifier --> Screen : Error
+    Screen -> User : Toast error, reset
+else valid user
+    DB -> IdSvc : user
+    IdSvc -> IdSvc : passwordEncoder.matches, recordLogin
+    IdSvc -> DB : save(user)
+    IdSvc -> IdSvc : generateAccessToken, generateRefreshToken
+    IdSvc -> DB : save UserSession
+    IdSvc -> IdSvc : audit LOGIN success
+    IdSvc --> GW : 200 AuthResponse (tokens, user)
+end
+
+== Success: tokens & redirect ==
+GW --> Repo : 200 + AuthResponse
+Repo --> Auth : tokens
+Auth -> Auth : _saveTokens(tokens)
+Auth -> Repo : getCurrentUser(accessToken)
+Repo -> GW : GET /api/auth/me
+GW -> IdSvc : me
+IdSvc --> GW : user
+GW --> Repo : user
+Repo --> Auth : user
+Auth -> Auth : state = tokens + user, notify logged in
+Auth --> Notifier : return
+Notifier -> Notifier : _syncUserProfile(), state = Success
+Notifier --> Screen : Success
+Screen -> User : context.go(/home)
+
+@enduml

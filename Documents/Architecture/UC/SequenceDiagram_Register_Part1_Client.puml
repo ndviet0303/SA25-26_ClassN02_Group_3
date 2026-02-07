@@ -1,0 +1,40 @@
+@startuml SequenceDiagram_Register_Part1_Client
+' Part 1: Client-side only (smaller diagram)
+!theme plain
+title Registration Flow - Part 1: Client (Flutter)
+
+skinparam maxMessageSize 100
+
+actor User
+participant "GoRouter" as Router
+participant "SignupFlowScreen" as Screen
+participant "SignupNotifier" as Notifier
+participant "Storage\n(ImgBB)" as Storage
+participant "AuthStateNotifier" as Auth
+participant "AuthRepository" as Repo
+
+== Navigate & steps 1-5 ==
+User -> Router : Sign up
+Router -> Screen : /signup
+Screen -> User : Step1 Gender
+User -> Screen : Select, Continue
+Screen -> User : Step2 Age
+User -> Screen : Select, Continue
+Screen -> User : Step3 Genre (Skip or Continue)
+User -> Screen : Step4 Profile (fullName, phone, dob, country, avatar?)
+Screen -> User : Step5 username, email, password, confirm
+
+== Submit ==
+User -> Screen : Sign Up
+Screen -> Notifier : registerUser(...)
+Notifier -> Notifier : Loading
+opt has avatar
+    Notifier -> Storage : uploadToImgBB()
+    Storage --> Notifier : avatarUrl
+end
+Notifier -> Auth : register(...)
+Auth -> Repo : register(RegisterRequest)
+Repo -> Repo : POST /api/auth/register
+... wait response ...
+
+@enduml

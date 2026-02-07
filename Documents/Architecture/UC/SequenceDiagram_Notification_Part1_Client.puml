@@ -1,0 +1,42 @@
+@startuml SequenceDiagram_Notification_Part1_Client
+' Part 1: Client - Notification screen
+!theme plain
+title Notification Flow - Part 1: Client (Flutter)
+
+skinparam maxMessageSize 100
+
+actor User
+participant "GoRouter" as Router
+participant "NotificationScreen" as Screen
+participant "NotificationRepository" as Repo
+
+== Open list ==
+User -> Router : Tap Notification or /notification
+Router -> Screen : NotificationScreen
+Screen -> Screen : ref.watch(notificationsProvider)
+Screen -> Repo : watchNotifications() -> fetchNotifications()
+Repo --> Screen : List NotificationItem
+Screen -> User : ListView with NotificationCard, or empty state
+
+== Actions ==
+User -> Screen : Tap "Mark all as read"
+Screen -> Repo : markAllAsRead()
+Repo -> Repo : fetchNotifications then markAsRead each
+Repo --> Screen : done
+Screen -> User : list refreshed
+
+User -> Screen : Tap a notification card
+Screen -> Repo : markAsRead(notification.id)
+Repo --> Screen : done
+Screen -> Screen : ref invalidate or next read shows updated
+
+User -> Screen : Tap Settings icon
+Screen -> Router : push /notification-settings
+Router -> User : NotificationSettingsScreen
+
+== Unread count (badge) ==
+Screen -> Repo : getUnreadCount() or watchUnreadCount()
+Repo --> Screen : count
+Screen -> User : badge or indicator (if used in app bar)
+
+@enduml

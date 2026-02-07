@@ -1,0 +1,60 @@
+@startuml SequenceDiagram_Notification_Part2_Server
+' Part 2: Notification Service - REST and event consumers
+!theme plain
+title Notification Flow - Part 2: Server (Notification Service)
+
+skinparam maxMessageSize 100
+
+participant "NotificationRepository\n(client)" as Repo
+participant "API Gateway" as GW
+participant "NotificationController" as Ctrl
+participant "NotificationService" as Svc
+participant "NotificationRepository\n(JPA)" as NotifRepo
+participant "EmailService" as Email
+participant "UserEventConsumer" as UserCons
+participant "SubscriptionEventConsumer" as SubCons
+database "DB" as DB
+participant "RabbitMQ" as MQ
+
+== REST: get list ==
+Repo -> GW : GET /notifications/:userId
+GW -> Ctrl : getNotifications(customerId)
+Ctrl -> NotifRepo : findByCustomerIdOrderByCreatedAtDesc
+NotifRepo -> DB : query
+DB --> NotifRepo : list
+NotifRepo --> Ctrl : list
+Ctrl --> GW : 200
+GW --> Repo : data
+
+== REST: mark as read ==
+Repo -> GW : PATCH /notifications/:id/read
+GW -> Ctrl : markAsRead(id)
+Ctrl -> NotifRepo : findById, setRead(true), save
+NotifRepo -> DB : save
+Ctrl --> GW : 200
+GW --> Repo : ok
+
+== REST: unread count ==
+Repo -> GW : GET /notifications/:userId/count
+GW -> Ctrl : getUnreadCount(customerId)
+Ctrl -> NotifRepo : countByCustomerIdAndReadFalse
+NotifRepo -> DB : count
+DB --> NotifRepo : n
+Ctrl --> GW : 200 unreadCount
+GW --> Repo : data
+
+== Event: UserRegistered ==
+MQ -> UserCons : UserRegisteredEvent
+UserCons -> Svc : handleUserRegistered(userId, email, name)
+Svc -> Email : sendWelcomeEmail
+Svc -> Svc : createNotification (Welcome, deepLink /explore)
+Svc -> NotifRepo : save
+NotifRepo -> DB : insert
+
+== Event: SubscriptionActivated ==
+MQ -> SubCons : SubscriptionActivatedEvent
+SubCons -> Svc : createNotification(userId, purchase, title, desc, /subscription)
+Svc -> NotifRepo : save
+NotifRepo -> DB : insert
+
+@enduml

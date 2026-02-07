@@ -1,0 +1,68 @@
+@startuml SequenceDiagram_Movie_Detail_Watch_Part2_APIs
+' Part 2: Backend APIs - Movie detail, play, wishlist, subscription
+!theme plain
+title Movie Detail & Watch - Part 2: APIs (Movie, Customer, Payment)
+
+skinparam maxMessageSize 100
+
+participant "MovieRepository" as Repo
+participant "WishlistRepo" as WishRepo
+participant "CustomerRepository" as CustRepo
+participant "MovieWatchService" as WatchSvc
+participant "SubscriptionRepo" as SubRepo
+participant "API Gateway" as GW
+participant "Movie Service" as MovieSvc
+participant "Customer Service" as CustSvc
+participant "Payment Service" as PaySvc
+database "DB" as DB
+
+== Movie detail ==
+Repo -> GW : GET /movies/:id
+GW -> MovieSvc : get movie
+MovieSvc -> DB : find by id
+DB --> MovieSvc : movie
+MovieSvc --> GW : 200 Movie (metadata, accessType, episodes)
+GW --> Repo : data
+
+== Play (access + stream URL) ==
+WatchSvc -> GW : GET /slug/:slug/play (Authorization)
+GW -> MovieSvc : play(slug, userId from token)
+MovieSvc -> MovieSvc : check access (FREE or subscription)
+MovieSvc -> PaySvc : or check subscription for userId
+PaySvc --> MovieSvc : isActive
+alt has access
+    MovieSvc -> DB : get stream URL / episodes
+    MovieSvc --> GW : 200 streamingData (m3u8Url, embedUrl)
+else no access
+    MovieSvc --> GW : 403 or hasAccess false
+end
+GW --> WatchSvc : response
+
+== Wishlist ==
+WishRepo -> GW : GET /user/:id/watchlist
+GW -> MovieSvc : or CustSvc
+MovieSvc -> DB : watchlist
+DB --> MovieSvc : list
+MovieSvc --> GW : 200
+WishRepo -> GW : POST /watchlist (movieId)
+GW -> MovieSvc : add
+MovieSvc --> GW : 200
+WishRepo -> GW : DELETE /watchlist/movieId
+GW -> MovieSvc : remove
+MovieSvc --> GW : 200
+
+== Subscription check ==
+SubRepo -> GW : GET /subscriptions/current/:userId
+GW -> PaySvc : current subscription
+PaySvc -> DB : subscription
+DB --> PaySvc : active or null
+PaySvc --> GW : 200
+GW --> SubRepo : UserSubscription
+
+== Viewing history (optional) ==
+CustRepo -> GW : POST /customers/:id/viewing-history
+GW -> CustSvc : recordViewing(movieId, progress)
+CustSvc -> DB : insert/update
+CustSvc --> GW : 200
+
+@enduml
