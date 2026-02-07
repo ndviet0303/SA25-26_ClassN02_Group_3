@@ -148,6 +148,8 @@ services:
       SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/notificationdb
       SPRING_REDIS_HOST: redis
       SPRING_RABBITMQ_HOST: rabbitmq
+      MAIL_USERNAME: ${MAIL_USERNAME:-vnhat.dev@gmail.com}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-okfq hhgf juor jqxy}
 
   identity-service:
     build: ./identity-service

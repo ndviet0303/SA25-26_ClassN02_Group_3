@@ -8,6 +8,17 @@ spring:
       host: redis
   rabbitmq:
     host: rabbitmq
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:vnhat.dev@gmail.com}
+    password: ${MAIL_PASSWORD:okfq hhgf juor jqxy}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 eureka:
   client:
