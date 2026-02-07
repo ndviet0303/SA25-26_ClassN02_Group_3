@@ -16,30 +16,22 @@ class NozieApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeControllerProvider);
-    
-    // Use routerProvider to get GoRouter with auth state integration
     final router = ref.watch(routerProvider);
 
     return OrientationLockWidget(
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
-
-        // i18n
-        locale: locale,
-        supportedLocales: AppLocale.values.map((locale) => locale.flutterLocale),
+        locale: locale, // language
+        supportedLocales: AppLocale.values.map((e) => e.flutterLocale),
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-
-        // theme
-        themeMode: themeMode,
+        themeMode: themeMode, // dark/light mode
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
-
-        // routing with go_router (now uses auth state from AuthStateNotifier)
-        routerConfig: router,
+        routerConfig: router, // routing config
       ),
     );
   }

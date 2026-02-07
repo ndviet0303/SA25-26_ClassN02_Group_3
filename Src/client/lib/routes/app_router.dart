@@ -34,19 +34,20 @@ import 'package:movie_fe/features/movie/presentation/screens/ratings_detail_scre
 import 'package:movie_fe/core/models/movie.dart';
 import 'package:movie_fe/features/subscription/presentation/subscription_screen.dart';
 import 'package:movie_fe/features/subscription/presentation/payment_success_screen.dart';
-import '../core/auth/auth_providers.dart';
-import '../core/auth/auth_state_notifier.dart';
-import '../core/layouts/main_layout.dart';
-import '../core/services/locale_setting.dart';
-import 'transition_page.dart';
-import 'auth_guard.dart';
+import 'package:movie_fe/core/auth/auth_providers.dart';
+import 'package:movie_fe/core/auth/auth_state_notifier.dart';
+import 'package:movie_fe/core/layouts/main_layout.dart';
+import 'package:movie_fe/core/services/locale_setting.dart';
+import 'package:movie_fe/routes/transition_page.dart';
+import 'package:movie_fe/routes/auth_guard.dart';
 
-/// Provides the GoRouter instance configured with auth state from AuthStateNotifier
+// GoRouter provider with auth state
 final routerProvider = Provider<GoRouter>((ref) {
   return AppRouter.createRouter(ref);
 });
 
 class AppRouter {
+  // Route paths
   static const welcome = '/';
   static const signup = '/signup';
   static const signIn = '/sign-in';
@@ -96,12 +97,9 @@ class AppRouter {
     signup,
   };
 
-  /// Create router with auth state from Riverpod
+  // Build router using auth state
   static GoRouter createRouter(Ref ref) {
-    // Watch auth state notifier for state changes
     final authNotifier = ref.watch(authStateNotifierProvider.notifier);
-    
-    // Create auth guard with callback to check login state
     final guard = AuthGuard(
       isLoggedIn: () => ref.read(authStateNotifierProvider).isLoggedIn,
     );
@@ -118,6 +116,7 @@ class AppRouter {
     );
   }
 
+  // Define all app routes
   static List<RouteBase> _buildRoutes() {
     return [
       GoRoute(path: welcome, builder: (_, __) => const WelcomeScreen()),
@@ -134,11 +133,11 @@ class AppRouter {
       }),
       GoRoute(path: '${movieCarouselCountry}:id', builder: (_, state) {
         final id = state.pathParameters['id']!;
-        return ExploreGenreDetails(query: id); // Reuse for country filtering
+        return ExploreGenreDetails(query: id); // for country
       }),
       GoRoute(path: '${movieCarouselYear}:id', builder: (_, state) {
         final id = state.pathParameters['id']!;
-        return ExploreGenreDetails(query: id); // Reuse for year filtering
+        return ExploreGenreDetails(query: id); // for year
       }),
       GoRoute(path: '$explore/:name', builder: (_, state) {
         final name = state.pathParameters['name']!;
@@ -153,26 +152,16 @@ class AppRouter {
         final extra = state.extra;
         Movie? movie;
         String? videoUrl;
-        
         if (extra is Map) {
           movie = extra['movie'] as Movie?;
           videoUrl = extra['videoUrl'] as String?;
         } else if (extra is Movie) {
           movie = extra;
         }
-        
         if (movie == null) {
-          return Scaffold(
-            body: Center(
-              child: Text('Movie not found: $id'),
-            ),
-          );
+          return Scaffold(body: Center(child: Text('Movie not found: $id')));
         }
-        
-        return VideoPlayerScreen(
-          movie: movie,
-          videoUrl: videoUrl,
-        );
+        return VideoPlayerScreen(movie: movie, videoUrl: videoUrl);
       }),
       GoRoute(path: '$movieInfo/:id', builder: (_, state) {
         final id = state.pathParameters['id']!;
@@ -183,15 +172,9 @@ class AppRouter {
         } else if (extra is Movie) {
           movie = extra;
         }
-
         if (movie == null) {
-          return Scaffold(
-            body: Center(
-              child: Text('Movie not found: $id'),
-            ),
-          );
+          return Scaffold(body: Center(child: Text('Movie not found: $id')));
         }
-
         return MovieInfoScreen(movie: movie);
       }),
       GoRoute(path: '$ratings/:id', builder: (context, state) {
@@ -248,14 +231,12 @@ class AppRouter {
       GoRoute(path: search, builder: (_, state) {
         final extra = state.extra;
         SearchSource searchSource = SearchSource.all;
-        
         if (extra is Map) {
           final source = extra['searchSource'] as String?;
           if (source == 'wishlist') {
             searchSource = SearchSource.wishlist;
           }
         }
-        
         return SearchScreen(searchSource: searchSource);
       }),
       ShellRoute(
@@ -287,6 +268,7 @@ class AppRouter {
     ];
   }
 
+  // Normalize route path
   static String _normalize(String location) {
     if (location.isEmpty) return welcome;
     final uri = Uri.parse(location);
@@ -295,12 +277,11 @@ class AppRouter {
   }
 }
 
-/// Listens to AuthStateNotifier's auth state changes stream and notifies GoRouter
+// Listens to auth changes for GoRouter refresh
 class _AuthStateRefreshNotifier extends ChangeNotifier {
   _AuthStateRefreshNotifier(AuthStateNotifier notifier) {
     _subscription = notifier.authStateChanges.listen((_) => notifyListeners());
   }
-
   late final StreamSubscription<bool> _subscription;
 
   @override

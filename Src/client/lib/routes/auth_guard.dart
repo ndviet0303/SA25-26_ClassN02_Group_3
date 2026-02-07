@@ -3,11 +3,10 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
-import '../core/auth/auth_models.dart';
+import 'package:movie_fe/core/auth/auth_models.dart';
 
-/// Guard for protecting routes based on authentication state.
-/// Uses token-based auth from AuthStateNotifier instead of Firebase.
 class AuthGuard {
+  /// Auth route guard.
   AuthGuard({
     required bool Function() isLoggedIn,
     Set<String>? publicPaths,
@@ -35,12 +34,12 @@ class AuthGuard {
     final isLoggedIn = _isLoggedIn();
     final location = _normalize(state.matchedLocation);
 
-    // If not logged in and trying to access protected route, redirect to sign-in
+    // Redirect to sign-in if not logged in and accessing protected page
     if (!isLoggedIn && !_publicPaths.contains(location)) {
       return '/sign-in';
     }
 
-    // If logged in and on auth pages, redirect to home
+    // Redirect logged in user away from auth pages
     if (isLoggedIn && _authRedirectWhitelist.contains(location)) {
       return '/home';
     }
@@ -48,6 +47,7 @@ class AuthGuard {
     return null;
   }
 
+  // Normalize URI path
   String _normalize(String location) {
     if (location.isEmpty) return '/';
     final uri = Uri.parse(location);

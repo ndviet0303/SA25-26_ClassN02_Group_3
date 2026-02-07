@@ -11,18 +11,19 @@ import 'i18n/translations.g.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Lock orientation to portrait
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  
+
   final sp = await SharedPreferences.getInstance();
   DioClient.init();
 
-  // Initialize slang locale BEFORE creating widget tree
+  // Set locale before widget tree
   final savedLocaleCode = sp.getString('app_locale') ?? 'vi';
   final appLocale = AppLocale.values.firstWhere(
-        (l) => l.languageCode == savedLocaleCode,
+    (l) => l.languageCode == savedLocaleCode,
     orElse: () => AppLocale.vi,
   );
   LocaleSettings.setLocale(appLocale);
