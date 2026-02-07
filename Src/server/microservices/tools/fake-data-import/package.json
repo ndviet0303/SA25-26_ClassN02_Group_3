@@ -1,0 +1,14 @@
+{
+  "name": "fake-data-import",
+  "version": "1.0.0",
+  "description": "Import ~10k fake users into identitydb and customers/interests into customerdb",
+  "main": "import.js",
+  "type": "module",
+  "scripts": {
+    "import": "node import.js",
+    "import:dry": "node import.js --dry-run"
+  },
+  "dependencies": {
+    "pg": "^8.11.3"
+  }
+}

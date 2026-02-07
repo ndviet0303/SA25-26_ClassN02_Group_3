@@ -27,6 +27,13 @@ class SettingsRepository {
   final AuthRepository _authRepository;
   final Ref _ref;
 
+  String? get _userId => _ref.read(currentUserIdProvider);
+
+  String _getKey(String baseKey) {
+    if (_userId == null) return baseKey;
+    return '$baseKey:$_userId';
+  }
+
   Future<UserProfile> fetchProfile() async {
     // Try to get from Customer Service first for full data
     try {
@@ -48,7 +55,7 @@ class SettingsRepository {
             gender: customerProfile.gender ?? '',
             bio: customerProfile.bio ?? '',
           );
-          await _prefs.setString(_keyProfile, jsonEncode(profile.toJson()));
+          await _prefs.setString(_getKey(_keyProfile), jsonEncode(profile.toJson()));
           return profile;
         }
       }
@@ -72,11 +79,11 @@ class SettingsRepository {
         bio: '',
       );
       // Sync local storage
-      await _prefs.setString(_keyProfile, jsonEncode(profile.toJson()));
+      await _prefs.setString(_getKey(_keyProfile), jsonEncode(profile.toJson()));
       return profile;
     }
 
-    final jsonString = _prefs.getString(_keyProfile);
+    final jsonString = _prefs.getString(_getKey(_keyProfile));
     if (jsonString == null) {
       const fallback = UserProfile(
         id: 'user_1',
@@ -90,7 +97,7 @@ class SettingsRepository {
         gender: 'male',
         bio: 'I love movies and coding!',
       );
-      await _prefs.setString(_keyProfile, jsonEncode(fallback.toJson()));
+      await _prefs.setString(_getKey(_keyProfile), jsonEncode(fallback.toJson()));
       return fallback;
     }
     return UserProfile.fromJson(jsonDecode(jsonString) as Map<String, dynamic>);
@@ -129,7 +136,7 @@ class SettingsRepository {
     }
 
     // 3. Save locally
-    await _prefs.setString(_keyProfile, jsonEncode(profile.toJson()));
+    await _prefs.setString(_getKey(_keyProfile), jsonEncode(profile.toJson()));
 
     // 4. Sync with AuthState
     if (currentAuthUser != null) {
@@ -152,10 +159,10 @@ class SettingsRepository {
   }
 
   Future<NotificationSettings> fetchNotificationSettings() async {
-    final jsonString = _prefs.getString(_keyNotification);
+    final jsonString = _prefs.getString(_getKey(_keyNotification));
     if (jsonString == null) {
       final defaults = NotificationSettings.defaults;
-      await _prefs.setString(_keyNotification, jsonEncode(defaults.toJson()));
+      await _prefs.setString(_getKey(_keyNotification), jsonEncode(defaults.toJson()));
       return defaults;
     }
     return NotificationSettings.fromJson(
@@ -166,32 +173,32 @@ class SettingsRepository {
   Future<NotificationSettings> updateNotificationSettings(
     NotificationSettings settings,
   ) async {
-    await _prefs.setString(_keyNotification, jsonEncode(settings.toJson()));
+    await _prefs.setString(_getKey(_keyNotification), jsonEncode(settings.toJson()));
     _log('Notification settings updated', settings.toJson());
     return settings;
   }
 
   Future<Preferences> fetchPreferences() async {
-    final jsonString = _prefs.getString(_keyPreferences);
+    final jsonString = _prefs.getString(_getKey(_keyPreferences));
     if (jsonString == null) {
       final defaults = Preferences.defaults;
-      await _prefs.setString(_keyPreferences, jsonEncode(defaults.toJson()));
+      await _prefs.setString(_getKey(_keyPreferences), jsonEncode(defaults.toJson()));
       return defaults;
     }
     return Preferences.fromJson(jsonDecode(jsonString) as Map<String, dynamic>);
   }
 
   Future<Preferences> updatePreferences(Preferences preferences) async {
-    await _prefs.setString(_keyPreferences, jsonEncode(preferences.toJson()));
+    await _prefs.setString(_getKey(_keyPreferences), jsonEncode(preferences.toJson()));
     _log('Preferences updated', preferences.toJson());
     return preferences;
   }
 
   Future<SecuritySettings> fetchSecuritySettings() async {
-    final jsonString = _prefs.getString(_keySecurity);
+    final jsonString = _prefs.getString(_getKey(_keySecurity));
     if (jsonString == null) {
       final defaults = SecuritySettings.defaults;
-      await _prefs.setString(_keySecurity, jsonEncode(defaults.toJson()));
+      await _prefs.setString(_getKey(_keySecurity), jsonEncode(defaults.toJson()));
       return defaults;
     }
     return SecuritySettings.fromJson(
@@ -200,7 +207,7 @@ class SettingsRepository {
   }
 
   Future<SecuritySettings> updateSecuritySettings(SecuritySettings settings) async {
-    await _prefs.setString(_keySecurity, jsonEncode(settings.toJson()));
+    await _prefs.setString(_getKey(_keySecurity), jsonEncode(settings.toJson()));
     _log('Security settings updated', settings.toJson());
     return settings;
   }
@@ -225,10 +232,10 @@ class SettingsRepository {
   }
 
   Future<LanguageSettings> fetchLanguageSettings() async {
-    final jsonString = _prefs.getString(_keyLanguage);
+    final jsonString = _prefs.getString(_getKey(_keyLanguage));
     if (jsonString == null) {
       final defaults = LanguageSettings.defaults;
-      await _prefs.setString(_keyLanguage, jsonEncode(defaults.toJson()));
+      await _prefs.setString(_getKey(_keyLanguage), jsonEncode(defaults.toJson()));
       return defaults;
     }
     return LanguageSettings.fromJson(
@@ -237,18 +244,18 @@ class SettingsRepository {
   }
 
   Future<LanguageSettings> updateLanguage(LanguageSettings settings) async {
-    await _prefs.setString(_keyLanguage, jsonEncode(settings.toJson()));
+    await _prefs.setString(_getKey(_keyLanguage), jsonEncode(settings.toJson()));
     _log('Language updated', settings.toJson());
     return settings;
   }
 
   Future<void> clearUserData() async {
     try {
-      await _prefs.remove(_keyProfile);
-      await _prefs.remove(_keyNotification);
-      await _prefs.remove(_keyPreferences);
-      await _prefs.remove(_keySecurity);
-      await _prefs.remove(_keyLanguage);
+      await _prefs.remove(_getKey(_keyProfile));
+      await _prefs.remove(_getKey(_keyNotification));
+      await _prefs.remove(_getKey(_keyPreferences));
+      await _prefs.remove(_getKey(_keySecurity));
+      await _prefs.remove(_getKey(_keyLanguage));
       _log('User data cleared', {});
     } catch (error) {
       debugPrint('[SettingsRepository] Failed to clear user data: $error');
@@ -261,6 +268,9 @@ class SettingsRepository {
 }
 
 final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
+  // Watch current user ID to ensure repository is recreated or aware of user changes
+  ref.watch(currentUserIdProvider);
+  
   final prefs = ref.watch(sharedPreferencesProvider);
   final authRepo = ref.watch(authRepositoryProvider);
   return SettingsRepository(prefs, authRepo, ref);

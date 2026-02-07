@@ -198,11 +198,15 @@ class MovieRating {
 
 /// Provider to get movie ratings
 final movieRatingsProvider = FutureProvider.autoDispose.family<List<MovieRating>, String>((ref, movieId) {
+  // Watch userId to refresh when user changes
+  ref.watch(currentUserIdProvider);
   return ref.watch(ratingsRepositoryProvider).getMovieRatings(movieId);
 });
 
 /// Provider to get current user's rating for a movie
 final userRatingProvider = FutureProvider.autoDispose.family<MovieRating?, String>((ref, movieId) {
+  // Watch userId to refresh when user changes
+  ref.watch(currentUserIdProvider);
   return ref.watch(ratingsRepositoryProvider).getUserRating(movieId);
 });
 

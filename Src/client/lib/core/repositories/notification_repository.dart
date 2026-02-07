@@ -174,10 +174,14 @@ class NotificationRepository {
 
 // Providers
 final notificationsProvider = StreamProvider<List<NotificationItem>>((ref) {
+  // Watch userId to refresh/clear when user changes
+  ref.watch(currentUserIdProvider);
   return ref.watch(notificationRepositoryProvider).watchNotifications();
 });
 
 final unreadCountProvider = StreamProvider<int>((ref) {
+  // Watch userId to refresh when user changes
+  ref.watch(currentUserIdProvider);
   return ref.watch(notificationRepositoryProvider).watchUnreadCount();
 });
 

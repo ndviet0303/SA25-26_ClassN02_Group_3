@@ -115,10 +115,14 @@ class RecommendationRepository {
 
 // Providers
 final recommendationsProvider = FutureProvider<List<Movie>>((ref) {
+  // Watch userId to refresh when user changes (personalized recommendations)
+  ref.watch(currentUserIdProvider);
   return ref.watch(recommendationRepositoryProvider).getRecommendations();
 });
 
 final trendingMoviesProvider = FutureProvider<List<Movie>>((ref) {
+  // Trending is usually global but we may want to refresh on login
+  ref.watch(isLoggedInProvider);
   return ref.watch(recommendationRepositoryProvider).getTrending();
 });
 

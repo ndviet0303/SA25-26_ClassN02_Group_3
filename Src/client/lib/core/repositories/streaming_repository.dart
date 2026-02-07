@@ -328,6 +328,8 @@ class Episode {
 
 /// Provider to get play URL for a movie
 final playUrlProvider = FutureProvider.autoDispose.family<PlayResult, PlayRequest>((ref, request) {
+  // Watch userId to refresh when user changes (premium status may affect access)
+  ref.watch(currentUserIdProvider);
   final repo = ref.watch(streamingRepositoryProvider);
   if (request.useSlug) {
     return repo.getPlayUrlBySlug(request.id, server: request.server, episode: request.episode);
@@ -337,6 +339,8 @@ final playUrlProvider = FutureProvider.autoDispose.family<PlayResult, PlayReques
 
 /// Provider to get episodes for a movie
 final episodesProvider = FutureProvider.autoDispose.family<EpisodesResult, EpisodesRequest>((ref, request) {
+  // Watch userId to refresh when user changes
+  ref.watch(currentUserIdProvider);
   final repo = ref.watch(streamingRepositoryProvider);
   if (request.useSlug) {
     return repo.getEpisodesBySlug(request.id);

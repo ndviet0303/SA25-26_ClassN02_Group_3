@@ -195,23 +195,30 @@ class SubscriptionRepository {
 
 // Providers
 final subscriptionPlansProvider = FutureProvider<List<SubscriptionPlan>>((ref) {
+  // Watch auth state to refresh when user changes
+  ref.watch(isLoggedInProvider);
   return ref.watch(subscriptionRepositoryProvider).getPlans();
 });
 
 final currentSubscriptionProvider = FutureProvider<UserSubscription?>((ref) {
+  // Watch userId to refresh when user changes
+  ref.watch(currentUserIdProvider);
   return ref.watch(subscriptionRepositoryProvider).getCurrentSubscription();
 });
 
 final hasSubscriptionProvider = FutureProvider<bool>((ref) {
+  ref.watch(currentUserIdProvider);
   return ref.watch(subscriptionRepositoryProvider).hasActiveSubscription();
 });
 
 final subscriptionHistoryProvider = FutureProvider<List<UserSubscription>>((ref) {
+  ref.watch(currentUserIdProvider);
   return ref.watch(subscriptionRepositoryProvider).getSubscriptionHistory();
 });
 
 final isUserSubscribedProvider = FutureProvider.family<bool, String>((ref, userId) {
-  // Repository uses the internal _userId from AuthState, 
-  // but we can pass the userId if we want to check specifically.
+  // Since this is family, we could watch specifically for this userId, 
+  // but usually we care about the current user.
+  ref.watch(currentUserIdProvider);
   return ref.watch(subscriptionRepositoryProvider).hasActiveSubscription();
 });

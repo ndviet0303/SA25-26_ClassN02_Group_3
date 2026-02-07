@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/user_profile.dart';
 import '../repository/settings_repository.dart';
+import '../../../core/auth/auth_providers.dart';
 
 class ProfileNotifier extends StateNotifier<AsyncValue<UserProfile>> {
   ProfileNotifier(this._repository) : super(const AsyncValue.loading()) {
@@ -38,6 +39,9 @@ class ProfileNotifier extends StateNotifier<AsyncValue<UserProfile>> {
 
 final profileNotifierProvider =
     StateNotifierProvider<ProfileNotifier, AsyncValue<UserProfile>>((ref) {
+  // Watch user ID to ensure profile is reloaded on user changes
+  ref.watch(currentUserIdProvider);
+  
   final repository = ref.watch(settingsRepositoryProvider);
   return ProfileNotifier(repository);
 });
